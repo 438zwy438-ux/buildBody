@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: smart-gym-backend
+  profiles:
+    active: dev
+
+  # 数据库连接
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/buildbody?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 123456  # 【修改这里】
+
+  # Redis 配置
+  data:
+    redis:
+      host: localhost       # 【修改这里】若在Docker中，填容器IP或服务名
+      port: 6379
+      password:             # 若无密码留空
+      database: 0
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.gym.**.entity
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名转换
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开发环境开启SQL日志打印
+
+# MinIO 配置 (自定义)
+minio:
+  endpoint: http://localhost:9000  # 【修改这里】
+  access-key: minioadmin           # 【修改这里】
+  secret-key: minioadmin           # 【修改这里】
+  bucket-name: gym-files
