@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @version 1.0
  * @description: GlobalExceptionHandler
  * @date 2026/2/14 17:12
- */
+// */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
