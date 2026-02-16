@@ -1,10 +1,10 @@
-package com.cdp.zwy.buildbody.module.system.controller;
+package com.cdp.zwy.buildbody.module.business.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.result.Result;
-import com.cdp.zwy.buildbody.module.system.entity.SysUser;
-import com.cdp.zwy.buildbody.module.system.service.SysUserService;
+import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
+import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -14,32 +14,32 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 系统用户表(SysUser)表控制层
+ * 课程信息表(TbCourse)表控制层
  *
  * @author makejava
- * @since 2026-02-15 09:14:42
+ * @since 2026-02-16 09:48:13
  */
 @RestController
-@Tag(name = "账号相关接口")
-@RequestMapping("/sysUser")
-public class SysUserController {
+@Tag(name = "课程信息相关接口")
+@RequestMapping("/tbCourse")
+public class TbCourseController {
     /**
      * 服务对象
      */
     @Resource
-    private SysUserService sysUserService;
+    private TbCourseService tbCourseService;
 
     /**
      * 分页查询所有数据
      *
      * @param page 分页对象
-     * @param sysUser 查询实体
+     * @param tbCourse 查询实体
      * @return 所有数据
      */
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    public Result<Page<SysUser>> selectAll(Page<SysUser> page, SysUser sysUser) {
-        return Result.success(this.sysUserService.page(page, new QueryWrapper<>(sysUser)));
+    public Result<Page<TbCourse>> selectAll(Page<TbCourse> page, TbCourse tbCourse) {
+        return Result.success(this.tbCourseService.page(page, new QueryWrapper<>(tbCourse)));
     }
 
     /**
@@ -50,32 +50,32 @@ public class SysUserController {
      */
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    public Result<SysUser> selectOne(@PathVariable Serializable id) {
-        return Result.success(this.sysUserService.getById(id));
+    public Result<TbCourse> selectOne(@PathVariable Serializable id) {
+        return Result.success(this.tbCourseService.getById(id));
     }
 
     /**
      * 新增数据
      *
-     * @param sysUser 实体对象
+     * @param tbCourse 实体对象
      * @return 新增结果
      */
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    public Result<Boolean> insert(@RequestBody SysUser sysUser) {
-        return Result.success(this.sysUserService.save(sysUser));
+    public Result<Boolean> insert(@RequestBody TbCourse tbCourse) {
+        return Result.success(this.tbCourseService.save(tbCourse));
     }
 
     /**
      * 修改数据
      *
-     * @param sysUser 实体对象
+     * @param tbCourse 实体对象
      * @return 修改结果
      */
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    public Result<Boolean> update(@RequestBody SysUser sysUser) {
-        return Result.success(this.sysUserService.updateById(sysUser));
+    public Result<Boolean> update(@RequestBody TbCourse tbCourse) {
+        return Result.success(this.tbCourseService.updateById(tbCourse));
     }
 
     /**
@@ -87,6 +87,6 @@ public class SysUserController {
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
-        return Result.success(this.sysUserService.removeByIds(idList));
+        return Result.success(this.tbCourseService.removeByIds(idList));
     }
 }

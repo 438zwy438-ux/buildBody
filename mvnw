@@ -204,7 +204,7 @@ elif set_java_home; then
   cat >"$javaSource" <<-END
 	public class Downloader extends java.net.Authenticator
 	{
-	  protected java.net.PasswordAuthentication getPasswordAuthentication()
+	  public java.net.PasswordAuthentication getPasswordAuthentication()
 	  {
 	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
 	  }
