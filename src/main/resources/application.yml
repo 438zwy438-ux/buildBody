@@ -28,3 +28,8 @@ springdoc:
       group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.cdp.zwy.buildbody.module.**
+minio:
+  endpoint: http://localhost:9000  # MinIO 服务地址
+  access-key: minioadmin           # 账号
+  secret-key: minioadmin           # 密码
+  bucket-name: buildbody            # 存储桶名称

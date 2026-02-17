@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
@@ -104,4 +105,17 @@ public class SysUserController {
         }
         return Result.success(sysUserService.login(loginDTO));
     }
+    /**
+     * 访客注册并办卡
+     */
+    @Operation(summary = "访客注册并办卡")
+    @PostMapping("/register")
+    public Result<Boolean> register(@RequestBody RegisterDTO dto) {
+        // 简单参数校验
+        if (dto.getCardTemplateId() == null) {
+            return Result.error("必须选择一种会员卡！");
+        }
+        return Result.success(sysUserService.registerMember(dto));
+    }
+
 }

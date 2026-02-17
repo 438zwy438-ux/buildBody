@@ -2,6 +2,7 @@ package com.cdp.zwy.buildbody.module.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 
@@ -14,6 +15,7 @@ import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 public interface SysUserService extends IService<SysUser> {
     // 增加这个方法定义
     LoginVO login(LoginDTO loginDTO);
+    public Boolean registerMember(RegisterDTO dto);
 
 
 }
