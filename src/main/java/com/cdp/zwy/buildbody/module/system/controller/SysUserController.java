@@ -3,6 +3,8 @@ package com.cdp.zwy.buildbody.module.system.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
+import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,5 +90,18 @@ public class SysUserController {
     @DeleteMapping("/delete")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.sysUserService.removeByIds(idList));
+    }
+
+    /**
+     * 统一登录接口
+     */
+    @Operation(summary = "统一登录接口(支持管理员/会员/教练)")
+    @PostMapping("/login")
+    public Result<LoginVO> login(@RequestBody LoginDTO loginDTO) {
+        // 简单的判空
+        if (loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
+            return Result.error("账号或密码不能为空");
+        }
+        return Result.success(sysUserService.login(loginDTO));
     }
 }
