@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  devtools:
+    restart:
+      enabled: true
   application:
     name: smart-gym-backend
   profiles:
@@ -33,3 +36,6 @@ minio:
   access-key: minioadmin           # 账号
   secret-key: minioadmin           # 密码
   bucket-name: buildbody            # 存储桶名称
+
+
+
