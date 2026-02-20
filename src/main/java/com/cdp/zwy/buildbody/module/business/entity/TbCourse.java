@@ -32,6 +32,8 @@ public class TbCourse extends Model<TbCourse> {
     private String description;
 //状态（1上架 0下架）
     private Integer status;
+//课程次数
+    private Integer courseTimes;
 //创建时间
     private Date createTime;
 
@@ -108,6 +110,14 @@ public class TbCourse extends Model<TbCourse> {
         this.status = status;
     }
 
+    public Integer getCourseTimes() {
+        return courseTimes;
+    }
+
+    public void setCourseTimes(Integer courseTimes) {
+        this.courseTimes = courseTimes;
+    }
+
     public Date getCreateTime() {
         return createTime;
     }
@@ -126,4 +136,3 @@ public class TbCourse extends Model<TbCourse> {
         return this.id;
     }
 }
-

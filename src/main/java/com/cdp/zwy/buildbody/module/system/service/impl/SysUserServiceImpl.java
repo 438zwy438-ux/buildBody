@@ -23,6 +23,7 @@ import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.entity.SysUserRole;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
 import com.cdp.zwy.buildbody.module.system.service.SysUserRoleService;
+import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +55,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
     
     @Resource
     private SysUserRoleService sysUserRoleService;
+    
+    @Resource
+    private SysOrderService sysOrderService;
 
 
     // 硬编码一个密钥，毕设足够了
@@ -159,7 +163,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         memberProfileDao.insert(profile);
 
 
-        // 5. 插入会员卡 (tb_member_card)
+        // 5. 生成会员卡订单并支付
+        Integer cardTimes = 0;
+        // 判断会员卡类型，如果是type=2为次卡 将times赋值给remainCount，如果type=1为时间卡不变动
+        if (cardTemplate.getType() == 2) { // 次卡
+            cardTimes = cardTemplate.getTimes();
+        }
+        
+        Long orderId = sysOrderService.createMemberCardOrder(user.getUserId(), cardTimes, cardTemplate.getPrice());
+        // 自动支付订单（实际项目中应该有支付流程）
+        sysOrderService.payOrder(orderId);
+
+        // 6. 插入会员卡 (tb_member_card)
         TbMemberCard card = new TbMemberCard();
         card.setUserId(user.getUserId());
         card.setTemplateId(cardTemplate.getId());
@@ -184,7 +199,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         card.setStatus(1); // 正常
         memberCardDao.insert(card);
 
-        // 6. 插入用户角色关系表 (sys_user_role)，角色id 2表示会员
+        // 7. 插入用户角色关系表 (sys_user_role)，角色id 2表示会员
         SysUserRole userRole = new SysUserRole();
         userRole.setUserId(user.getUserId());
         userRole.setRoleId(2L); // 角色id 2表示会员

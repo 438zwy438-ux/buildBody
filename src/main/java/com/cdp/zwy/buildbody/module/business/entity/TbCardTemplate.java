@@ -2,6 +2,7 @@ package com.cdp.zwy.buildbody.module.business.entity;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 会员卡模板表(TbCardTemplate)表实体类
@@ -18,7 +19,7 @@ public class TbCardTemplate extends Model<TbCardTemplate> {
 //类型（1期限卡 2次卡）
     private Integer type;
 //标准售价
-    private Double price;
+    private BigDecimal price;
 //有效期天数
     private Integer durationDays;
 //包含次数(仅次卡有效)
@@ -53,11 +54,11 @@ public class TbCardTemplate extends Model<TbCardTemplate> {
         this.type = type;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

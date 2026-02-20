@@ -12,4 +12,3 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCourseBooking;
 public interface TbCourseBookingService extends IService<TbCourseBooking> {
 
 }
-
