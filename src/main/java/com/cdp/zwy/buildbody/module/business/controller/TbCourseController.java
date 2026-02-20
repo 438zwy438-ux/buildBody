@@ -3,6 +3,7 @@ package com.cdp.zwy.buildbody.module.business.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.business.controller.DTO.CourseAddDTO;
 import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,5 +89,14 @@ public class TbCourseController {
     @DeleteMapping("/delete")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCourseService.removeByIds(idList));
+    }
+
+    /**
+     * 添加私教课
+     */
+    @Operation(summary = "添加私教课")
+    @PostMapping("/addPrivate")
+    public Result<Boolean> addPrivate(@RequestBody CourseAddDTO dto) {
+        return Result.success(tbCourseService.addPrivateCourse(dto));
     }
 }

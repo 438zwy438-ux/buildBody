@@ -3,6 +3,7 @@ package com.cdp.zwy.buildbody.module.system.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
@@ -117,5 +118,12 @@ public class SysUserController {
         }
         return Result.success(sysUserService.registerMember(dto));
     }
-
+    /**
+     * 添加教练
+     */
+    @Operation(summary = "添加教练")
+    @PostMapping("/addCoach")
+    public Result<Boolean> addCoach(@RequestBody CoachAddDTO dto) {
+        return Result.success(sysUserService.addCoach(dto));
+    }
 }

@@ -2,6 +2,7 @@ package com.cdp.zwy.buildbody.module.business.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cdp.zwy.buildbody.module.business.controller.DTO.CourseAddDTO;
 import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 
 /**
@@ -11,6 +12,7 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
  * @since 2026-02-16 09:48:13
  */
 public interface TbCourseService extends IService<TbCourse> {
+    public Boolean addPrivateCourse(CourseAddDTO dto);
 
 }
 

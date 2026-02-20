@@ -1,6 +1,7 @@
 package com.cdp.zwy.buildbody.module.business.entity;
 
 
+import java.math.BigDecimal;
 import java.util.Date;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
@@ -22,7 +23,7 @@ public class TbCourse extends Model<TbCourse> {
 //课程类型（1私教 2团课）
     private Integer type;
 //课程单价
-    private Double price;
+    private BigDecimal price;
 //时长(分钟)
     private Integer duration;
 //封面图URL
@@ -67,11 +68,11 @@ public class TbCourse extends Model<TbCourse> {
         this.type = type;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

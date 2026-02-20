@@ -14,6 +14,7 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCardTemplate;
 import com.cdp.zwy.buildbody.module.business.entity.TbCoachProfile;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
@@ -188,6 +189,42 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         userRole.setUserId(user.getUserId());
         userRole.setRoleId(2L); // 角色id 2表示会员
         sysUserRoleService.save(userRole);
+
+        return true;
+    }
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean addCoach(CoachAddDTO dto) {
+        // 1. 校验账号防重
+        Long count = this.baseMapper.selectCount(new QueryWrapper<SysUser>()
+                .eq("username", dto.getUsername()).or().eq("phone", dto.getPhone()));
+        if (count > 0) {
+            throw new RuntimeException("该教练账号或手机号已存在！");
+        }
+
+        // 2. 创建系统账号 (sys_user)
+        SysUser user = new SysUser();
+        user.setUsername(dto.getUsername());
+        user.setPassword(BCrypt.hashpw(dto.getPassword())); // 必须加密
+        user.setNickname(dto.getRealName() + "教练");
+        user.setPhone(dto.getPhone());
+        user.setStatus(1);
+        this.baseMapper.insert(user);
+
+        // 3. 关联角色 (假设教练角色 ID 为 3)
+         SysUserRole userRole = new SysUserRole();
+         userRole.setUserId(user.getUserId());
+         userRole.setRoleId(3L);
+         sysUserRoleService.save(userRole);
+
+        // 4. 创建教练档案 (tb_coach_profile)
+        TbCoachProfile profile = new TbCoachProfile();
+        profile.setUserId(user.getUserId());
+        profile.setRealName(dto.getRealName());
+        profile.setSpecialty(dto.getSpecialty());
+        profile.setIntro(dto.getIntro());
+        profile.setStatus(1); // 1在职
+        coachProfileDao.insert(profile);
 
         return true;
     }

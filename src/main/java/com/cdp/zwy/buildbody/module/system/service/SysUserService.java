@@ -1,6 +1,7 @@
 package com.cdp.zwy.buildbody.module.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
@@ -16,6 +17,8 @@ public interface SysUserService extends IService<SysUser> {
     // 增加这个方法定义
     LoginVO login(LoginDTO loginDTO);
     public Boolean registerMember(RegisterDTO dto);
+    //注册教练
+    public Boolean addCoach(CoachAddDTO dto);
 
 
 }
