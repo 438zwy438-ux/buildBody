@@ -6,7 +6,9 @@ import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.CourseAddDTO;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.CoursePurchaseDTO;
 import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
+import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
+import com.cdp.zwy.buildbody.module.business.service.TbMemberProfileService;
 import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,6 +36,9 @@ public class TbCourseController {
     
     @Resource
     private SysOrderService sysOrderService;
+    
+    @Resource
+    private TbMemberProfileService memberProfileService;
 
     /**
      * 分页查询所有数据
@@ -120,13 +125,20 @@ public class TbCourseController {
         // 计算总课程次数：产品包含的课程次数 × 购买数量
         Integer totalCourseTimes = course.getCourseTimes() * dto.getQuantity();
         
-        // 计算总金额：课程单价 × 购买数量
-        Double totalAmount = course.getPrice().doubleValue() * dto.getQuantity();
+        // 计算总金额：课程单价 × 购买数量（使用BigDecimal保持精度）
+        java.math.BigDecimal totalAmount = course.getPrice().multiply(new java.math.BigDecimal(dto.getQuantity()));
         
         // 创建课程订单
-        Long orderId = sysOrderService.createCourseOrder(dto.getUserId(), totalCourseTimes, totalAmount);
+        Long orderId = sysOrderService.createCourseOrder(dto.getUserId(), totalCourseTimes, totalAmount.doubleValue());
         // 自动支付订单（实际项目中应该有支付流程）
         sysOrderService.payOrder(orderId);
+        
+        // 更新会员VIP状态为1（购买私教课后成为VIP）
+        TbMemberProfile memberProfile = memberProfileService.getOne(new QueryWrapper<TbMemberProfile>().eq("user_id", dto.getUserId()));
+        if (memberProfile != null) {
+            memberProfile.setIsVip(1);
+            memberProfileService.updateById(memberProfile);
+        }
         
         return Result.success(orderId);
     }
