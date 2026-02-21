@@ -14,8 +14,10 @@ import java.math.BigDecimal;
 public class CourseAddDTO {
     private Long coachUserId;   // 绑定的教练ID (对应 sys_user 表的 ID)
     private String name;        // 课程名称
-    private BigDecimal price;   // 价格
-    private Integer duration;   // 时长(分钟)
-    private String description; // 描述
+    private Integer type;       // 课程类型（1私教 2团课）
+    private BigDecimal price;    // 价格
+    private Integer duration;    // 时长(分钟)
     private String coverImg;    // 封面图
+    private String description; // 描述
+    private Integer courseTimes; // 课程次数
 }

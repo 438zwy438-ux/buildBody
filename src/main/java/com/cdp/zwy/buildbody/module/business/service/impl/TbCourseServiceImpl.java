@@ -13,6 +13,8 @@ import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 /**
  * 课程信息表(TbCourse)表服务实现类
  *
@@ -37,16 +39,17 @@ public class TbCourseServiceImpl extends ServiceImpl<TbCourseDao, TbCourse> impl
         TbCourse course = new TbCourse();
         course.setCoachUserId(dto.getCoachUserId());
         course.setName(dto.getName());
-        course.setType(1); // 严格限制此接口只能发私教课 (1私教 2团课)
+        course.setType(dto.getType() != null ? dto.getType() : 1); // 默认为私教课
         course.setPrice(dto.getPrice());
+        course.setCourseTimes(dto.getCourseTimes());
         course.setDuration(dto.getDuration());
         course.setDescription(dto.getDescription());
         course.setCoverImg(dto.getCoverImg());
         course.setStatus(1); // 1默认上架
+        course.setCreateTime(new Date()); // 设置创建时间
 
         this.baseMapper.insert(course);
         return true;
     }
 
 }
-
