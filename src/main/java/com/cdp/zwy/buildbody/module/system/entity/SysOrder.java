@@ -1,7 +1,5 @@
 package com.cdp.zwy.buildbody.module.system.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import java.math.BigDecimal;
 import java.util.Date;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
@@ -10,31 +8,34 @@ import java.io.Serializable;
  * 系统订单表(SysOrder)表实体类
  *
  * @author makejava
- * @since 2026-02-20 10:00:00
+ * @since 2026-02-21 13:05:14
  */
 @SuppressWarnings("serial")
 public class SysOrder extends Model<SysOrder> {
 //订单ID
     private Long id;
-//订单编号
+//订单编号(唯一)
     private String orderNo;
-//用户ID
+//下单用户ID
     private Long userId;
-//订单类型（1会员卡 2课程预约）
-    private Integer type;
-//订单金额
-    private BigDecimal amount;
-//支付状态（0待支付 1已支付 2已退款）
-    private Integer payStatus;
+//订单标题
+    private String subject;
+//剩余次数（2026年2月20日22:50:06）
+    private Integer remainCount;
+//订单总金额
+    private Double totalAmount;
+//支付方式（1微信 2支付宝 3余额）
+    private Integer payType;
+//状态（0待支付 1已支付 2已取消 3已退款）
+    private Integer status;
 //支付时间
     private Date payTime;
-//剩余次数
-    @TableField("remain_count")
-    private Integer remainCount;
-//创建时间
+//下单时间
     private Date createTime;
-//更新时间
-    private Date updateTime;
+//订单类型（1会员卡2私教课）
+    private Integer type;
+//总次数
+    private Integer totalCount;
 
 
     public Long getId() {
@@ -61,36 +62,12 @@ public class SysOrder extends Model<SysOrder> {
         this.userId = userId;
     }
 
-    public Integer getType() {
-        return type;
+    public String getSubject() {
+        return subject;
     }
 
-    public void setType(Integer type) {
-        this.type = type;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public Integer getPayStatus() {
-        return payStatus;
-    }
-
-    public void setPayStatus(Integer payStatus) {
-        this.payStatus = payStatus;
-    }
-
-    public Date getPayTime() {
-        return payTime;
-    }
-
-    public void setPayTime(Date payTime) {
-        this.payTime = payTime;
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public Integer getRemainCount() {
@@ -101,6 +78,38 @@ public class SysOrder extends Model<SysOrder> {
         this.remainCount = remainCount;
     }
 
+    public Double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public Integer getPayType() {
+        return payType;
+    }
+
+    public void setPayType(Integer payType) {
+        this.payType = payType;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Date getPayTime() {
+        return payTime;
+    }
+
+    public void setPayTime(Date payTime) {
+        this.payTime = payTime;
+    }
+
     public Date getCreateTime() {
         return createTime;
     }
@@ -109,12 +118,20 @@ public class SysOrder extends Model<SysOrder> {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
-        return updateTime;
+    public Integer getType() {
+        return type;
     }
 
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    public Integer getTotalCount() {
+        return totalCount;
+    }
+
+    public void setTotalCount(Integer totalCount) {
+        this.totalCount = totalCount;
     }
 
     /**
@@ -123,7 +140,8 @@ public class SysOrder extends Model<SysOrder> {
      * @return 主键值
      */
     @Override
-    public Serializable pkVal() {
+    protected Serializable pkVal() {
         return this.id;
     }
 }
+
