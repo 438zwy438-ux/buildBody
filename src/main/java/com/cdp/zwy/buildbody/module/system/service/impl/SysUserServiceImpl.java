@@ -170,7 +170,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
             cardTimes = cardTemplate.getTimes();
         }
         
-        Long orderId = sysOrderService.createMemberCardOrder(user.getUserId(), cardTimes, cardTemplate.getPrice());
+        Long orderId = sysOrderService.createMemberCardOrder(user.getUserId(), cardTimes, cardTemplate.getPrice().doubleValue());
         // 自动支付订单（实际项目中应该有支付流程）
         sysOrderService.payOrder(orderId);
 

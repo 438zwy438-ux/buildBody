@@ -6,6 +6,7 @@ import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.CourseAddDTO;
 import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
+import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * 课程信息表(TbCourse)表控制层
@@ -29,6 +31,9 @@ public class TbCourseController {
      */
     @Resource
     private TbCourseService tbCourseService;
+    
+    @Resource
+    private SysOrderService sysOrderService;
 
     /**
      * 分页查询所有数据
@@ -98,5 +103,21 @@ public class TbCourseController {
     @PostMapping("/addPrivate")
     public Result<Boolean> addPrivate(@RequestBody CourseAddDTO dto) {
         return Result.success(tbCourseService.addPrivateCourse(dto));
+    }
+    
+    /**
+     * 购买课程
+     */
+    @Operation(summary = "购买课程")
+    @PostMapping("/purchase")
+    public Result<Long> purchaseCourse(@RequestParam Long userId, 
+                                      @RequestParam Integer courseTimes, 
+                                      @RequestParam Double amount) {
+        // 创建课程订单
+        Long orderId = sysOrderService.createCourseOrder(userId, courseTimes, amount);
+        // 自动支付订单（实际项目中应该有支付流程）
+        sysOrderService.payOrder(orderId);
+        
+        return Result.success(orderId);
     }
 }

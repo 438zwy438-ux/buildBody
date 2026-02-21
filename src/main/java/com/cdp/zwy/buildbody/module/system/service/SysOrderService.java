@@ -11,5 +11,31 @@ import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
  */
 public interface SysOrderService extends IService<SysOrder> {
 
-}
+    /**
+     * 创建会员卡订单
+     *
+     * @param userId 用户ID
+     * @param cardTimes 卡次数
+     * @param amount 金额
+     * @return 订单ID
+     */
+    Long createMemberCardOrder(Long userId, Integer cardTimes, Double amount);
 
+    /**
+     * 创建课程订单
+     *
+     * @param userId 用户ID
+     * @param courseTimes 课程次数
+     * @param amount 金额
+     * @return 订单ID
+     */
+    Long createCourseOrder(Long userId, Integer courseTimes, Double amount);
+
+    /**
+     * 支付订单
+     *
+     * @param orderId 订单ID
+     * @return 支付结果
+     */
+    Boolean payOrder(Long orderId);
+}
