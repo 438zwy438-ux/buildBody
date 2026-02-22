@@ -19,6 +19,7 @@ import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
 import com.cdp.zwy.buildbody.module.system.dao.SysUserDao;
+import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.entity.SysUserRole;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
@@ -198,6 +199,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
 
         card.setStatus(1); // 正常
         memberCardDao.insert(card);
+
+        // 更新订单的cardId
+        SysOrder order = sysOrderService.getById(orderId);
+        if (order != null) {
+            order.setCardId(card.getId());
+            sysOrderService.updateById(order);
+        }
 
         // 7. 插入用户角色关系表 (sys_user_role)，角色id 2表示会员
         SysUserRole userRole = new SysUserRole();

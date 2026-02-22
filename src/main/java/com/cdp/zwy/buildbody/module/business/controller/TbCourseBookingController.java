@@ -8,9 +8,11 @@ import com.cdp.zwy.buildbody.module.business.service.TbCourseBookingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -88,5 +90,67 @@ public class TbCourseBookingController {
     @DeleteMapping("/delete")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCourseBookingService.removeByIds(idList));
+    }
+    
+    /**
+     * 预约课程
+     *
+     * @param userId 用户ID
+     * @param coachUserId 教练ID
+     * @param courseId 课程ID
+     * @param scheduleTime 预约上课时间
+     * @return 预约ID
+     */
+    @Operation(summary = "预约课程")
+    @PostMapping("/book")
+    public Result<Long> bookCourse(@RequestParam Long userId,
+                                  @RequestParam Long coachUserId,
+                                  @RequestParam Long courseId,
+                                  @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date scheduleTime) {
+        Long bookingId = tbCourseBookingService.bookCourse(userId, coachUserId, courseId, scheduleTime);
+        return Result.success(bookingId);
+    }
+    
+    /**
+     * 核销课程
+     *
+     * @param bookingId 预约ID
+     * @return 核销结果
+     */
+    @Operation(summary = "核销课程")
+    @PostMapping("/check")
+    public Result<Boolean> checkCourse(@RequestParam Long bookingId) {
+        Boolean result = tbCourseBookingService.checkCourse(bookingId);
+        return Result.success(result);
+    }
+    
+    /**
+     * 查询用户的预约记录
+     *
+     * @param userId 用户ID
+     * @return 预约记录列表
+     */
+    @Operation(summary = "查询用户的预约记录")
+    @GetMapping("/user/{userId}")
+    public Result<List<TbCourseBooking>> getUserBookings(@PathVariable Long userId) {
+        QueryWrapper<TbCourseBooking> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.orderByDesc("create_time");
+        return Result.success(tbCourseBookingService.list(queryWrapper));
+    }
+    
+    /**
+     * 查询教练的预约记录
+     *
+     * @param coachUserId 教练ID
+     * @return 预约记录列表
+     */
+    @Operation(summary = "查询教练的预约记录")
+    @GetMapping("/coach/{coachUserId}")
+    public Result<List<TbCourseBooking>> getCoachBookings(@PathVariable Long coachUserId) {
+        QueryWrapper<TbCourseBooking> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("coach_user_id", coachUserId);
+        queryWrapper.orderByDesc("create_time");
+        return Result.success(tbCourseBookingService.list(queryWrapper));
     }
 }

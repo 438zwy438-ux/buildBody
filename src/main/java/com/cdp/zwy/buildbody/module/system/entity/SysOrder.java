@@ -36,6 +36,10 @@ public class SysOrder extends Model<SysOrder> {
     private Integer type;
 //总次数
     private Integer totalCount;
+//关联课程ID（私教课订单使用）
+    private Long courseId;
+//关联会员卡ID（会员卡订单使用）
+    private Long cardId;
 
 
     public Long getId() {
@@ -134,6 +138,22 @@ public class SysOrder extends Model<SysOrder> {
         this.totalCount = totalCount;
     }
 
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
+    }
+
+    public Long getCardId() {
+        return cardId;
+    }
+
+    public void setCardId(Long cardId) {
+        this.cardId = cardId;
+    }
+
     /**
      * 获取主键值
      *
@@ -144,4 +164,3 @@ public class SysOrder extends Model<SysOrder> {
         return this.id;
     }
 }
-

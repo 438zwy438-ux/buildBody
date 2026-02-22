@@ -9,6 +9,7 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberProfileService;
+import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
 import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +17,8 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 课程信息表(TbCourse)表控制层
@@ -129,9 +131,11 @@ public class TbCourseController {
         java.math.BigDecimal totalAmount = course.getPrice().multiply(new java.math.BigDecimal(dto.getQuantity()));
         
         // 创建课程订单
-        Long orderId = sysOrderService.createCourseOrder(dto.getUserId(), totalCourseTimes, totalAmount.doubleValue());
+        Long orderId = sysOrderService.createCourseOrder(dto.getUserId(), dto.getCourseId(), totalCourseTimes, totalAmount.doubleValue());
         // 自动支付订单（实际项目中应该有支付流程）
         sysOrderService.payOrder(orderId);
+        
+        // 移除了更新订单courseId的代码，因为已经在创建订单时设置了
         
         // 更新会员VIP状态为1（购买私教课后成为VIP）
         TbMemberProfile memberProfile = memberProfileService.getOne(new QueryWrapper<TbMemberProfile>().eq("user_id", dto.getUserId()));
@@ -141,5 +145,69 @@ public class TbCourseController {
         }
         
         return Result.success(orderId);
+    }
+
+    /**
+     * 查询用户的私教课程列表（基于用户购买的私教课订单）
+     *
+     * @param userId 用户ID
+     * @return 用户的私教课程列表
+     */
+    @Operation(summary = "查询用户的私教课程列表")
+    @GetMapping("/my-courses/{userId}")
+    public Result<List<TbCourse>> getMyPrivateCourses(@PathVariable Long userId) {
+        // 查询用户购买的私教课订单
+        QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
+        orderQuery.eq("user_id", userId);
+        orderQuery.eq("type", 2); // 2-私教课
+        orderQuery.eq("status", 1); // 1-已支付
+        orderQuery.gt("remain_count", 0); // 剩余次数大于0
+        
+        List<SysOrder> orders = sysOrderService.list(orderQuery);
+        if (orders.isEmpty()) {
+            return Result.success(new ArrayList<>());
+        }
+        
+        // 获取所有课程ID
+        Set<Long> courseIds = orders.stream()
+                .map(SysOrder::getCourseId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        
+        if (courseIds.isEmpty()) {
+            // 如果订单中没有courseId，返回所有可用的私教课程
+            QueryWrapper<TbCourse> courseQuery = new QueryWrapper<>();
+            courseQuery.eq("type", 1); // 1-私教
+            courseQuery.eq("status", 1); // 1-上架
+            courseQuery.orderByDesc("create_time");
+            return Result.success(tbCourseService.list(courseQuery));
+        }
+        
+        // 查询对应的课程信息
+        QueryWrapper<TbCourse> courseQuery = new QueryWrapper<>();
+        courseQuery.in("id", courseIds);
+        courseQuery.eq("status", 1); // 1-上架
+        courseQuery.orderByDesc("create_time");
+        
+        return Result.success(tbCourseService.list(courseQuery));
+    }
+    
+    /**
+     * 查询用户的私教课订单
+     *
+     * @param userId 用户ID
+     * @return 用户的私教课订单列表
+     */
+    @Operation(summary = "查询用户的私教课订单")
+    @GetMapping("/my-orders/{userId}")
+    public Result<List<SysOrder>> getMyPrivateOrders(@PathVariable Long userId) {
+        // 查询用户购买的私教课订单
+        QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
+        orderQuery.eq("user_id", userId);
+        orderQuery.eq("type", 2); // 2-私教课
+        orderQuery.eq("status", 1); // 1-已支付
+        orderQuery.orderByDesc("create_time");
+        
+        return Result.success(sysOrderService.list(orderQuery));
     }
 }

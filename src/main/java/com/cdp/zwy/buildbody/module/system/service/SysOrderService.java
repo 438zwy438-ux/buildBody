@@ -25,11 +25,12 @@ public interface SysOrderService extends IService<SysOrder> {
      * 创建课程订单
      *
      * @param userId 用户ID
+     * @param courseId 课程ID
      * @param courseTimes 课程次数
      * @param amount 金额
      * @return 订单ID
      */
-    Long createCourseOrder(Long userId, Integer courseTimes, Double amount);
+    Long createCourseOrder(Long userId, Long courseId, Integer courseTimes, Double amount);
 
     /**
      * 支付订单

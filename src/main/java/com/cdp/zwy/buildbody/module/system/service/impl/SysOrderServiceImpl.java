@@ -23,7 +23,7 @@ public class SysOrderServiceImpl extends ServiceImpl<SysOrderDao, SysOrder> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createCourseOrder(Long userId, Integer courseTimes, Double amount) {
+    public Long createCourseOrder(Long userId, Long courseId, Integer courseTimes, Double amount) {
         // 1. 生成订单号
         String orderNo = generateOrderNo();
         
@@ -39,6 +39,7 @@ public class SysOrderServiceImpl extends ServiceImpl<SysOrderDao, SysOrder> impl
         order.setRemainCount(courseTimes);
         order.setPayType(1); // 1-微信支付
         order.setCreateTime(new Date());
+        order.setCourseId(courseId); // 设置课程ID
         
         this.save(order);
         return order.getId();
@@ -62,6 +63,8 @@ public class SysOrderServiceImpl extends ServiceImpl<SysOrderDao, SysOrder> impl
         order.setRemainCount(cardTimes);
         order.setPayType(1); // 1-微信支付
         order.setCreateTime(new Date());
+        // 注意：这里不设置cardId，因为创建订单时还没有创建会员卡
+        // 在创建会员卡后需要更新订单的cardId
         
         this.save(order);
         return order.getId();
