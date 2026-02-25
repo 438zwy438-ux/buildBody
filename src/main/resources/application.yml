@@ -36,6 +36,11 @@ minio:
   access-key: minioadmin           # 账号
   secret-key: minioadmin           # 密码
   bucket-name: buildbody            # 存储桶名称
-
+# AI 大模型配置 (自定义)
+ai:
+  api-key: "sk-79e941a200de425eb92090d340e9531f"
+  # DeepSeek 的基础 URL
+  api-url: "https://api.deepseek.com/chat/completions"
+  model: "deepseek-chat"
 
 
