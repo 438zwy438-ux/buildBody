@@ -12,6 +12,20 @@ import com.cdp.zwy.buildbody.module.business.entity.TbLocker;
  * @since 2026-02-16 09:53:06
  */
 public interface TbLockerService extends IService<TbLocker> {
-
+    
+    /**
+     * 上锁储物柜
+     *
+     * @param id 储物柜ID
+     * @return 操作结果
+     */
+    Boolean lockLocker(Long id);
+    
+    /**
+     * 解锁储物柜
+     *
+     * @param id 储物柜ID
+     * @return 操作结果
+     */
+    Boolean unlockLocker(Long id);
 }
-

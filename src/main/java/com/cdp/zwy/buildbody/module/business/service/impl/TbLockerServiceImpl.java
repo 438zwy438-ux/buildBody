@@ -17,5 +17,23 @@ import org.springframework.stereotype.Service;
 @Service("tbLockerService")
 public class TbLockerServiceImpl extends ServiceImpl<TbLockerDao, TbLocker> implements TbLockerService {
 
-}
+    @Override
+    public Boolean lockLocker(Long id) {
+        TbLocker locker = this.getById(id);
+        if (locker == null) {
+            return false;
+        }
+        locker.setIsLocker(1);
+        return this.updateById(locker);
+    }
 
+    @Override
+    public Boolean unlockLocker(Long id) {
+        TbLocker locker = this.getById(id);
+        if (locker == null) {
+            return false;
+        }
+        locker.setIsLocker(0);
+        return this.updateById(locker);
+    }
+}

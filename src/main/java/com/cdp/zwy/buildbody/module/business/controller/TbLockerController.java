@@ -89,4 +89,28 @@ public class TbLockerController {
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbLockerService.removeByIds(idList));
     }
+    
+    /**
+     * 上锁储物柜
+     *
+     * @param id 储物柜ID
+     * @return 操作结果
+     */
+    @Operation(summary = "上锁储物柜")
+    @PutMapping("/lock/{id}")
+    public Result<Boolean> lock(@PathVariable Long id) {
+        return Result.success(this.tbLockerService.lockLocker(id));
+    }
+    
+    /**
+     * 解锁储物柜
+     *
+     * @param id 储物柜ID
+     * @return 操作结果
+     */
+    @Operation(summary = "解锁储物柜")
+    @PutMapping("/unlock/{id}")
+    public Result<Boolean> unlock(@PathVariable Long id) {
+        return Result.success(this.tbLockerService.unlockLocker(id));
+    }
 }

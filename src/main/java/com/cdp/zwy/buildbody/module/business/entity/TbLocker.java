@@ -22,6 +22,8 @@ public class TbLocker extends Model<TbLocker> {
     private Long currentUserId;
 //状态（0空闲 1占用 2故障）
     private Integer status;
+//是否上锁（0打开 1上锁）
+    private Integer isLocker;
 
 
     public Long getId() {
@@ -64,6 +66,14 @@ public class TbLocker extends Model<TbLocker> {
         this.status = status;
     }
 
+    public Integer getIsLocker() {
+        return isLocker;
+    }
+
+    public void setIsLocker(Integer isLocker) {
+        this.isLocker = isLocker;
+    }
+
     /**
      * 获取主键值
      *
@@ -74,4 +84,3 @@ public class TbLocker extends Model<TbLocker> {
         return this.id;
     }
 }
-
