@@ -1,15 +1,16 @@
 <template>
-  <div class="member-cards-page">
+  <div class="coach-profiles-page">
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>会员卡管理</span>
+          <span>教练档案管理</span>
+          <el-button type="primary" @click="handleAdd">添加教练</el-button>
         </div>
       </template>
       
       <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="会员姓名">
-          <el-input v-model="searchForm.memberName" placeholder="请输入会员姓名" clearable />
+        <el-form-item label="教练姓名">
+          <el-input v-model="searchForm.realName" placeholder="请输入教练姓名" clearable />
         </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
@@ -23,12 +24,14 @@
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="userId" label="用户ID" />
-        <el-table-column prop="cardTemplateId" label="模板ID" />
-        <el-table-column prop="cardNo" label="卡号" />
-        <el-table-column prop="balance" label="余额" />
+        <el-table-column prop="realName" label="姓名" />
+        <el-table-column prop="phone" label="手机号" />
+        <el-table-column prop="specialty" label="专长" />
+        <el-table-column prop="experience" label="经验(年)" />
+        <el-table-column prop="hourlyRate" label="时薪" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '已过期' }}</el-tag>
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '在职' : '离职' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200">
@@ -51,24 +54,33 @@
       />
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="用户ID" prop="userId">
           <el-input v-model="form.userId" placeholder="请输入用户ID" />
         </el-form-item>
-        <el-form-item label="模板ID" prop="cardTemplateId">
-          <el-input v-model="form.cardTemplateId" placeholder="请输入会员卡模板ID" />
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="form.realName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="卡号" prop="cardNo">
-          <el-input v-model="form.cardNo" placeholder="请输入卡号" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
-        <el-form-item label="余额" prop="balance">
-          <el-input-number v-model="form.balance" :min="0" :precision="2" style="width: 100%" />
+        <el-form-item label="专长" prop="specialty">
+          <el-input v-model="form.specialty" placeholder="请输入专长" />
+        </el-form-item>
+        <el-form-item label="经验(年)" prop="experience">
+          <el-input-number v-model="form.experience" :min="0" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="时薪" prop="hourlyRate">
+          <el-input-number v-model="form.hourlyRate" :min="0" :precision="2" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="简介" prop="introduction">
+          <el-input v-model="form.introduction" type="textarea" :rows="3" placeholder="请输入简介" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">正常</el-radio>
-            <el-radio :label="0">已过期</el-radio>
+            <el-radio :label="1">在职</el-radio>
+            <el-radio :label="0">离职</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -82,17 +94,17 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getMemberCardList, createMemberCard, updateMemberCard, deleteMemberCard } from '@/api/memberCard'
+import { getCoachProfileList, createCoachProfile, updateCoachProfile, deleteCoachProfile } from '@/api/coachProfile'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
-const dialogTitle = ref('添加会员卡')
+const dialogTitle = ref('添加教练')
 const formRef = ref(null)
 const tableData = ref([])
 
 const searchForm = reactive({
-  memberName: '',
+  realName: '',
   phone: ''
 })
 
@@ -105,24 +117,32 @@ const pagination = reactive({
 const form = reactive({
   id: null,
   userId: null,
-  cardTemplateId: null,
-  cardNo: '',
-  balance: 0,
+  realName: '',
+  phone: '',
+  specialty: '',
+  experience: 0,
+  hourlyRate: 0,
+  introduction: '',
   status: 1
 })
 
 const rules = {
   userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
-  cardTemplateId: [{ required: true, message: '请输入会员卡模板ID', trigger: 'blur' }],
-  cardNo: [{ required: true, message: '请输入卡号', trigger: 'blur' }],
-  balance: [{ required: true, message: '请输入余额', trigger: 'blur' }],
+  realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  specialty: [{ required: true, message: '请输入专长', trigger: 'blur' }],
+  experience: [{ required: true, message: '请输入经验', trigger: 'blur' }],
+  hourlyRate: [{ required: true, message: '请输入时薪', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getMemberCardList({
+    const res = await getCoachProfileList({
       current: pagination.page,
       size: pagination.size,
       ...searchForm
@@ -130,7 +150,7 @@ const fetchData = async () => {
     tableData.value = res.data.records
     pagination.total = res.data.total
   } catch (error) {
-    console.error('获取会员卡列表失败:', error)
+    console.error('获取教练列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -142,42 +162,48 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  searchForm.memberName = ''
+  searchForm.realName = ''
   searchForm.phone = ''
   pagination.page = 1
   fetchData()
 }
 
 const handleAdd = () => {
-  dialogTitle.value = '添加会员卡'
+  dialogTitle.value = '添加教练'
   form.id = null
   form.userId = null
-  form.cardTemplateId = null
-  form.cardNo = ''
-  form.balance = 0
+  form.realName = ''
+  form.phone = ''
+  form.specialty = ''
+  form.experience = 0
+  form.hourlyRate = 0
+  form.introduction = ''
   form.status = 1
   dialogVisible.value = true
 }
 
 const handleEdit = (row) => {
-  dialogTitle.value = '编辑会员卡'
+  dialogTitle.value = '编辑教练'
   form.id = row.id
   form.userId = row.userId
-  form.cardTemplateId = row.cardTemplateId
-  form.cardNo = row.cardNo
-  form.balance = row.balance
+  form.realName = row.realName
+  form.phone = row.phone
+  form.specialty = row.specialty
+  form.experience = row.experience
+  form.hourlyRate = row.hourlyRate
+  form.introduction = row.introduction
   form.status = row.status
   dialogVisible.value = true
 }
 
 const handleDelete = async (row) => {
   try {
-    await ElMessageBox.confirm('确定要删除该会员卡吗?', '提示', {
+    await ElMessageBox.confirm('确定要删除该教练档案吗?', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteMemberCard([row.id])
+    await deleteCoachProfile([row.id])
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
@@ -192,9 +218,9 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (form.id) {
-          await updateMemberCard(form)
+          await updateCoachProfile(form)
         } else {
-          await createMemberCard(form)
+          await createCoachProfile(form)
         }
         ElMessage.success(form.id ? '更新成功' : '添加成功')
         dialogVisible.value = false

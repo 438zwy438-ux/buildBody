@@ -96,6 +96,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { getCourseList, createCourse, updateCourse, deleteCourse } from '@/api/course'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loading = ref(false)
@@ -131,13 +132,19 @@ const rules = {
   courseTime: [{ required: true, message: '请选择课程时间', trigger: 'change' }],
   maxPeople: [{ required: true, message: '请输入最大人数', trigger: 'blur' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-  status: [{ required: true, message, trigger: 'change' }]
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const fetchData = async () => {
   loading.value = true
   try {
-    ElMessage.info('课程管理功能待实现')
+    const res = await getCourseList({
+      current: pagination.page,
+      size: pagination.size,
+      ...searchForm
+    })
+    tableData.value = res.data.records
+    pagination.total = res.data.total
   } catch (error) {
     console.error('获取课程列表失败:', error)
   } finally {
@@ -188,6 +195,7 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    await deleteCourse([row.id])
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
@@ -201,6 +209,11 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        if (form.id) {
+          await updateCourse(form)
+        } else {
+          await createCourse(form)
+        }
         ElMessage.success(form.id ? '更新成功' : '添加成功')
         dialogVisible.value = false
         fetchData()

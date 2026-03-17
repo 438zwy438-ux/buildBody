@@ -92,6 +92,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment } from '@/api/equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loading = ref(false)
@@ -129,7 +130,13 @@ const rules = {
 const fetchData = async () => {
   loading.value = true
   try {
-    ElMessage.info('器材管理功能待实现')
+    const res = await getEquipmentList({
+      current: pagination.page,
+      size: pagination.size,
+      ...searchForm
+    })
+    tableData.value = res.data.records
+    pagination.total = res.data.total
   } catch (error) {
     console.error('获取器材列表失败:', error)
   } finally {
@@ -178,6 +185,7 @@ const handleRepair = async (row) => {
     })
     form.id = row.id
     form.status = 2
+    await updateEquipment(form)
     ElMessage.success('报修成功')
     fetchData()
   } catch (error) {
@@ -192,6 +200,7 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    await deleteEquipment([row.id])
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
@@ -205,6 +214,11 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        if (form.id) {
+          await updateEquipment(form)
+        } else {
+          await createEquipment(form)
+        }
         ElMessage.success(form.id ? '更新成功' : '添加成功')
         dialogVisible.value = false
         fetchData()

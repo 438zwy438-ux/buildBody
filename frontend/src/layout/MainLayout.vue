@@ -34,9 +34,13 @@
             <span>业务管理</span>
           </template>
           <el-menu-item index="/member-cards">会员卡管理</el-menu-item>
+          <el-menu-item index="/card-templates">会员卡模板</el-menu-item>
           <el-menu-item index="/courses">课程管理</el-menu-item>
+          <el-menu-item index="/coach-profiles">教练档案</el-menu-item>
+          <el-menu-item index="/member-profiles">会员档案</el-menu-item>
           <el-menu-item index="/equipment">器材管理</el-menu-item>
           <el-menu-item index="/lockers">储物柜管理</el-menu-item>
+          <el-menu-item index="/fix-logs">维修记录</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

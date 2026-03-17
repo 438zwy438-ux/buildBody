@@ -2,21 +2,88 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/Login.vue'),
-    meta: { title: '登录' }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/Register.vue'),
-    meta: { title: '注册' }
-  },
-  {
     path: '/',
+    name: 'Landing',
+    component: () => import('@/views/Landing.vue'),
+    meta: { title: '首页' }
+  },
+  {
+    path: '/user/login',
+    name: 'UserLogin',
+    component: () => import('@/views/user/Login.vue'),
+    meta: { title: '会员登录' }
+  },
+  {
+    path: '/user/register',
+    name: 'UserRegister',
+    component: () => import('@/views/user/Register.vue'),
+    meta: { title: '会员注册' }
+  },
+  {
+    path: '/user',
+    component: () => import('@/layout/UserLayout.vue'),
+    redirect: '/user/home',
+    children: [
+      {
+        path: 'home',
+        name: 'UserHome',
+        component: () => import('@/views/user/Home.vue'),
+        meta: { title: '首页', requiresAuth: true }
+      },
+      {
+        path: 'profile',
+        name: 'UserProfile',
+        component: () => import('@/views/user/Profile.vue'),
+        meta: { title: '个人中心', requiresAuth: true }
+      },
+      {
+        path: 'member-card',
+        name: 'UserMemberCard',
+        component: () => import('@/views/user/MemberCard.vue'),
+        meta: { title: '我的会员卡', requiresAuth: true }
+      },
+      {
+        path: 'courses',
+        name: 'UserCourses',
+        component: () => import('@/views/user/Courses.vue'),
+        meta: { title: '我的课程', requiresAuth: true }
+      },
+      {
+        path: 'course-booking',
+        name: 'UserCourseBooking',
+        component: () => import('@/views/user/CourseBooking.vue'),
+        meta: { title: '课程预约', requiresAuth: true }
+      },
+      {
+        path: 'entry-records',
+        name: 'UserEntryRecords',
+        component: () => import('@/views/user/EntryRecords.vue'),
+        meta: { title: '入场记录', requiresAuth: true }
+      },
+      {
+        path: 'orders',
+        name: 'UserOrders',
+        component: () => import('@/views/user/Orders.vue'),
+        meta: { title: '我的订单', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '管理员登录' }
+  },
+  {
+    path: '/admin/register',
+    name: 'AdminRegister',
+    component: () => import('@/views/Register.vue'),
+    meta: { title: '管理员注册' }
+  },
+  {
+    path: '/admin',
     component: () => import('@/layout/MainLayout.vue'),
-    redirect: '/dashboard',
+    redirect: '/admin/dashboard',
     children: [
       {
         path: 'dashboard',
@@ -55,10 +122,28 @@ const routes = [
         meta: { title: '会员卡管理', requiresAuth: true }
       },
       {
+        path: 'card-templates',
+        name: 'CardTemplates',
+        component: () => import('@/views/business/CardTemplates.vue'),
+        meta: { title: '会员卡模板', requiresAuth: true }
+      },
+      {
         path: 'courses',
         name: 'Courses',
         component: () => import('@/views/business/Courses.vue'),
         meta: { title: '课程管理', requiresAuth: true }
+      },
+      {
+        path: 'coach-profiles',
+        name: 'CoachProfiles',
+        component: () => import('@/views/business/CoachProfiles.vue'),
+        meta: { title: '教练档案', requiresAuth: true }
+      },
+      {
+        path: 'member-profiles',
+        name: 'MemberProfiles',
+        component: () => import('@/views/business/MemberProfiles.vue'),
+        meta: { title: '会员档案', requiresAuth: true }
       },
       {
         path: 'equipment',
@@ -71,6 +156,12 @@ const routes = [
         name: 'Lockers',
         component: () => import('@/views/business/Lockers.vue'),
         meta: { title: '储物柜管理', requiresAuth: true }
+      },
+      {
+        path: 'fix-logs',
+        name: 'FixLogs',
+        component: () => import('@/views/business/FixLogs.vue'),
+        meta: { title: '维修记录', requiresAuth: true }
       }
     ]
   }
@@ -85,9 +176,15 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   
   if (to.meta.requiresAuth && !token) {
-    next('/login')
-  } else if ((to.path === '/login' || to.path === '/register') && token) {
-    next('/')
+    if (to.path.startsWith('/user')) {
+      next('/user/login')
+    } else {
+      next('/admin/login')
+    }
+  } else if ((to.path === '/user/login' || to.path === '/user/register') && token) {
+    next('/user/home')
+  } else if ((to.path === '/admin/login' || to.path === '/admin/register') && token) {
+    next('/admin/dashboard')
   } else {
     next()
   }
