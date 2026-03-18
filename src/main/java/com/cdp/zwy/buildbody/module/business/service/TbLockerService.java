@@ -4,7 +4,6 @@ package com.cdp.zwy.buildbody.module.business.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cdp.zwy.buildbody.module.business.entity.TbLocker;
 
-
 /**
  * 更衣室储物柜表(TbLocker)表服务接口
  *
@@ -13,19 +12,11 @@ import com.cdp.zwy.buildbody.module.business.entity.TbLocker;
  */
 public interface TbLockerService extends IService<TbLocker> {
     
-    /**
-     * 上锁储物柜
-     *
-     * @param id 储物柜ID
-     * @return 操作结果
-     */
     Boolean lockLocker(Long id);
     
-    /**
-     * 解锁储物柜
-     *
-     * @param id 储物柜ID
-     * @return 操作结果
-     */
     Boolean unlockLocker(Long id);
+    
+    Boolean useLocker(Long userId, Long lockerId);
+    
+    Boolean releaseLocker(Long userId);
 }

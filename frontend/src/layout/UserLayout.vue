@@ -18,25 +18,31 @@
             active-text-color="#409eff"
           >
             <el-menu-item index="/user/home">首页</el-menu-item>
-            <el-menu-item index="/user/courses">课程预约</el-menu-item>
-            <el-menu-item index="/user/member-card">我的会员卡</el-menu-item>
-            <el-menu-item index="/user/entry-records">入场记录</el-menu-item>
-            <el-menu-item index="/user/orders">我的订单</el-menu-item>
-            <el-menu-item index="/user/profile">个人中心</el-menu-item>
+            <el-menu-item index="/user/courses" v-if="hasAnyRole(['MEMBER', 'VIP'])">课程预约</el-menu-item>
+            <el-menu-item index="/user/member-card" v-if="hasAnyRole(['MEMBER', 'VIP'])">我的会员卡</el-menu-item>
+            <el-menu-item index="/user/entry-records" v-if="hasAnyRole(['MEMBER', 'VIP'])">入场记录</el-menu-item>
+            <el-menu-item index="/user/orders" v-if="hasAnyRole(['MEMBER', 'VIP'])">我的订单</el-menu-item>
+            <el-menu-item index="/user/profile" v-if="isAuthenticated">个人中心</el-menu-item>
           </el-menu>
-          <el-dropdown @command="handleCommand" class="user-dropdown">
-            <span class="user-info">
-              <el-avatar :size="32" :src="userInfo.faceImgUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
-              <span>{{ userInfo.nickname || userInfo.username }}</span>
-              <el-icon><ArrowDown /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <template v-if="isAuthenticated">
+            <el-dropdown @command="handleCommand" class="user-dropdown">
+              <span class="user-info">
+                <el-avatar :size="32" :src="userInfo.faceImgUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
+                <span>{{ userInfo.nickname || userInfo.username }}</span>
+                <el-icon><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+                  <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+          <template v-else>
+            <el-button type="primary" @click="router.push('/user/login')">登录</el-button>
+            <el-button @click="router.push('/user/register')">注册</el-button>
+          </template>
         </div>
       </el-header>
       <el-main class="main">
@@ -61,6 +67,12 @@ const userStore = useUserStore()
 
 const activeMenu = computed(() => route.path)
 const userInfo = computed(() => userStore.userInfo)
+const isAuthenticated = computed(() => !!localStorage.getItem('token'))
+const roles = computed(() => userStore.roles)
+
+const hasAnyRole = (roleList) => {
+  return roleList.some(role => roles.value.includes(role))
+}
 
 const handleCommand = async (command) => {
   if (command === 'logout') {

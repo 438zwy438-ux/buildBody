@@ -15,6 +15,13 @@ export const getEquipmentById = (id) => {
   })
 }
 
+export const getEquipmentDetail = (id) => {
+  return request({
+    url: `/tbEquipment/detail/${id}`,
+    method: 'get'
+  })
+}
+
 export const createEquipment = (data) => {
   return request({
     url: '/tbEquipment/insert',

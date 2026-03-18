@@ -1,6 +1,7 @@
 package com.cdp.zwy.buildbody.module.business.service.impl;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.cdp.zwy.buildbody.module.business.dao.TbLockerDao;
@@ -33,6 +34,35 @@ public class TbLockerServiceImpl extends ServiceImpl<TbLockerDao, TbLocker> impl
         if (locker == null) {
             return false;
         }
+        locker.setIsLocker(0);
+        return this.updateById(locker);
+    }
+
+    @Override
+    public Boolean useLocker(Long userId, Long lockerId) {
+        TbLocker locker = this.getById(lockerId);
+        if (locker == null) {
+            throw new RuntimeException("储物柜不存在");
+        }
+        if (locker.getStatus() != 0) {
+            throw new RuntimeException("储物柜已被占用");
+        }
+
+        locker.setCurrentUserId(userId);
+        locker.setStatus(1);
+        locker.setIsLocker(1);
+        return this.updateById(locker);
+    }
+
+    @Override
+    public Boolean releaseLocker(Long userId) {
+        TbLocker locker = this.getOne(new QueryWrapper<TbLocker>().eq("current_user_id", userId));
+        if (locker == null) {
+            throw new RuntimeException("未找到使用的储物柜");
+        }
+
+        locker.setCurrentUserId(null);
+        locker.setStatus(0);
         locker.setIsLocker(0);
         return this.updateById(locker);
     }

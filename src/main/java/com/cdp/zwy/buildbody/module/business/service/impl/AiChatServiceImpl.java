@@ -223,6 +223,7 @@ public class AiChatServiceImpl {
                 equipmentInfo.set("name", equipment.getName());
                 equipmentInfo.set("code", equipment.getCode());
                 equipmentInfo.set("location", equipment.getLocation());
+                equipmentInfo.set("detail_desc", equipment.getDetailDesc());
                 result.add(equipmentInfo);
             }
             return result.toString();

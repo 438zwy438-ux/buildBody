@@ -35,6 +35,9 @@
             <span>还没有账号?</span>
             <el-link type="primary" @click="goToRegister">立即注册</el-link>
           </div>
+          <div class="login-footer">
+            <el-link type="info" @click="goToAdminLogin">管理员登录</el-link>
+          </div>
         </el-form-item>
       </el-form>
     </div>
@@ -69,7 +72,18 @@ const handleLogin = async () => {
     if (valid) {
       loading.value = true
       try {
-        await userStore.loginAction(loginForm)
+        const res = await userStore.loginAction(loginForm)
+        
+        const allowedRoles = ['MEMBER', 'VIP', 'COACH']
+        const userRoles = res.data.roles || []
+        const hasAllowedRole = userRoles.some(role => allowedRoles.includes(role))
+        
+        if (!hasAllowedRole) {
+          ElMessage.error('该账号不是会员或教练账号，请使用管理员登录')
+          userStore.logout()
+          return
+        }
+        
         ElMessage.success('登录成功')
         router.push('/user/home')
       } catch (error) {
@@ -83,6 +97,10 @@ const handleLogin = async () => {
 
 const goToRegister = () => {
   router.push('/user/register')
+}
+
+const goToAdminLogin = () => {
+  router.push('/admin/login')
 }
 </script>
 

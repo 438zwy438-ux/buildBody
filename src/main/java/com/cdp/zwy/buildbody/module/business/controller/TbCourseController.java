@@ -2,6 +2,7 @@ package com.cdp.zwy.buildbody.module.business.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.CourseAddDTO;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.CoursePurchaseDTO;
@@ -14,25 +15,17 @@ import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * 课程信息表(TbCourse)表控制层
- *
- * @author makejava
- * @since 2026-02-16 09:48:13
- */
 @RestController
 @Tag(name = "课程信息相关接口")
 @RequestMapping("/tbCourse")
 public class TbCourseController {
-    /**
-     * 服务对象
-     */
     @Resource
     private TbCourseService tbCourseService;
     
@@ -42,102 +35,66 @@ public class TbCourseController {
     @Resource
     private TbMemberProfileService memberProfileService;
 
-    /**
-     * 分页查询所有数据
-     *
-     * @param page 分页对象
-     * @param tbCourse 查询实体
-     * @return 所有数据
-     */
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
+    @RequireRole(requireLogin = false,value = {"MEMBER", "VIP"})
     public Result<Page<TbCourse>> selectAll(Page<TbCourse> page, TbCourse tbCourse) {
         return Result.success(this.tbCourseService.page(page, new QueryWrapper<>(tbCourse)));
     }
 
-    /**
-     * 通过主键查询单条数据
-     *
-     * @param id 主键
-     * @return 单条数据
-     */
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
+    @RequireRole(requireLogin = false,value = {"MEMBER", "VIP"})
     public Result<TbCourse> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbCourseService.getById(id));
     }
 
-    /**
-     * 新增数据
-     *
-     * @param tbCourse 实体对象
-     * @return 新增结果
-     */
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
+    @RequireRole("ADMIN")
     public Result<Boolean> insert(@RequestBody TbCourse tbCourse) {
         return Result.success(this.tbCourseService.save(tbCourse));
     }
 
-    /**
-     * 修改数据
-     *
-     * @param tbCourse 实体对象
-     * @return 修改结果
-     */
     @Operation(summary = "修改数据")
     @PutMapping("/update")
+    @RequireRole({"ADMIN", "COACH"})
     public Result<Boolean> update(@RequestBody TbCourse tbCourse) {
         return Result.success(this.tbCourseService.updateById(tbCourse));
     }
 
-    /**
-     * 删除数据
-     *
-     * @param idList 主键结合
-     * @return 删除结果
-     */
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
+    @RequireRole("ADMIN")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCourseService.removeByIds(idList));
     }
 
-    /**
-     * 添加私教课
-     */
     @Operation(summary = "添加私教课")
     @PostMapping("/addPrivate")
+    @RequireRole({"ADMIN", "COACH"})
     public Result<Boolean> addPrivate(@RequestBody CourseAddDTO dto) {
         return Result.success(tbCourseService.addPrivateCourse(dto));
     }
     
-    /**
-     * 购买课程
-     */
     @Operation(summary = "购买课程")
     @PostMapping("/purchase")
-    public Result<Long> purchaseCourse(@RequestBody CoursePurchaseDTO dto) {
-        // 根据课程ID获取课程信息
+    @RequireRole({"MEMBER", "VIP"})
+    public Result<Long> purchaseCourse(@RequestBody CoursePurchaseDTO dto, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        dto.setUserId(userId);
+        
         TbCourse course = tbCourseService.getById(dto.getCourseId());
         if (course == null) {
             throw new RuntimeException("课程不存在");
         }
         
-        // 计算总课程次数：产品包含的课程次数 × 购买数量
         Integer totalCourseTimes = course.getCourseTimes() * dto.getQuantity();
-        
-        // 计算总金额：课程单价 × 购买数量（使用BigDecimal保持精度）
         java.math.BigDecimal totalAmount = course.getPrice().multiply(new java.math.BigDecimal(dto.getQuantity()));
         
-        // 创建课程订单
         Long orderId = sysOrderService.createCourseOrder(dto.getUserId(), dto.getCourseId(), totalCourseTimes, totalAmount.doubleValue());
-        // 自动支付订单（实际项目中应该有支付流程）
         sysOrderService.payOrder(orderId);
         
-        // 移除了更新订单courseId的代码，因为已经在创建订单时设置了
-        
-        // 更新会员VIP状态为1（购买私教课后成为VIP）
         TbMemberProfile memberProfile = memberProfileService.getOne(new QueryWrapper<TbMemberProfile>().eq("user_id", dto.getUserId()));
         if (memberProfile != null) {
             memberProfile.setIsVip(1);
@@ -147,65 +104,54 @@ public class TbCourseController {
         return Result.success(orderId);
     }
 
-    /**
-     * 查询用户的私教课程列表（基于用户购买的私教课订单）
-     *
-     * @param userId 用户ID
-     * @return 用户的私教课程列表
-     */
     @Operation(summary = "查询用户的私教课程列表")
-    @GetMapping("/my-courses/{userId}")
-    public Result<List<TbCourse>> getMyPrivateCourses(@PathVariable Long userId) {
-        // 查询用户购买的私教课订单
+    @GetMapping("/my-courses")
+    @RequireRole({"MEMBER", "VIP"})
+    public Result<List<TbCourse>> getMyPrivateCourses(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        
         QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
         orderQuery.eq("user_id", userId);
-        orderQuery.eq("type", 2); // 2-私教课
-        orderQuery.eq("status", 1); // 1-已支付
-        orderQuery.gt("remain_count", 0); // 剩余次数大于0
+        orderQuery.eq("type", 2);
+        orderQuery.eq("status", 1);
+        orderQuery.gt("remain_count", 0);
         
         List<SysOrder> orders = sysOrderService.list(orderQuery);
         if (orders.isEmpty()) {
             return Result.success(new ArrayList<>());
         }
         
-        // 获取所有课程ID
         Set<Long> courseIds = orders.stream()
                 .map(SysOrder::getCourseId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         
         if (courseIds.isEmpty()) {
-            // 如果订单中没有courseId，返回所有可用的私教课程
             QueryWrapper<TbCourse> courseQuery = new QueryWrapper<>();
-            courseQuery.eq("type", 1); // 1-私教
-            courseQuery.eq("status", 1); // 1-上架
+            courseQuery.eq("type", 1);
+            courseQuery.eq("status", 1);
             courseQuery.orderByDesc("create_time");
             return Result.success(tbCourseService.list(courseQuery));
         }
         
-        // 查询对应的课程信息
         QueryWrapper<TbCourse> courseQuery = new QueryWrapper<>();
         courseQuery.in("id", courseIds);
-        courseQuery.eq("status", 1); // 1-上架
+        courseQuery.eq("status", 1);
         courseQuery.orderByDesc("create_time");
         
         return Result.success(tbCourseService.list(courseQuery));
     }
     
-    /**
-     * 查询用户的私教课订单
-     *
-     * @param userId 用户ID
-     * @return 用户的私教课订单列表
-     */
     @Operation(summary = "查询用户的私教课订单")
-    @GetMapping("/my-orders/{userId}")
-    public Result<List<SysOrder>> getMyPrivateOrders(@PathVariable Long userId) {
-        // 查询用户购买的私教课订单
+    @GetMapping("/my-orders")
+    @RequireRole({"MEMBER", "VIP"})
+    public Result<List<SysOrder>> getMyPrivateOrders(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        
         QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
         orderQuery.eq("user_id", userId);
-        orderQuery.eq("type", 2); // 2-私教课
-        orderQuery.eq("status", 1); // 1-已支付
+        orderQuery.eq("type", 2);
+        orderQuery.eq("status", 1);
         orderQuery.orderByDesc("create_time");
         
         return Result.success(sysOrderService.list(orderQuery));

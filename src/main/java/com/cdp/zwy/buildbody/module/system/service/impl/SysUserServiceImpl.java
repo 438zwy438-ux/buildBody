@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,15 +72,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
      */
     @Override
     public LoginVO login(LoginDTO loginDTO) {
-        // 1. 校验账号是否存在
         SysUser user = this.getOne(new QueryWrapper<SysUser>().eq("username", loginDTO.getUsername()));
         if (user == null) {
             throw new RuntimeException("账号不存在");
         }
 
-        // 2. 校验密码 (数据库是BCrypt加密，所以用checkpw校验)
-        // 注意：如果你数据库里的密码是明文 123456，这里会报错。
-        // 如果是明文，暂时改成 if (!user.getPassword().equals(loginDTO.getPassword()))
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
             throw new RuntimeException("密码错误");
         }
@@ -88,36 +85,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
             throw new RuntimeException("账号已停用");
         }
 
-        // 3. 判断角色 (简单粗暴版)
-        String role = "UNKNOWN";
-        if ("admin".equals(user.getUsername())) {
-            role = "ADMIN";
-        } else {
-            // 查是不是会员
-            Long memberCount = memberProfileDao.selectCount(new QueryWrapper<TbMemberProfile>().eq("user_id", user.getUserId()));
-            if (memberCount > 0) {
-                role = "MEMBER";
-            } else {
-                // 查是不是教练
-                Long coachCount = coachProfileDao.selectCount(new QueryWrapper<TbCoachProfile>().eq("user_id", user.getUserId()));
-                if (coachCount > 0) {
-                    role = "COACH";
-                }
-            }
-        }
+        java.util.List<String> roles = getUserRoles(user.getUserId());
 
-        // 4. 生成 Token (Hutool)
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", user.getUserId());
-        payload.put("role", role);
-        // 默认过期时间写在 JWTUtil 内部逻辑里或者自己封装，这里简单生成
+        payload.put("roles", roles);
         String token = JWTUtil.createToken(payload, JWT_KEY);
 
-        // 5. 封装返回
         LoginVO vo = new LoginVO();
         vo.setUserId(user.getUserId());
         vo.setNickname(user.getNickname());
-        vo.setRole(role);
+        vo.setRoles(roles);
         vo.setAvatar(user.getAvatar());
         vo.setToken(token);
 
@@ -250,5 +228,63 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         coachProfileDao.insert(profile);
 
         return true;
+    }
+
+    @Override
+    public List<String> getUserRoles(Long userId) {
+        SysUser user = this.getById(userId);
+        if (user == null) {
+            return java.util.Collections.emptyList();
+        }
+
+        java.util.List<String> roles = new java.util.ArrayList<>();
+
+        if ("admin".equals(user.getUsername())) {
+            roles.add("ADMIN");
+        }
+
+        Long memberCount = memberProfileDao.selectCount(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
+        if (memberCount > 0) {
+            if (isVip(userId)) {
+                roles.add("VIP");
+            } else {
+                roles.add("MEMBER");
+            }
+        }
+
+        Long coachCount = coachProfileDao.selectCount(new QueryWrapper<TbCoachProfile>().eq("user_id", userId));
+        if (coachCount > 0) {
+            roles.add("COACH");
+        }
+
+        return roles;
+    }
+
+    @Override
+    public Boolean isVip(Long userId) {
+        SysOrder vipOrder = sysOrderService.getOne(new QueryWrapper<SysOrder>()
+                .eq("user_id", userId)
+                .eq("type", 2)
+                .eq("status", 1)
+                .gt("remain_count", 0)
+                .orderByDesc("create_time")
+                .last("LIMIT 1"));
+        
+        if (vipOrder != null && vipOrder.getRemainCount() != null && vipOrder.getRemainCount() > 0) {
+            TbMemberProfile profile = memberProfileDao.selectOne(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
+            if (profile != null) {
+                profile.setIsVip(1);
+                memberProfileDao.updateById(profile);
+            }
+            return true;
+        }
+        
+        TbMemberProfile profile = memberProfileDao.selectOne(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
+        if (profile != null && profile.getIsVip() == 1) {
+            profile.setIsVip(0);
+            memberProfileDao.updateById(profile);
+        }
+        
+        return false;
     }
 }

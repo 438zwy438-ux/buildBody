@@ -1,249 +1,368 @@
 <template>
   <div class="home-page">
-    <el-row :gutter="20">
-      <el-col :span="24">
-        <el-card class="welcome-card">
-          <div class="welcome-content">
-            <h1>欢迎来到健身俱乐部</h1>
-            <p>专业健身服务，助您达成健身目标</p>
+    <div class="banner-section">
+      <el-carousel :interval="4000" height="400px" arrow="always" indicator-position="outside">
+        <el-carousel-item v-for="banner in banners" :key="banner.id">
+          <div class="banner-item" :style="{ backgroundImage: `url(${banner.imageUrl})` }">
+            <div class="banner-overlay">
+              <h1>{{ banner.title }}</h1>
+              <p>{{ banner.description }}</p>
+            </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
 
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="8">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <el-icon class="stat-icon" color="#409eff"><Calendar /></el-icon>
-            <div class="stat-info">
-              <div class="stat-value">{{ memberCardInfo.cardName || '暂无会员卡' }}</div>
-              <div class="stat-label">当前会员卡</div>
-            </div>
+    <div class="equipment-section">
+      <div class="section-header">
+        <h2>健身器材</h2>
+        <p>专业设备，助力您的健身之旅</p>
+      </div>
+      
+      <div class="equipment-grid">
+        <div 
+          v-for="equipment in equipmentList" 
+          :key="equipment.id" 
+          class="equipment-card"
+          @click="goToDetail(equipment.id)"
+        >
+          <div class="equipment-images">
+            <el-carousel 
+              :interval="0" 
+              height="200px" 
+              arrow="hover" 
+              indicator-position="none"
+              :autoplay="false"
+            >
+              <el-carousel-item v-for="(image, index) in equipment.images" :key="index">
+                <div class="equipment-image" :style="{ backgroundImage: `url(${image})` }"></div>
+              </el-carousel-item>
+              <el-carousel-item v-if="equipment.images.length === 0">
+                <div class="equipment-image no-image">
+                  <el-icon :size="60"><Picture /></el-icon>
+                  <p>暂无图片</p>
+                </div>
+              </el-carousel-item>
+            </el-carousel>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <el-icon class="stat-icon" color="#67c23a"><TrendCharts /></el-icon>
-            <div class="stat-info">
-              <div class="stat-value">{{ entryCount }}次</div>
-              <div class="stat-label">本月入场</div>
-            </div>
+          
+          <div class="equipment-info">
+            <h3>{{ equipment.name }}</h3>
+            <p class="equipment-code">编号: {{ equipment.code }}</p>
+            <p class="equipment-location">位置: {{ equipment.location }}</p>
+            <el-tag :type="equipment.status === 1 ? 'success' : 'danger'" size="small">
+              {{ equipment.status === 1 ? '正常' : '维护中' }}
+            </el-tag>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <el-icon class="stat-icon" color="#e6a23c"><Coin /></el-icon>
-            <div class="stat-info">
-              <div class="stat-value">¥{{ memberCardInfo.balance || 0 }}</div>
-              <div class="stat-label">卡内余额</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </div>
 
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <span>热门课程</span>
-              <el-link type="primary" @click="$router.push('/user/course-booking')">查看更多</el-link>
-            </div>
-          </template>
-          <el-table :data="hotCourses" style="width: 100%">
-            <el-table-column prop="courseName" label="课程名称" />
-            <el-table-column prop="coachName" label="教练" />
-            <el-table-column prop="price" label="价格" />
-            <el-table-column label="操作">
-              <template #default="{ row }">
-                <el-button type="primary" size="small" @click="handleBook(row)">预约</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <span>最近入场记录</span>
-              <el-link type="primary" @click="$router.push('/user/entry-records')">查看更多</el-link>
-            </div>
-          </template>
-          <el-table :data="recentEntries" style="width: 100%">
-            <el-table-column prop="entryTime" label="入场时间" />
-            <el-table-column prop="exitTime" label="出场时间" />
-            <el-table-column prop="status" label="状态">
-              <template #default="{ row }">
-                <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="24">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <span>快捷操作</span>
-            </div>
-          </template>
-          <div class="quick-actions">
-            <el-button type="primary" size="large" @click="$router.push('/user/course-booking')">预约课程</el-button>
-            <el-button type="success" size="large" @click="$router.push('/user/member-card')">查看会员卡</el-button>
-            <el-button type="warning" size="large" @click="$router.push('/user/orders')">我的订单</el-button>
-            <el-button type="danger" size="large" @click="$router.push('/user/profile')">个人中心</el-button>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <div class="features-section">
+      <div class="feature-item">
+        <el-icon :size="40" color="#667eea"><Trophy /></el-icon>
+        <h3>专业教练</h3>
+        <p>资深教练团队，为您提供专业指导</p>
+      </div>
+      <div class="feature-item">
+        <el-icon :size="40" color="#667eea"><Star /></el-icon>
+        <h3>优质服务</h3>
+        <p>贴心服务，让您享受健身乐趣</p>
+      </div>
+      <div class="feature-item">
+        <el-icon :size="40" color="#667eea"><Clock /></el-icon>
+        <h3>灵活时间</h3>
+        <p>24小时营业，随时随地健身</p>
+      </div>
+      <div class="feature-item">
+        <el-icon :size="40" color="#667eea"><Medal /></el-icon>
+        <h3>先进设备</h3>
+        <p>国际一流品牌，保障训练效果</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useUserStore } from '@/stores/user'
-import { getMemberCardList } from '@/api/memberCard'
-import { getEntryLogList } from '@/api/entryLog'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getBannerList } from '@/api/banner'
+import { getEquipmentList } from '@/api/equipment'
+import { Trophy, Star, Clock, Medal, Picture } from '@element-plus/icons-vue'
 
-const userStore = useUserStore()
-const userInfo = ref(userStore.userInfo)
+const router = useRouter()
+const banners = ref([])
+const equipmentList = ref([])
 
-const memberCardInfo = ref({})
-const entryCount = ref(0)
-const hotCourses = ref([
-  { id: 1, courseName: '瑜伽基础', coachName: '张教练', price: 199 },
-  { id: 2, courseName: '力量训练', coachName: '李教练', price: 299 },
-  { id: 3, courseName: '有氧操', coachName: '王教练', price: 159 }
-])
-const recentEntries = ref([
-  { entryTime: '2024-03-17 09:30', exitTime: '2024-03-17 11:30', status: '已离场' },
-  { entryTime: '2024-03-16 14:00', exitTime: '2024-03-16 16:00', status: '已离场' },
-  { entryTime: '2024-03-15 10:00', exitTime: null, status: '在场' }
-])
-
-const fetchMemberCard = async () => {
+const fetchBanners = async () => {
   try {
-    const res = await getMemberCardList({
-      current: 1,
-      size: 1,
-      userId: userInfo.value.id
-    })
-    if (res.data.records && res.data.records.length > 0) {
-      memberCardInfo.value = res.data.records[0]
-    }
-  } catch (error) {
-    console.error('获取会员卡信息失败:', error)
-  }
-}
-
-const fetchEntryRecords = async () => {
-  try {
-    const res = await getEntryLogList({
+    const res = await getBannerList({
       current: 1,
       size: 10,
-      userId: userInfo.value.id
+      status: 1
     })
-    entryCount.value = res.data.total
     if (res.data.records) {
-      recentEntries.value = res.data.records.slice(0, 3)
+      banners.value = res.data.records.map(banner => ({
+        ...banner,
+        imageUrl: banner.imageUrl || 'https://via.placeholder.com/1200x400?text=Banner'
+      }))
     }
   } catch (error) {
-    console.error('获取入场记录失败:', error)
+    console.error('获取轮播图失败:', error)
   }
 }
 
-const handleBook = (course) => {
-  console.log('预约课程:', course)
+const fetchEquipment = async () => {
+  try {
+    const res = await getEquipmentList({
+      current: 1,
+      size: 20,
+      status: 1
+    })
+    if (res.data.records) {
+      equipmentList.value = res.data.records.map(equipment => ({
+        ...equipment,
+        images: equipment.images || []
+      }))
+    }
+  } catch (error) {
+    console.error('获取器材列表失败:', error)
+  }
+}
+
+const goToDetail = (equipmentId) => {
+  router.push(`/user/equipment/${equipmentId}`)
 }
 
 onMounted(() => {
-  fetchMemberCard()
-  fetchEntryRecords()
+  fetchBanners()
+  fetchEquipment()
 })
 </script>
 
 <style scoped>
 .home-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
 }
 
-.welcome-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+.banner-section {
+  width: 100%;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.welcome-content {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.welcome-content h1 {
-  margin: 0 0 10px 0;
-  font-size: 36px;
-}
-
-.welcome-content p {
-  margin: 0;
-  font-size: 18px;
-  opacity: 0.9;
-}
-
-.stat-card {
-  margin-bottom: 20px;
-}
-
-.stat-content {
+.banner-item {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
 }
 
-.stat-icon {
+.banner-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 40px 60px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.banner-overlay h1 {
   font-size: 48px;
+  margin: 0 0 16px 0;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.stat-info {
-  flex: 1;
+.banner-overlay p {
+  font-size: 20px;
+  margin: 0;
+  opacity: 0.95;
 }
 
-.stat-value {
-  font-size: 24px;
-  font-weight: bold;
+.equipment-section {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  font-size: 36px;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+
+.section-header p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.equipment-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.equipment-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.equipment-images {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.equipment-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.equipment-image.no-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  color: #999;
+}
+
+.equipment-image.no-image .el-icon {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+.equipment-image.no-image p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.equipment-card:hover .equipment-image {
+  transform: scale(1.05);
+}
+
+.equipment-info {
+  padding: 20px;
+}
+
+.equipment-info h3 {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.equipment-code,
+.equipment-location {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.equipment-info .el-tag {
+  margin-top: 8px;
+}
+
+.features-section {
+  max-width: 1400px;
+  margin: 60px auto 40px;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+
+.feature-item {
+  text-align: center;
+  padding: 20px;
+}
+
+.feature-item h3 {
+  font-size: 20px;
+  color: #333;
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+}
+
+.feature-item p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+:deep(.el-carousel__arrow) {
+  background: rgba(255, 255, 255, 0.8);
   color: #333;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #999;
-  margin-top: 5px;
+:deep(.el-carousel__arrow:hover) {
+  background: white;
+  color: #667eea;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+:deep(.el-carousel__indicator) {
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+:deep(.el-carousel__indicator.is-active) {
+  background: #667eea;
 }
 
-.quick-actions .el-button {
-  height: 80px;
-  font-size: 18px;
+@media (max-width: 1200px) {
+  .equipment-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .features-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .equipment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .features-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .banner-overlay h1 {
+    font-size: 32px;
+  }
+  
+  .banner-overlay p {
+    font-size: 16px;
+  }
 }
 </style>

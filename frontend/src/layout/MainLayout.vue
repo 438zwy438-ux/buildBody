@@ -14,7 +14,7 @@
         text-color="#bfcbd9"
         active-text-color="#409eff"
       >
-        <el-menu-item index="/dashboard">
+        <el-menu-item index="/admin/dashboard">
           <el-icon><HomeFilled /></el-icon>
           <template #title>首页</template>
         </el-menu-item>
@@ -23,24 +23,24 @@
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item index="/users">用户管理</el-menu-item>
-          <el-menu-item index="/orders">订单管理</el-menu-item>
-          <el-menu-item index="/banners">轮播图管理</el-menu-item>
-          <el-menu-item index="/checkin">入场管理</el-menu-item>
+          <el-menu-item index="/admin/users">用户管理</el-menu-item>
+          <el-menu-item index="/admin/orders">订单管理</el-menu-item>
+          <el-menu-item index="/admin/banners">轮播图管理</el-menu-item>
+          <el-menu-item index="/admin/checkin">入场管理</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="business">
           <template #title>
             <el-icon><Briefcase /></el-icon>
             <span>业务管理</span>
           </template>
-          <el-menu-item index="/member-cards">会员卡管理</el-menu-item>
-          <el-menu-item index="/card-templates">会员卡模板</el-menu-item>
-          <el-menu-item index="/courses">课程管理</el-menu-item>
-          <el-menu-item index="/coach-profiles">教练档案</el-menu-item>
-          <el-menu-item index="/member-profiles">会员档案</el-menu-item>
-          <el-menu-item index="/equipment">器材管理</el-menu-item>
-          <el-menu-item index="/lockers">储物柜管理</el-menu-item>
-          <el-menu-item index="/fix-logs">维修记录</el-menu-item>
+          <el-menu-item index="/admin/member-cards">会员卡管理</el-menu-item>
+          <el-menu-item index="/admin/card-templates">会员卡模板</el-menu-item>
+          <el-menu-item index="/admin/courses">课程管理</el-menu-item>
+          <el-menu-item index="/admin/coach-profiles">教练档案</el-menu-item>
+          <el-menu-item index="/admin/member-profiles">会员档案</el-menu-item>
+          <el-menu-item index="/admin/equipment">器材管理</el-menu-item>
+          <el-menu-item index="/admin/lockers">储物柜管理</el-menu-item>
+          <el-menu-item index="/admin/fix-logs">维修记录</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -52,7 +52,7 @@
             <Expand v-else />
           </el-icon>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/admin' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="currentRoute">{{ currentRoute }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -106,7 +106,7 @@ const handleCommand = async (command) => {
         type: 'warning'
       })
       userStore.logout()
-      router.push('/login')
+      router.push('/admin/login')
     } catch (error) {
       console.log('取消退出')
     }

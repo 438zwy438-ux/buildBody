@@ -10,7 +10,7 @@
       
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="器材名称">
-          <el-input v-model="searchForm.equipmentName" placeholder="请输入器材名称" clearable />
+          <el-input v-model="searchForm.name" placeholder="请输入器材名称" clearable />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
@@ -27,9 +27,10 @@
 
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="equipmentName" label="器材名称" />
-        <el-table-column prop="model" label="型号" />
-        <el-table-column prop="purchaseDate" label="购买日期" />
+        <el-table-column prop="name" label="器材名称" />
+        <el-table-column prop="code" label="编号" />
+        <el-table-column prop="location" label="位置" />
+        <el-table-column prop="buyDate" label="购买日期" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag v-if="row.status === 1" type="success">正常</el-tag>
@@ -40,7 +41,6 @@
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button type="warning" size="small" @click="handleRepair(row)">报修</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -58,17 +58,20 @@
       />
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="器材名称" prop="equipmentName">
-          <el-input v-model="form.equipmentName" placeholder="请输入器材名称" />
+        <el-form-item label="器材名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入器材名称" />
         </el-form-item>
-        <el-form-item label="型号" prop="model">
-          <el-input v-model="form.model" placeholder="请输入型号" />
+        <el-form-item label="编号" prop="code">
+          <el-input v-model="form.code" placeholder="请输入编号" />
         </el-form-item>
-        <el-form-item label="购买日期" prop="purchaseDate">
+        <el-form-item label="位置" prop="location">
+          <el-input v-model="form.location" placeholder="请输入位置" />
+        </el-form-item>
+        <el-form-item label="购买日期" prop="buyDate">
           <el-date-picker
-            v-model="form.purchaseDate"
+            v-model="form.buyDate"
             type="date"
             placeholder="选择日期"
             style="width: 100%"
@@ -80,6 +83,32 @@
             <el-option label="维修中" :value="2" />
             <el-option label="已报废" :value="3" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="详细描述" prop="detailDesc">
+          <el-input
+            v-model="form.detailDesc"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入详细描述"
+          />
+        </el-form-item>
+        <el-form-item label="设备图片">
+          <el-upload
+            v-model:file-list="fileList"
+            :action="uploadUrl"
+            list-type="picture-card"
+            :data="{ equipmentId: form.id }"
+            :on-preview="handlePicturePreview"
+            :on-success="handleUploadSuccess"
+            :on-remove="handleRemove"
+            :before-upload="beforeUpload"
+            multiple
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <el-dialog v-model="previewVisible" title="图片预览" width="600px">
+            <img :src="previewImage" style="width: 100%" />
+          </el-dialog>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -94,15 +123,20 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment } from '@/api/equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('添加器材')
 const formRef = ref(null)
 const tableData = ref([])
+const fileList = ref([])
+const previewVisible = ref(false)
+const previewImage = ref('')
+const uploadUrl = ref('http://localhost:8080/api/upload/equipment/')
 
 const searchForm = reactive({
-  equipmentName: '',
+  name: '',
   status: null
 })
 
@@ -114,16 +148,19 @@ const pagination = reactive({
 
 const form = reactive({
   id: null,
-  equipmentName: '',
-  model: '',
-  purchaseDate: null,
-  status: 1
+  name: '',
+  code: '',
+  location: '',
+  buyDate: null,
+  status: 1,
+  detailDesc: ''
 })
 
 const rules = {
-  equipmentName: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
-  model: [{ required: true, message: '请输入型号', trigger: 'blur' }],
-  purchaseDate: [{ required: true, message: '请选择购买日期', trigger: 'change' }],
+  name: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入编号', trigger: 'blur' }],
+  location: [{ required: true, message: '请输入位置', trigger: 'blur' }],
+  buyDate: [{ required: true, message: '请选择购买日期', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -150,7 +187,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  searchForm.equipmentName = ''
+  searchForm.name = ''
   searchForm.status = null
   pagination.page = 1
   fetchData()
@@ -159,38 +196,27 @@ const handleReset = () => {
 const handleAdd = () => {
   dialogTitle.value = '添加器材'
   form.id = null
-  form.equipmentName = ''
-  form.model = ''
-  form.purchaseDate = null
+  form.name = ''
+  form.code = ''
+  form.location = ''
+  form.buyDate = null
   form.status = 1
+  form.detailDesc = ''
+  fileList.value = []
   dialogVisible.value = true
 }
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑器材'
   form.id = row.id
-  form.equipmentName = row.equipmentName
-  form.model = row.model
-  form.purchaseDate = row.purchaseDate
+  form.name = row.name
+  form.code = row.code
+  form.location = row.location
+  form.buyDate = row.buyDate
   form.status = row.status
+  form.detailDesc = row.detailDesc || ''
+  fileList.value = []
   dialogVisible.value = true
-}
-
-const handleRepair = async (row) => {
-  try {
-    await ElMessageBox.confirm('确定要报修该器材吗?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    form.id = row.id
-    form.status = 2
-    await updateEquipment(form)
-    ElMessage.success('报修成功')
-    fetchData()
-  } catch (error) {
-    console.log('取消报修')
-  }
 }
 
 const handleDelete = async (row) => {
@@ -206,6 +232,45 @@ const handleDelete = async (row) => {
   } catch (error) {
     console.log('取消删除')
   }
+}
+
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt5M = file.size / 1024 / 1024 < 5
+  
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB!')
+    return false
+  }
+  return true
+}
+
+const handleUploadSuccess = (response, file) => {
+  if (response.code === 200) {
+    ElMessage.success('上传成功')
+    if (!form.id) {
+      const newId = response.data?.equipmentId
+      if (newId) {
+        form.id = newId
+        uploadUrl.value = `http://localhost:8080/api/upload/equipment/${newId}`
+      }
+    }
+  } else {
+    ElMessage.error(response.msg || '上传失败')
+  }
+}
+
+const handleRemove = (file) => {
+  console.log('移除文件:', file)
+}
+
+const handlePicturePreview = (file) => {
+  previewImage.value = file.url
+  previewVisible.value = true
 }
 
 const handleSubmit = async () => {

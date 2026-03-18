@@ -25,6 +25,8 @@ public class TbEquipment extends Model<TbEquipment> {
     private Date buyDate;
 //状态（1正常 2维修 3报废）
     private Integer status;
+//器材详细描述
+    private String detailDesc;
 
 
     public Long getId() {
@@ -75,6 +77,14 @@ public class TbEquipment extends Model<TbEquipment> {
         this.status = status;
     }
 
+    public String getDetailDesc() {
+        return detailDesc;
+    }
+
+    public void setDetailDesc(String detailDesc) {
+        this.detailDesc = detailDesc;
+    }
+
     /**
      * 获取主键值
      *
@@ -85,4 +95,3 @@ public class TbEquipment extends Model<TbEquipment> {
         return this.id;
     }
 }
-

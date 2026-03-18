@@ -51,9 +51,17 @@ const handleLogin = async () => {
     if (valid) {
       loading.value = true
       try {
-        await userStore.loginAction(loginForm)
+        const res = await userStore.loginAction(loginForm)
+        
+        const userRoles = res.data.roles || []
+        if (!userRoles.includes('ADMIN')) {
+          ElMessage.error('该账号不是管理员账号')
+          userStore.logout()
+          return
+        }
+        
         ElMessage.success('登录成功')
-        router.push('/')
+        router.push('/admin/dashboard')
       } catch (error) {
         console.error('登录失败:', error)
       } finally {
