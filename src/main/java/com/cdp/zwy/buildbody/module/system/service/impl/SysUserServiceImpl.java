@@ -18,8 +18,10 @@ import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
+import com.cdp.zwy.buildbody.module.system.dao.SysRoleDao;
 import com.cdp.zwy.buildbody.module.system.dao.SysUserDao;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
+import com.cdp.zwy.buildbody.module.system.entity.SysRole;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.entity.SysUserRole;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
@@ -59,6 +61,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
     
     @Resource
     private SysOrderService sysOrderService;
+    
+    @Resource
+    private SysRoleDao sysRoleDao;
 
     /**
      * 备注：一个账号只有一个角色
@@ -183,7 +188,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         // 7. 插入用户角色关系表 (sys_user_role)，角色id 2表示会员
         SysUserRole userRole = new SysUserRole();
         userRole.setUserId(user.getUserId());
-        userRole.setRoleId(2L); // 角色id 2表示会员
+        userRole.setRoleId(2L); // 会员角色ID
+        userRole.setRoleCode("user"); // 保持向后兼容
         sysUserRoleService.save(userRole);
 
         return true;
@@ -207,10 +213,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         user.setStatus(1);
         this.baseMapper.insert(user);
 
-        // 3. 关联角色 (假设教练角色 ID 为 3)
+        // 3. 关联角色 (教练角色 ID 为 3)
          SysUserRole userRole = new SysUserRole();
          userRole.setUserId(user.getUserId());
-         userRole.setRoleId(3L);
+         userRole.setRoleId(3L); // 教练角色ID
+         userRole.setRoleCode("coach"); // 保持向后兼容
          sysUserRoleService.save(userRole);
 
         // 4. 创建教练档案 (tb_coach_profile)
@@ -234,22 +241,27 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
 
         java.util.List<String> roles = new java.util.ArrayList<>();
 
+        // 管理员角色特殊处理，也可以考虑从sys_role表获取
         if ("admin".equals(user.getUsername())) {
-            roles.add("ADMIN");
+            roles.add("admin"); // 使用sys_role表中的role_key
         }
 
-        Long memberCount = memberProfileDao.selectCount(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
-        if (memberCount > 0) {
-            if (isVip(userId)) {
-                roles.add("VIP");
-            } else {
-                roles.add("MEMBER");
+        // 从数据库查询用户角色
+        List<SysUserRole> userRoles = sysUserRoleService.list(new QueryWrapper<SysUserRole>().eq("user_id", userId));
+        for (SysUserRole userRole : userRoles) {
+            // 优先使用role_id关联sys_role表获取role_key，如果role_id不存在则使用role_code
+            if (userRole.getRoleId() != null) {
+                // 通过sysRoleDao查询sys_role表获取role_key
+                SysRole sysRole = sysRoleDao.selectById(userRole.getRoleId());
+                if (sysRole != null && sysRole.getRoleKey() != null) {
+                    roles.add(sysRole.getRoleKey());
+                } else if (userRole.getRoleCode() != null) {
+                    // 如果关联查询失败，则使用role_code作为备选
+                    roles.add(userRole.getRoleCode());
+                }
+            } else if (userRole.getRoleCode() != null) {
+                roles.add(userRole.getRoleCode());
             }
-        }
-
-        Long coachCount = coachProfileDao.selectCount(new QueryWrapper<TbCoachProfile>().eq("user_id", userId));
-        if (coachCount > 0) {
-            roles.add("COACH");
         }
 
         return roles;

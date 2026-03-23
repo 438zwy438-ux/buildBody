@@ -11,12 +11,12 @@
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="标题" />
-        <el-table-column prop="imageUrl" label="图片">
+        <el-table-column prop="imgUrl" label="图片">
           <template #default="{ row }">
             <el-image
               style="width: 100px; height: 60px"
-              :src="row.imageUrl"
-              :preview-src-list="[row.imageUrl]"
+              :src="row.imgUrl"
+              :preview-src-list="[row.imgUrl]"
               fit="cover"
             />
           </template>
@@ -53,15 +53,16 @@
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" placeholder="请输入标题" />
         </el-form-item>
-        <el-form-item label="图片" prop="imageUrl">
+        <el-form-item label="图片" prop="imgUrl">
           <el-upload
             class="avatar-uploader"
             :action="uploadUrl"
+            :data="uploadData"
             :show-file-list="false"
             :on-success="handleUploadSuccess"
             :before-upload="beforeUpload"
           >
-            <img v-if="form.imageUrl" :src="form.imageUrl" class="avatar" />
+            <img v-if="form.imgUrl" :src="form.imgUrl" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -96,7 +97,8 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('添加轮播图')
 const formRef = ref(null)
 const tableData = ref([])
-const uploadUrl = '/api/common/upload?folder=banner'
+const uploadUrl = '/api/common/upload'
+const uploadData = { folder: 'banner' }
 
 const pagination = reactive({
   page: 1,
@@ -107,7 +109,7 @@ const pagination = reactive({
 const form = reactive({
   id: null,
   title: '',
-  imageUrl: '',
+  imgUrl: '',
   linkUrl: '',
   sort: 0,
   status: 1
@@ -115,7 +117,7 @@ const form = reactive({
 
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  imageUrl: [{ required: true, message: '请上传图片', trigger: 'change' }],
+  imgUrl: [{ required: true, message: '请上传图片', trigger: 'change' }],
   sort: [{ required: true, message: '请输入排序', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
@@ -140,7 +142,7 @@ const handleAdd = () => {
   dialogTitle.value = '添加轮播图'
   form.id = null
   form.title = ''
-  form.imageUrl = ''
+  form.imgUrl = ''
   form.linkUrl = ''
   form.sort = 0
   form.status = 1
@@ -151,7 +153,7 @@ const handleEdit = (row) => {
   dialogTitle.value = '编辑轮播图'
   form.id = row.id
   form.title = row.title
-  form.imageUrl = row.imageUrl
+  form.imgUrl = row.imgUrl
   form.linkUrl = row.linkUrl
   form.sort = row.sort
   form.status = row.status
@@ -174,7 +176,7 @@ const handleDelete = async (row) => {
 }
 
 const handleUploadSuccess = (response) => {
-  form.imageUrl = response.data
+  form.imgUrl = response.data
   ElMessage.success('上传成功')
 }
 

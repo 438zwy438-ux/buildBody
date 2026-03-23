@@ -164,7 +164,7 @@ const fetchBanners = async () => {
     if (res.data.records) {
       banners.value = res.data.records.map(banner => ({
         ...banner,
-        imageUrl: banner.imageUrl || 'https://via.placeholder.com/1200x400?text=Banner'
+        imageUrl: banner.imgUrl || 'https://via.placeholder.com/1200x400?text=Banner'
       }))
     }
   } catch (error) {
@@ -253,12 +253,10 @@ onMounted(() => {
 }
 
 .banner-overlay {
-  background: rgba(0, 0, 0, 0.4);
+  background: transparent;
   padding: 40px 60px;
-  border-radius: 12px;
   text-align: center;
   color: white;
-  backdrop-filter: blur(10px);
 }
 
 .banner-overlay h1 {

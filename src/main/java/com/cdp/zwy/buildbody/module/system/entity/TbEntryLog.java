@@ -1,6 +1,7 @@
 package com.cdp.zwy.buildbody.module.system.entity;
 
 import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
 
@@ -11,22 +12,18 @@ import java.io.Serializable;
  * @since 2026-02-19 09:46:36
  */
 @SuppressWarnings("serial")
+@TableName("tb_entry_log")
 public class TbEntryLog extends Model<TbEntryLog> {
-//日志ID
     private Long id;
-//入场人员ID
     private Long userId;
-//人员类型（1会员 2教练 3员工）
+    private String userName;
+    private String phone;
     private Integer userType;
-//入场时间
     private LocalDateTime entryTime;
-//出场时间
     private LocalDateTime exitTime;
-//验证方式（1人脸 2扫码 3人工）
+    private String status;
     private Integer verifyMode;
-//放行管理员ID(若人工)
     private Long adminId;
-//体温
     private Float temperature;
 
 
@@ -44,6 +41,22 @@ public class TbEntryLog extends Model<TbEntryLog> {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public Integer getUserType() {
@@ -70,6 +83,14 @@ public class TbEntryLog extends Model<TbEntryLog> {
         this.exitTime = exitTime;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public Integer getVerifyMode() {
         return verifyMode;
     }
@@ -94,11 +115,6 @@ public class TbEntryLog extends Model<TbEntryLog> {
         this.temperature = temperature;
     }
 
-    /**
-     * 获取主键值
-     *
-     * @return 主键值
-     */
     @Override
     public Serializable pkVal() {
         return this.id;

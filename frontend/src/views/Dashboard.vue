@@ -6,7 +6,7 @@
           <div class="stat-content">
             <el-icon class="stat-icon" color="#409eff"><User /></el-icon>
             <div class="stat-info">
-              <div class="stat-value">1,234</div>
+              <div class="stat-value">{{ stats.memberCount || 0 }}</div>
               <div class="stat-label">会员总数</div>
             </div>
           </div>
@@ -17,7 +17,7 @@
           <div class="stat-content">
             <el-icon class="stat-icon" color="#67c23a"><TrendCharts /></el-icon>
             <div class="stat-info">
-              <div class="stat-value">567</div>
+              <div class="stat-value">{{ stats.todayEntryCount || 0 }}</div>
               <div class="stat-label">今日入场</div>
             </div>
           </div>
@@ -28,7 +28,7 @@
           <div class="stat-content">
             <el-icon class="stat-icon" color="#e6a23c"><Money /></el-icon>
             <div class="stat-info">
-              <div class="stat-value">¥89,000</div>
+              <div class="stat-value">¥{{ formatMoney(stats.monthIncome || 0) }}</div>
               <div class="stat-label">本月收入</div>
             </div>
           </div>
@@ -39,8 +39,8 @@
           <div class="stat-content">
             <el-icon class="stat-icon" color="#f56c6c"><Calendar /></el-icon>
             <div class="stat-info">
-              <div class="stat-value">23</div>
-              <div class="stat-label">今日课程</div>
+              <div class="stat-value">{{ stats.activeCardCount || 0 }}</div>
+              <div class="stat-label">有效会员卡</div>
             </div>
           </div>
         </el-card>
@@ -55,13 +55,13 @@
               <span>最近入场记录</span>
             </div>
           </template>
-          <el-table :data="recentEntries" style="width: 100%">
-            <el-table-column prop="name" label="姓名" />
+          <el-table :data="recentEntries" style="width: 100%" v-loading="loading">
+            <el-table-column prop="userName" label="姓名" />
             <el-table-column prop="phone" label="手机号" />
-            <el-table-column prop="time" label="入场时间" />
+            <el-table-column prop="entryTime" label="入场时间" :formatter="formatTime" />
             <el-table-column prop="status" label="状态">
               <template #default="{ row }">
-                <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
+                <el-tag :type="row.status === 'IN' ? 'success' : 'info'">{{ row.status === 'IN' ? '在场' : '已离场' }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -75,10 +75,10 @@
             </div>
           </template>
           <div class="quick-actions">
-            <el-button type="primary" @click="$router.push('/checkin')">入场登记</el-button>
-            <el-button type="success" @click="$router.push('/users')">添加会员</el-button>
-            <el-button type="warning" @click="$router.push('/courses')">预约课程</el-button>
-            <el-button type="danger" @click="$router.push('/equipment')">器材报修</el-button>
+            <el-button type="primary" @click="$router.push('/admin/checkin')">入场登记</el-button>
+            <el-button type="success" @click="$router.push('/admin/users')">添加会员</el-button>
+            <el-button type="warning" @click="$router.push('/admin/courses')">预约课程</el-button>
+            <el-button type="danger" @click="$router.push('/admin/equipment')">器材报修</el-button>
           </div>
         </el-card>
       </el-col>
@@ -87,15 +87,55 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { getDashboardStats, getRecentEntries } from '@/api/statistics'
+import { formatDate } from '@/utils/format'
 
-const recentEntries = ref([
-  { name: '张三', phone: '13800138000', time: '2024-03-17 09:30', status: '在场' },
-  { name: '李四', phone: '13800138001', time: '2024-03-17 09:15', status: '在场' },
-  { name: '王五', phone: '13800138002', time: '2024-03-17 08:45', status: '已离场' },
-  { name: '赵六', phone: '13800138003', time: '2024-03-17 08:30', status: '在场' },
-  { name: '孙七', phone: '13800138004', time: '2024-03-17 08:00', status: '已离场' }
-])
+const loading = ref(false)
+const stats = reactive({
+  memberCount: 0,
+  todayEntryCount: 0,
+  monthIncome: 0,
+  activeCardCount: 0
+})
+const recentEntries = ref([])
+
+const formatMoney = (value) => {
+  return Number(value).toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+const formatTime = (row, column, cellValue) => {
+  return formatDate(cellValue)
+}
+
+const fetchStats = async () => {
+  try {
+    const res = await getDashboardStats()
+    Object.assign(stats, res.data)
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+  }
+}
+
+const fetchRecentEntries = async () => {
+  loading.value = true
+  try {
+    const res = await getRecentEntries()
+    recentEntries.value = res.data || []
+  } catch (error) {
+    console.error('获取入场记录失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchStats()
+  fetchRecentEntries()
+})
 </script>
 
 <style scoped>

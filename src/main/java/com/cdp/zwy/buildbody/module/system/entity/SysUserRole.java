@@ -1,5 +1,7 @@
 package com.cdp.zwy.buildbody.module.system.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
 
@@ -10,12 +12,22 @@ import java.io.Serializable;
  * @since 2026-02-17 10:22:38
  */
 @SuppressWarnings("serial")
+@TableName("sys_user_role")
 public class SysUserRole extends Model<SysUserRole> {
-//用户ID
+    @TableId
+    private Long id;
     private Long userId;
-//角色ID
     private Long roleId;
+    private String roleCode;
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Long getUserId() {
         return userId;
@@ -33,14 +45,16 @@ public class SysUserRole extends Model<SysUserRole> {
         this.roleId = roleId;
     }
 
-    /**
-     * 获取主键值
-     *
-     * @return 主键值
-     */
+    public String getRoleCode() {
+        return roleCode;
+    }
+
+    public void setRoleCode(String roleCode) {
+        this.roleCode = roleCode;
+    }
+
     @Override
     public Serializable pkVal() {
-        return this.userId;
+        return this.id;
     }
 }
-

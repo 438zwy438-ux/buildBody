@@ -32,11 +32,17 @@
           <el-input-number v-model="registerForm.age" :min="1" :max="100" />
         </el-form-item>
         <el-form-item label="会员卡" prop="cardTemplateId">
-          <el-select v-model="registerForm.cardTemplateId" placeholder="请选择会员卡" style="width: 100%">
-            <el-option label="月卡 - 199元" :value="1" />
-            <el-option label="季卡 - 499元" :value="2" />
-            <el-option label="年卡 - 1499元" :value="3" />
+          <el-select v-model="registerForm.cardTemplateId" placeholder="请选择会员卡" style="width: 100%" :loading="cardTemplatesLoading">
+            <el-option 
+              v-for="template in cardTemplates" 
+              :key="template.id" 
+              :label="`${template.name} - ¥${template.price}`" 
+              :value="template.id" 
+            />
           </el-select>
+        </el-form-item>
+        <el-form-item v-if="selectedTemplate">
+          <el-alert :title="`会员卡详情：${selectedTemplate.description || '暂无描述'}`" type="info" :closable="false" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleRegister" :loading="loading" style="width: 100%">注册并办卡</el-button>
@@ -53,14 +59,17 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '@/api/user'
+import { getCardTemplateList } from '@/api/cardTemplate'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const registerFormRef = ref(null)
 const loading = ref(false)
+const cardTemplates = ref([])
+const cardTemplatesLoading = ref(false)
 
 const registerForm = reactive({
   username: '',
@@ -73,6 +82,11 @@ const registerForm = reactive({
   cardTemplateId: null
 })
 
+const selectedTemplate = computed(() => {
+  if (!registerForm.cardTemplateId) return null
+  return cardTemplates.value.find(t => t.id === registerForm.cardTemplateId)
+})
+
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
@@ -83,6 +97,25 @@ const rules = {
   ],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
   cardTemplateId: [{ required: true, message: '请选择会员卡', trigger: 'change' }]
+}
+
+const fetchCardTemplates = async () => {
+  cardTemplatesLoading.value = true
+  try {
+    const res = await getCardTemplateList({
+      current: 1,
+      size: 100,
+      status: 1
+    })
+    if (res.data.records) {
+      cardTemplates.value = res.data.records
+    }
+  } catch (error) {
+    console.error('获取会员卡模板失败:', error)
+    ElMessage.error('获取会员卡模板失败')
+  } finally {
+    cardTemplatesLoading.value = false
+  }
 }
 
 const handleRegister = async () => {
@@ -107,6 +140,10 @@ const handleRegister = async () => {
 const goToLogin = () => {
   router.push('/user/login')
 }
+
+onMounted(() => {
+  fetchCardTemplates()
+})
 </script>
 
 <style scoped>
