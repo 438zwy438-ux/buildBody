@@ -3,7 +3,7 @@ package com.cdp.zwy.buildbody.module.system.service.impl;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.digest.BCrypt;
-import cn.hutool.jwt.JWTUtil;
+import com.cdp.zwy.buildbody.common.utils.JwtUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cdp.zwy.buildbody.module.business.dao.TbCardTemplateDao;
@@ -29,7 +29,6 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -61,10 +60,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
     @Resource
     private SysOrderService sysOrderService;
 
-
-    // 硬编码一个密钥，毕设足够了
-    private static final byte[] JWT_KEY = "buildbody_secret_key_2026".getBytes(StandardCharsets.UTF_8);
-
     /**
      * 备注：一个账号只有一个角色
      * @param loginDTO
@@ -90,7 +85,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", user.getUserId());
         payload.put("roles", roles);
-        String token = JWTUtil.createToken(payload, JWT_KEY);
+        String token = JwtUtils.createToken(payload);
 
         LoginVO vo = new LoginVO();
         vo.setUserId(user.getUserId());

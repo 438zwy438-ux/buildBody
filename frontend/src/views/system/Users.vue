@@ -55,8 +55,8 @@
       />
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
@@ -70,12 +70,23 @@
           <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="角色" prop="role">
-          <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%">
+          <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%" @change="handleRoleChange">
             <el-option label="管理员" :value="1" />
             <el-option label="会员" :value="2" />
             <el-option label="教练" :value="3" />
           </el-select>
         </el-form-item>
+        <template v-if="form.role === 3 && !form.id">
+          <el-form-item label="真实姓名" prop="realName">
+            <el-input v-model="form.realName" placeholder="请输入真实姓名" />
+          </el-form-item>
+          <el-form-item label="专长" prop="specialty">
+            <el-input v-model="form.specialty" placeholder="请输入专长，多个用逗号分隔（如：减脂,增肌）" />
+          </el-form-item>
+          <el-form-item label="简介" prop="intro">
+            <el-input v-model="form.intro" type="textarea" :rows="3" placeholder="请输入个人简介" />
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -87,7 +98,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getUserList, updateUser, deleteUser } from '@/api/user'
+import { getUserList, updateUser, deleteUser, addCoach } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loading = ref(false)
@@ -113,7 +124,10 @@ const form = reactive({
   password: '',
   nickname: '',
   phone: '',
-  role: 2
+  role: 2,
+  realName: '',
+  specialty: '',
+  intro: ''
 })
 
 const rules = {
@@ -124,7 +138,10 @@ const rules = {
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }]
+  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
+  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  specialty: [{ required: true, message: '请输入专长', trigger: 'blur' }],
+  intro: [{ required: true, message: '请输入简介', trigger: 'blur' }]
 }
 
 const fetchData = async () => {
@@ -164,7 +181,16 @@ const handleAdd = () => {
   form.nickname = ''
   form.phone = ''
   form.role = 2
+  form.realName = ''
+  form.specialty = ''
+  form.intro = ''
   dialogVisible.value = true
+}
+
+const handleRoleChange = (value) => {
+  if (value === 3 && !form.id) {
+    form.nickname = form.realName ? form.realName + '教练' : ''
+  }
 }
 
 const handleEdit = (row) => {
@@ -198,7 +224,18 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        await updateUser(form)
+        if (form.role === 3 && !form.id) {
+          await addCoach({
+            username: form.username,
+            password: form.password,
+            phone: form.phone,
+            realName: form.realName,
+            specialty: form.specialty,
+            intro: form.intro
+          })
+        } else {
+          await updateUser(form)
+        }
         ElMessage.success(form.id ? '更新成功' : '添加成功')
         dialogVisible.value = false
         fetchData()

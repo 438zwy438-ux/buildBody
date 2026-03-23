@@ -12,9 +12,6 @@
         <el-form-item label="教练姓名">
           <el-input v-model="searchForm.realName" placeholder="请输入教练姓名" clearable />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -23,12 +20,10 @@
 
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="userId" label="用户ID" />
         <el-table-column prop="realName" label="姓名" />
-        <el-table-column prop="phone" label="手机号" />
         <el-table-column prop="specialty" label="专长" />
-        <el-table-column prop="experience" label="经验(年)" />
-        <el-table-column prop="hourlyRate" label="时薪" />
+        <el-table-column prop="intro" label="简介" show-overflow-tooltip />
+        <el-table-column prop="entryDate" label="入职日期" width="120" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '在职' : '离职' }}</el-tag>
@@ -37,6 +32,7 @@
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button type="success" size="small" @click="handleUploadImage(row)">上传图片</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -62,20 +58,20 @@
         <el-form-item label="姓名" prop="realName">
           <el-input v-model="form.realName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
-        </el-form-item>
         <el-form-item label="专长" prop="specialty">
-          <el-input v-model="form.specialty" placeholder="请输入专长" />
+          <el-input v-model="form.specialty" placeholder="请输入专长，多个用逗号分隔" />
         </el-form-item>
-        <el-form-item label="经验(年)" prop="experience">
-          <el-input-number v-model="form.experience" :min="0" style="width: 100%" />
+        <el-form-item label="简介" prop="intro">
+          <el-input v-model="form.intro" type="textarea" :rows="4" placeholder="请输入简介" />
         </el-form-item>
-        <el-form-item label="时薪" prop="hourlyRate">
-          <el-input-number v-model="form.hourlyRate" :min="0" :precision="2" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="简介" prop="introduction">
-          <el-input v-model="form.introduction" type="textarea" :rows="3" placeholder="请输入简介" />
+        <el-form-item label="入职日期" prop="entryDate">
+          <el-date-picker
+            v-model="form.entryDate"
+            type="date"
+            placeholder="选择入职日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
@@ -89,23 +85,52 @@
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="uploadDialogVisible" title="上传教练图片" width="500px">
+      <el-upload
+        ref="uploadRef"
+        :action="uploadUrl"
+        :on-success="handleUploadSuccess"
+        :on-error="handleUploadError"
+        :before-upload="beforeUpload"
+        :show-file-list="false"
+        accept="image/*"
+        drag
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">
+          将图片拖到此处，或<em>点击上传</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">
+            只能上传 JPG/PNG 文件，且不超过 5MB
+          </div>
+        </template>
+      </el-upload>
+      <template #footer>
+        <el-button @click="uploadDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getCoachProfileList, createCoachProfile, updateCoachProfile, deleteCoachProfile } from '@/api/coachProfile'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { getCoachList, addCoach, updateCoach, deleteCoach } from '@/api/coach'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
+const uploadDialogVisible = ref(false)
 const dialogTitle = ref('添加教练')
 const formRef = ref(null)
+const uploadRef = ref(null)
 const tableData = ref([])
+const currentCoachId = ref(null)
 
 const searchForm = reactive({
-  realName: '',
-  phone: ''
+  realName: ''
 })
 
 const pagination = reactive({
@@ -118,31 +143,29 @@ const form = reactive({
   id: null,
   userId: null,
   realName: '',
-  phone: '',
   specialty: '',
-  experience: 0,
-  hourlyRate: 0,
-  introduction: '',
+  intro: '',
+  entryDate: '',
   status: 1
+})
+
+const uploadUrl = computed(() => {
+  return currentCoachId.value 
+    ? `http://localhost:8080/upload/coach/${currentCoachId.value}`
+    : ''
 })
 
 const rules = {
   userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
   specialty: [{ required: true, message: '请输入专长', trigger: 'blur' }],
-  experience: [{ required: true, message: '请输入经验', trigger: 'blur' }],
-  hourlyRate: [{ required: true, message: '请输入时薪', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getCoachProfileList({
+    const res = await getCoachList({
       current: pagination.page,
       size: pagination.size,
       ...searchForm
@@ -163,7 +186,6 @@ const handleSearch = () => {
 
 const handleReset = () => {
   searchForm.realName = ''
-  searchForm.phone = ''
   pagination.page = 1
   fetchData()
 }
@@ -173,11 +195,9 @@ const handleAdd = () => {
   form.id = null
   form.userId = null
   form.realName = ''
-  form.phone = ''
   form.specialty = ''
-  form.experience = 0
-  form.hourlyRate = 0
-  form.introduction = ''
+  form.intro = ''
+  form.entryDate = ''
   form.status = 1
   dialogVisible.value = true
 }
@@ -187,13 +207,44 @@ const handleEdit = (row) => {
   form.id = row.id
   form.userId = row.userId
   form.realName = row.realName
-  form.phone = row.phone
   form.specialty = row.specialty
-  form.experience = row.experience
-  form.hourlyRate = row.hourlyRate
-  form.introduction = row.introduction
+  form.intro = row.intro
+  form.entryDate = row.entryDate
   form.status = row.status
   dialogVisible.value = true
+}
+
+const handleUploadImage = (row) => {
+  currentCoachId.value = row.id
+  uploadDialogVisible.value = true
+}
+
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB!')
+    return false
+  }
+  return true
+}
+
+const handleUploadSuccess = (response) => {
+  if (response.code === 200) {
+    ElMessage.success('上传成功')
+    fetchData()
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
 }
 
 const handleDelete = async (row) => {
@@ -203,7 +254,7 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteCoachProfile([row.id])
+    await deleteCoach([row.id])
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
@@ -218,9 +269,9 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (form.id) {
-          await updateCoachProfile(form)
+          await updateCoach(form)
         } else {
-          await createCoachProfile(form)
+          await addCoach(form)
         }
         ElMessage.success(form.id ? '更新成功' : '添加成功')
         dialogVisible.value = false
@@ -256,5 +307,11 @@ onMounted(() => {
 
 .search-form {
   margin-bottom: 20px;
+}
+
+.el-icon--upload {
+  font-size: 67px;
+  color: #409eff;
+  margin-bottom: 16px;
 }
 </style>

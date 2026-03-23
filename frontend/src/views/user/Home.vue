@@ -58,8 +58,66 @@
       </div>
     </div>
 
+    <div class="coach-section">
+      <div class="section-header">
+        <h2>专业教练</h2>
+        <p>资深教练团队，为您提供专业指导</p>
+      </div>
+      
+      <div class="coach-grid">
+        <div 
+          v-for="coach in coachList" 
+          :key="coach.id" 
+          class="coach-card"
+          @click="goToCoachDetail(coach.id)"
+        >
+          <div class="coach-images">
+            <el-carousel 
+              :interval="0" 
+              height="300px" 
+              arrow="hover" 
+              indicator-position="none"
+              :autoplay="false"
+            >
+              <el-carousel-item v-for="(image, index) in coach.images" :key="index">
+                <div class="coach-image" :style="{ backgroundImage: `url(${image})` }"></div>
+              </el-carousel-item>
+              <el-carousel-item v-if="coach.images.length === 0">
+                <div class="coach-image no-image">
+                  <el-icon :size="80"><User /></el-icon>
+                  <p>暂无照片</p>
+                </div>
+              </el-carousel-item>
+            </el-carousel>
+          </div>
+          
+          <div class="coach-info">
+            <h3>{{ coach.realName }}</h3>
+            <div class="coach-tags">
+              <el-tag 
+                v-for="(tag, index) in specialtyTags(coach.specialty)" 
+                :key="index" 
+                type="primary"
+                size="small"
+              >
+                {{ tag }}
+              </el-tag>
+            </div>
+            <p class="coach-intro">{{ coach.intro || '暂无简介' }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="view-all-button">
+        <el-button type="primary" size="large" @click="goToCoachList">
+          查看所有教练
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+    </div>
+
     <div class="features-section">
-      <div class="feature-item">
+      <div class="feature-item" @click="goToCoachList" style="cursor: pointer">
         <el-icon :size="40" color="#667eea"><Trophy /></el-icon>
         <h3>专业教练</h3>
         <p>资深教练团队，为您提供专业指导</p>
@@ -88,11 +146,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getBannerList } from '@/api/banner'
 import { getEquipmentList } from '@/api/equipment'
-import { Trophy, Star, Clock, Medal, Picture } from '@element-plus/icons-vue'
+import { getCoachList } from '@/api/coach'
+import { Trophy, Star, Clock, Medal, Picture, User, ArrowRight } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const banners = ref([])
 const equipmentList = ref([])
+const coachList = ref([])
 
 const fetchBanners = async () => {
   try {
@@ -130,13 +190,42 @@ const fetchEquipment = async () => {
   }
 }
 
+const fetchCoach = async () => {
+  try {
+    const res = await getCoachList({
+      current: 1,
+      size: 4,
+      status: 1
+    })
+    if (res.data.records) {
+      coachList.value = res.data.records
+    }
+  } catch (error) {
+    console.error('获取教练列表失败:', error)
+  }
+}
+
 const goToDetail = (equipmentId) => {
   router.push(`/user/equipment/${equipmentId}`)
+}
+
+const goToCoachDetail = (coachId) => {
+  router.push(`/user/coach/${coachId}`)
+}
+
+const goToCoachList = () => {
+  router.push('/user/coach')
+}
+
+const specialtyTags = (specialty) => {
+  if (!specialty) return []
+  return specialty.split(',').filter(tag => tag.trim())
 }
 
 onMounted(() => {
   fetchBanners()
   fetchEquipment()
+  fetchCoach()
 })
 </script>
 
@@ -289,6 +378,104 @@ onMounted(() => {
   margin-top: 8px;
 }
 
+.coach-section {
+  max-width: 1400px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.coach-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.coach-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.coach-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.coach-images {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+}
+
+.coach-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.coach-card:hover .coach-image {
+  transform: scale(1.05);
+}
+
+.coach-image.no-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  color: #999;
+}
+
+.coach-image.no-image .el-icon {
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.coach-image.no-image p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.coach-info {
+  padding: 24px;
+}
+
+.coach-info h3 {
+  font-size: 20px;
+  color: #333;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.coach-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.coach-intro {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.view-all-button {
+  text-align: center;
+  margin-top: 30px;
+}
+
 .features-section {
   max-width: 1400px;
   margin: 60px auto 40px;
@@ -343,6 +530,10 @@ onMounted(() => {
     grid-template-columns: repeat(3, 1fr);
   }
   
+  .coach-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
   .features-section {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -350,6 +541,10 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .equipment-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .coach-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   

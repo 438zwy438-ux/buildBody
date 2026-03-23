@@ -35,6 +35,18 @@ const routes = [
         meta: { title: '首页', requiresAuth: false }
       },
       {
+        path: 'coach',
+        name: 'CoachList',
+        component: () => import('@/views/user/CoachList.vue'),
+        meta: { title: '专业教练', requiresAuth: false }
+      },
+      {
+        path: 'coach/:id',
+        name: 'CoachDetail',
+        component: () => import('@/views/user/CoachDetail.vue'),
+        meta: { title: '教练详情', requiresAuth: false }
+      },
+      {
         path: 'equipment/:id',
         name: 'EquipmentDetail',
         component: () => import('@/views/user/EquipmentDetail.vue'),

@@ -28,7 +28,7 @@ public class SysUserController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+
     public Result<Page<SysUser>> selectAll(Page<SysUser> page, SysUser sysUser) {
         return Result.success(this.sysUserService.page(page, new QueryWrapper<>(sysUser)));
     }

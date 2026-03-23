@@ -1,9 +1,9 @@
 package com.cdp.zwy.buildbody.common.interceptor;
 
-import cn.hutool.jwt.JWTUtil;
 import cn.hutool.jwt.JWT;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.common.utils.JwtUtils;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,8 +25,6 @@ import java.util.List;
  */
 @Component
 public class RoleAuthInterceptor implements HandlerInterceptor {
-
-    private static final byte[] JWT_KEY = "buildbody_secret_key_2026".getBytes(StandardCharsets.UTF_8);
 
     @Resource
     private SysUserService sysUserService;
@@ -59,14 +56,15 @@ public class RoleAuthInterceptor implements HandlerInterceptor {
 
         try {
             String jwtToken = token.substring(7);
-            if (!JWTUtil.verify(jwtToken, JWT_KEY)) {
+            
+            if (!JwtUtils.validateToken(jwtToken)) {
                 response.setStatus(401);
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"code\":401,\"msg\":\"token验证失败\",\"data\":null}");
+                response.getWriter().write("{\"code\":401,\"msg\":\"token无效或已过期\",\"data\":null}");
                 return false;
             }
 
-            JWT jwt = JWTUtil.parseToken(jwtToken);
+            JWT jwt = JwtUtils.parseToken(jwtToken);
             List<String> userRoles = (List<String>) jwt.getPayload("roles");
             Long userId = Long.valueOf(jwt.getPayload("userId").toString());
 

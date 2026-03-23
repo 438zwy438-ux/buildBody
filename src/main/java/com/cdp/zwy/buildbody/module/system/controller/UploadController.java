@@ -1,6 +1,7 @@
 package com.cdp.zwy.buildbody.module.system.controller;
 
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.common.utils.MinioUtil;
 import com.cdp.zwy.buildbody.module.system.entity.ImgRelation;
 import com.cdp.zwy.buildbody.module.system.service.ImgRelationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,10 +10,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Date;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/upload")
@@ -21,6 +19,8 @@ public class UploadController {
 
     @Resource
     private ImgRelationService imgRelationService;
+    @Resource
+    private MinioUtil minioUtil;
 
     @Operation(summary = "上传文件")
     @PostMapping
@@ -30,22 +30,9 @@ public class UploadController {
         }
 
         try {
-            String fileName = file.getOriginalFilename();
-            String suffix = fileName.substring(fileName.lastIndexOf("."));
-            String newFileName = UUID.randomUUID().toString() + suffix;
-            
-            String uploadPath = "D:/study/buildbody/uploads/";
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
-            
-            File dest = new File(uploadPath + newFileName);
-            file.transferTo(dest);
-            
-            String fileUrl = "http://localhost:8080/uploads/" + newFileName;
+            String fileUrl = minioUtil.upload(file, null);
             return Result.success(fileUrl);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return Result.error("上传失败");
         }
@@ -61,20 +48,7 @@ public class UploadController {
         }
 
         try {
-            String fileName = file.getOriginalFilename();
-            String suffix = fileName.substring(fileName.lastIndexOf("."));
-            String newFileName = UUID.randomUUID().toString() + suffix;
-            
-            String uploadPath = "D:/study/buildbody/uploads/";
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
-            
-            File dest = new File(uploadPath + newFileName);
-            file.transferTo(dest);
-            
-            String fileUrl = "http://localhost:8080/uploads/" + newFileName;
+            String fileUrl = minioUtil.upload(file, "equipment");
             
             ImgRelation imgRelation = new ImgRelation();
             imgRelation.setRelationType(1);
@@ -85,7 +59,34 @@ public class UploadController {
             imgRelationService.save(imgRelation);
             
             return Result.success(true);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("上传失败");
+        }
+    }
+
+    @Operation(summary = "上传教练图片")
+    @PostMapping("/coach/{coachId}")
+    public Result<Boolean> uploadCoachImage(
+            @PathVariable Long coachId,
+            @RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("文件不能为空");
+        }
+
+        try {
+            String fileUrl = minioUtil.upload(file, "coach");
+            
+            ImgRelation imgRelation = new ImgRelation();
+            imgRelation.setRelationType(2);
+            imgRelation.setRelationId(coachId.intValue());
+            imgRelation.setImgUrl(fileUrl);
+            imgRelation.setCreateTime(new Date());
+            
+            imgRelationService.save(imgRelation);
+            
+            return Result.success(true);
+        } catch (Exception e) {
             e.printStackTrace();
             return Result.error("上传失败");
         }
