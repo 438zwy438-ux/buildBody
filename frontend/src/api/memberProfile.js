@@ -38,3 +38,10 @@ export const deleteMemberProfile = (idList) => {
     params: { idList }
   })
 }
+
+export const getMyMemberProfile = () => {
+  return request({
+    url: '/tbMemberProfile/myProfile',
+    method: 'get'
+  })
+}

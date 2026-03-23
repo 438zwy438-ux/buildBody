@@ -26,63 +26,63 @@ public class TbEntryLogController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Page<TbEntryLog>> selectAll(Page<TbEntryLog> page, TbEntryLog tbEntryLog) {
         return Result.success(this.tbEntryLogService.page(page, new QueryWrapper<>(tbEntryLog)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<TbEntryLog> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbEntryLogService.getById(id));
     }
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbEntryLog tbEntryLog) {
         return Result.success(this.tbEntryLogService.save(tbEntryLog));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody TbEntryLog tbEntryLog) {
         return Result.success(this.tbEntryLogService.updateById(tbEntryLog));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbEntryLogService.removeByIds(idList));
     }
 
     @Operation(summary = "搜索会员(核验入场资格)")
     @PostMapping("/search")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<List<MemberCheckVO>> search(@RequestBody CheckInSearchDTO dto) {
         return Result.success(tbEntryLogService.searchMemberForCheckIn(dto.getPhone()));
     }
 
     @Operation(summary = "确认入场(管理员操作)")
     @PostMapping("/checkIn")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> checkIn(@RequestParam Long userId) {
         return Result.success(tbEntryLogService.confirmCheckIn(userId, 1L));
     }
 
     @Operation(summary = "确认出场")
     @PostMapping("/checkOut")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> checkOut(@RequestParam Long userId) {
         return Result.success(tbEntryLogService.confirmCheckOut(userId));
     }
 
     @Operation(summary = "查询我的出勤记录")
     @GetMapping("/my-logs")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<TbEntryLog>> getMyLogs(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         QueryWrapper<TbEntryLog> queryWrapper = new QueryWrapper<>();

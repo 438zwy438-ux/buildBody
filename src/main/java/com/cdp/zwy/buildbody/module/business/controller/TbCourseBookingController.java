@@ -26,42 +26,42 @@ public class TbCourseBookingController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Page<TbCourseBooking>> selectAll(Page<TbCourseBooking> page, TbCourseBooking tbCourseBooking) {
         return Result.success(this.tbCourseBookingService.page(page, new QueryWrapper<>(tbCourseBooking)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<TbCourseBooking> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbCourseBookingService.getById(id));
     }
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbCourseBooking tbCourseBooking) {
         return Result.success(this.tbCourseBookingService.save(tbCourseBooking));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody TbCourseBooking tbCourseBooking) {
         return Result.success(this.tbCourseBookingService.updateById(tbCourseBooking));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCourseBookingService.removeByIds(idList));
     }
     
     @Operation(summary = "预约课程")
     @PostMapping("/book")
-    @RequireRole("VIP")
+    @RequireRole("vip")
     public Result<Long> bookCourse(@RequestParam Long coachUserId,
                                   @RequestParam Long courseId,
                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date scheduleTime,
@@ -73,7 +73,7 @@ public class TbCourseBookingController {
     
     @Operation(summary = "核销课程")
     @PostMapping("/check")
-    @RequireRole({"ADMIN", "COACH"})
+    @RequireRole({"admin", "coach"})
     public Result<Boolean> checkCourse(@RequestParam Long bookingId, HttpServletRequest request) {
         String role = (String) request.getAttribute("role");
         Long userId = (Long) request.getAttribute("userId");
@@ -83,7 +83,7 @@ public class TbCourseBookingController {
             return Result.error("预约记录不存在");
         }
         
-        if ("COACH".equals(role) && !booking.getCoachUserId().equals(userId)) {
+        if ("coach".equals(role) && !booking.getCoachUserId().equals(userId)) {
             return Result.error("只能核销自己的课程");
         }
         
@@ -93,7 +93,7 @@ public class TbCourseBookingController {
     
     @Operation(summary = "查询我的预约记录")
     @GetMapping("/my-bookings")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<TbCourseBooking>> getMyBookings(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         QueryWrapper<TbCourseBooking> queryWrapper = new QueryWrapper<>();
@@ -104,13 +104,13 @@ public class TbCourseBookingController {
     
     @Operation(summary = "查询教练的预约记录")
     @GetMapping("/coach-bookings")
-    @RequireRole({"ADMIN", "COACH"})
+    @RequireRole({"admin", "coach"})
     public Result<List<TbCourseBooking>> getCoachBookings(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         String role = (String) request.getAttribute("role");
         
         QueryWrapper<TbCourseBooking> queryWrapper = new QueryWrapper<>();
-        if ("COACH".equals(role)) {
+        if ("coach".equals(role)) {
             queryWrapper.eq("coach_user_id", userId);
         }
         queryWrapper.orderByDesc("create_time");

@@ -43,7 +43,7 @@ public class StatisticsController {
 
     @Operation(summary = "获取Dashboard统计数据")
     @GetMapping("/dashboard")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Map<String, Object>> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
 
@@ -79,7 +79,7 @@ public class StatisticsController {
 
     @Operation(summary = "获取最近入场记录")
     @GetMapping("/recent-entries")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<List<Map<String, Object>>> getRecentEntries() {
         LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);

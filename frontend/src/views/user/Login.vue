@@ -74,7 +74,7 @@ const handleLogin = async () => {
       try {
         const res = await userStore.loginAction(loginForm)
         
-        const allowedRoles = ['MEMBER', 'VIP', 'COACH']
+        const allowedRoles = ['user', 'vip', 'coach']
         const userRoles = res.data.roles || []
         const hasAllowedRole = userRoles.some(role => allowedRoles.includes(role))
         

@@ -8,7 +8,7 @@ ALTER TABLE sys_user_role DROP PRIMARY KEY;
 ALTER TABLE sys_user_role ADD COLUMN id BIGINT AUTO_INCREMENT PRIMARY KEY FIRST;
 
 -- 3. 添加role_code字段（如果不存在）
-ALTER TABLE sys_user_role ADD COLUMN role_code VARCHAR(50) NOT NULL COMMENT '角色编码（ADMIN/MEMBER/VIP/COACH）' AFTER user_id;
+ALTER TABLE sys_user_role ADD COLUMN role_code VARCHAR(50) NOT NULL COMMENT '角色编码（admin/user/vip/coach）' AFTER user_id;
 
 -- 4. 添加create_time字段（如果不存在）
 ALTER TABLE sys_user_role ADD COLUMN create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间' AFTER role_code;

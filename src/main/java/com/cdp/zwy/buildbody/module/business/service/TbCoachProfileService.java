@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface TbCoachProfileService extends IService<TbCoachProfile> {
     List<String> getCoachImages(Long coachId);
+    TbCoachProfile getByUserId(Long userId);
 }

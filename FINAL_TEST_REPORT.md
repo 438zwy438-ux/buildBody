@@ -67,7 +67,7 @@ POST http://localhost:8080/sysUser/login
     "userId": 2034630327334973443,
     "nickname": "admin",
     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    "roles": ["ADMIN", ""],
+    "roles": ["admin", ""],
     "avatar": null
   }
 }

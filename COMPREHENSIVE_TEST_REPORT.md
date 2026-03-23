@@ -51,7 +51,7 @@ POST http://localhost:8080/sysUser/login
   "data": {
     "userId": 1,
     "nickname": "管理员",
-    "roles": ["ADMIN"],
+    "roles": ["admin"],
     "token": "..."
   }
 }
@@ -241,7 +241,7 @@ SELECT * FROM sys_user_role WHERE user_id = 1;
 +----+---------+-----------+---------------------+
 | id | user_id | role_code | create_time         |
 +----+---------+-----------+---------------------+
-|  1 |       1 | ADMIN     | 2026-03-23 10:00:00 |
+|  1 |       1 | admin     | 2026-03-23 10:00:00 |
 +----+---------+-----------+---------------------+
 ```
 

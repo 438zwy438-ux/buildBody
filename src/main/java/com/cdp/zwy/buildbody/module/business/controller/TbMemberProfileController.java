@@ -24,21 +24,21 @@ public class TbMemberProfileController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Page<TbMemberProfile>> selectAll(Page<TbMemberProfile> page, TbMemberProfile tbMemberProfile) {
         return Result.success(this.tbMemberProfileService.page(page, new QueryWrapper<>(tbMemberProfile)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<TbMemberProfile> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbMemberProfileService.getById(id));
     }
 
     @Operation(summary = "查询我的会员信息")
     @GetMapping("/myProfile")
-    @RequireRole({"MEMBER", "VIP"})
+   
     public Result<TbMemberProfile> getMyProfile(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         TbMemberProfile profile = tbMemberProfileService.getOne(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
@@ -47,19 +47,19 @@ public class TbMemberProfileController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbMemberProfile tbMemberProfile) {
         return Result.success(this.tbMemberProfileService.save(tbMemberProfile));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole({"ADMIN", "MEMBER", "VIP"})
+    @RequireRole({"admin", "user", "vip"})
     public Result<Boolean> update(@RequestBody TbMemberProfile tbMemberProfile, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         String role = (String) request.getAttribute("role");
         
-        if (!"ADMIN".equals(role) && !tbMemberProfile.getUserId().equals(userId)) {
+        if (!"admin".equals(role) && !tbMemberProfile.getUserId().equals(userId)) {
             return Result.error("只能修改自己的信息");
         }
         return Result.success(this.tbMemberProfileService.updateById(tbMemberProfile));
@@ -67,7 +67,7 @@ public class TbMemberProfileController {
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbMemberProfileService.removeByIds(idList));
     }

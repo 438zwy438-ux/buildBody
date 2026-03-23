@@ -42,28 +42,28 @@ public class TbLockerController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbLocker tbLocker) {
         return Result.success(this.tbLockerService.save(tbLocker));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody TbLocker tbLocker) {
         return Result.success(this.tbLockerService.updateById(tbLocker));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbLockerService.removeByIds(idList));
     }
     
     @Operation(summary = "上锁储物柜")
     @PutMapping("/lock/{id}")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<Boolean> lock(@PathVariable Long id, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         TbLocker locker = tbLockerService.getById(id);
@@ -75,7 +75,7 @@ public class TbLockerController {
     
     @Operation(summary = "解锁储物柜")
     @PutMapping("/unlock/{id}")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<Boolean> unlock(@PathVariable Long id, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         TbLocker locker = tbLockerService.getById(id);
@@ -87,7 +87,7 @@ public class TbLockerController {
 
     @Operation(summary = "使用储物柜")
     @PostMapping("/use/{lockerId}")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<Boolean> useLocker(@PathVariable Long lockerId, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return Result.success(this.tbLockerService.useLocker(userId, lockerId));
@@ -95,7 +95,7 @@ public class TbLockerController {
 
     @Operation(summary = "释放储物柜")
     @PostMapping("/release")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<Boolean> releaseLocker(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return Result.success(this.tbLockerService.releaseLocker(userId));
@@ -103,7 +103,7 @@ public class TbLockerController {
 
     @Operation(summary = "查询我的储物柜")
     @GetMapping("/myLocker")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<TbLocker> getMyLocker(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         TbLocker locker = tbLockerService.getOne(new QueryWrapper<TbLocker>().eq("current_user_id", userId));

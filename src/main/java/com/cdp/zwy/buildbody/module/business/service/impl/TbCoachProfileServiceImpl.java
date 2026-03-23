@@ -31,4 +31,12 @@ public class TbCoachProfileServiceImpl extends ServiceImpl<TbCoachProfileDao, Tb
             .map(ImgRelation::getImgUrl)
             .collect(Collectors.toList());
     }
+    
+    @Override
+    public TbCoachProfile getByUserId(Long userId) {
+        return this.getOne(
+            new QueryWrapper<TbCoachProfile>()
+                .eq("user_id", userId)
+        );
+    }
 }

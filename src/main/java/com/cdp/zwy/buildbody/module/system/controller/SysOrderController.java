@@ -24,21 +24,21 @@ public class SysOrderController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Page<SysOrder>> selectAll(Page<SysOrder> page, SysOrder sysOrder) {
         return Result.success(this.sysOrderService.page(page, new QueryWrapper<>(sysOrder)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<SysOrder> selectOne(@PathVariable Serializable id) {
         return Result.success(this.sysOrderService.getById(id));
     }
 
     @Operation(summary = "查询我的订单")
     @GetMapping("/my-orders")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<SysOrder>> getMyOrders(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         QueryWrapper<SysOrder> queryWrapper = new QueryWrapper<>();
@@ -49,21 +49,21 @@ public class SysOrderController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody SysOrder sysOrder) {
         return Result.success(this.sysOrderService.save(sysOrder));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody SysOrder sysOrder) {
         return Result.success(this.sysOrderService.updateById(sysOrder));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.sysOrderService.removeByIds(idList));
     }

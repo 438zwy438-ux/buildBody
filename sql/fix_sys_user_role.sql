@@ -34,7 +34,7 @@ SET @preparedStatement = (SELECT IF(
       AND (column_name = @columnname)
   ) > 0,
   'SELECT 1',
-  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN role_code VARCHAR(50) NOT NULL COMMENT ''角色编码（ADMIN/MEMBER/VIP/COACH）'' AFTER user_id')
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN role_code VARCHAR(50) NOT NULL COMMENT ''角色编码（admin/user/vip/coach）'' AFTER user_id')
 ));
 PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;

@@ -3,6 +3,7 @@ package com.cdp.zwy.buildbody.module.business.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import com.cdp.zwy.buildbody.common.utils.AgeCalculator;
 import com.cdp.zwy.buildbody.module.business.dao.TbMemberProfileDao;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberProfileService;
@@ -17,5 +18,13 @@ import org.springframework.stereotype.Service;
 @Service("tbMemberProfileService")
 public class TbMemberProfileServiceImpl extends ServiceImpl<TbMemberProfileDao, TbMemberProfile> implements TbMemberProfileService {
 
+    @Override
+    public boolean updateById(TbMemberProfile entity) {
+        // 如果设置了出生日期，自动计算年龄
+        if (entity.getBirthDate() != null) {
+            int calculatedAge = AgeCalculator.calculateAge(entity.getBirthDate());
+            entity.setAge(calculatedAge);
+        }
+        return super.updateById(entity);
+    }
 }
-

@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
 CREATE TABLE IF NOT EXISTS sys_user_role (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
-    role_code VARCHAR(50) NOT NULL COMMENT '角色编码（ADMIN/MEMBER/VIP/COACH）',
+    role_code VARCHAR(50) NOT NULL COMMENT '角色编码（admin/user/vip/coach）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     UNIQUE KEY uk_user_role (user_id, role_code),
     INDEX idx_user_id (user_id),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS sys_order (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '订单ID',
     order_no VARCHAR(50) NOT NULL UNIQUE COMMENT '订单号',
     user_id BIGINT NOT NULL COMMENT '用户ID',
-    order_type VARCHAR(20) NOT NULL COMMENT '订单类型（MEMBER_CARD/COURSE/COACH）',
+    order_type VARCHAR(20) NOT NULL COMMENT '订单类型（MEMBER_CARD/COURSE/coach）',
     order_amount DECIMAL(10,2) NOT NULL COMMENT '订单金额',
     order_status VARCHAR(20) DEFAULT 'PENDING' COMMENT '订单状态（PENDING/PAID/CANCELLED/REFUNDED）',
     payment_method VARCHAR(20) COMMENT '支付方式',
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS sys_banner (
 -- 5. 图片关系表
 CREATE TABLE IF NOT EXISTS img_relation (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-    business_type VARCHAR(50) NOT NULL COMMENT '业务类型（COACH/EQUIPMENT/MEMBER）',
+    business_type VARCHAR(50) NOT NULL COMMENT '业务类型（coach/EQUIPMENT/user）',
     business_id BIGINT NOT NULL COMMENT '业务ID',
     image_url VARCHAR(255) NOT NULL COMMENT '图片URL',
     sort_order INT DEFAULT 0 COMMENT '排序',
@@ -246,7 +246,7 @@ ON DUPLICATE KEY UPDATE username=username;
 
 -- 初始化管理员角色
 INSERT INTO sys_user_role (user_id, role_code) 
-SELECT user_id, 'ADMIN' FROM sys_user WHERE username='admin'
+SELECT user_id, 'admin' FROM sys_user WHERE username='admin'
 ON DUPLICATE KEY UPDATE user_id=user_id;
 
 -- 初始化测试数据

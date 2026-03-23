@@ -54,7 +54,7 @@ const handleLogin = async () => {
         const res = await userStore.loginAction(loginForm)
         
         const userRoles = res.data.roles || []
-        if (!userRoles.includes('ADMIN')) {
+        if (!userRoles.includes('admin')) {
           ElMessage.error('该账号不是管理员账号')
           userStore.logout()
           return

@@ -33,6 +33,8 @@ public class TbMemberProfile extends Model<TbMemberProfile> {
     private Integer isVip;
 //VIP过期时间(若有)
     private Date vipExpireTime;
+//出生日期
+    private Date birthDate;
 
 
     public Long getId() {
@@ -115,6 +117,14 @@ public class TbMemberProfile extends Model<TbMemberProfile> {
         this.vipExpireTime = vipExpireTime;
     }
 
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
+    }
+
     /**
      * 获取主键值
      *
@@ -125,4 +135,3 @@ public class TbMemberProfile extends Model<TbMemberProfile> {
         return this.id;
     }
 }
-

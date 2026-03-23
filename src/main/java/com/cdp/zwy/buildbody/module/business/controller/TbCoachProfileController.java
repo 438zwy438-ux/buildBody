@@ -24,6 +24,17 @@ public class TbCoachProfileController {
     @Resource
     private TbCoachProfileService tbCoachProfileService;
 
+    @Operation(summary = "通过用户ID获取教练档案")
+    @GetMapping("/by-user-id/{userId}")
+    @RequireRole(requireLogin = true)
+    public Result<TbCoachProfile> getByUserId(@PathVariable Long userId) {
+        TbCoachProfile coachProfile = this.tbCoachProfileService.getByUserId(userId);
+        if (coachProfile == null) {
+            return Result.error("未找到教练档案");
+        }
+        return Result.success(coachProfile);
+    }
+
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
     @RequireRole(requireLogin = false)
@@ -73,21 +84,21 @@ public class TbCoachProfileController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbCoachProfile tbCoachProfile) {
         return Result.success(this.tbCoachProfileService.save(tbCoachProfile));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole({"ADMIN", "COACH"})
+    @RequireRole({"admin", "coach"})
     public Result<Boolean> update(@RequestBody TbCoachProfile tbCoachProfile) {
         return Result.success(this.tbCoachProfileService.updateById(tbCoachProfile));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCoachProfileService.removeByIds(idList));
     }

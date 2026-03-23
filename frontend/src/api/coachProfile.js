@@ -38,3 +38,18 @@ export const deleteCoachProfile = (idList) => {
     params: { idList }
   })
 }
+
+export const getCoachProfileByUserId = (userId) => {
+  return request({
+    url: `/tbCoachProfile/by-user-id/${userId}`,
+    method: 'get'
+  })
+}
+
+export const updateCoachProfileByUserId = (data) => {
+  return request({
+    url: '/tbCoachProfile/update',
+    method: 'put',
+    data
+  })
+}

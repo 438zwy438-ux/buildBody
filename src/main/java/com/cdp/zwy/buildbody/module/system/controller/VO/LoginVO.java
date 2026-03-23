@@ -8,6 +8,6 @@ public class LoginVO {
     private Long userId;
     private String nickname;
     private String token;
-    private List<String> roles; // 支持多角色: ["ADMIN", "MEMBER", "COACH", "VIP"]
+    private List<String> roles; // 支持多角色: ["admin", "user", "coach", "vip"]
     private String avatar;
 }

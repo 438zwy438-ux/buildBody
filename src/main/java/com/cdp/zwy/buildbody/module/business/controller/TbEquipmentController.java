@@ -72,7 +72,7 @@ public class TbEquipmentController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Map<String, Object>> insert(@RequestBody TbEquipment tbEquipment) {
         boolean success = this.tbEquipmentService.save(tbEquipment);
         Map<String, Object> result = new HashMap<>();
@@ -83,14 +83,14 @@ public class TbEquipmentController {
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody TbEquipment tbEquipment) {
         return Result.success(this.tbEquipmentService.updateById(tbEquipment));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbEquipmentService.removeByIds(idList));
     }

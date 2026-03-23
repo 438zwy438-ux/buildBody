@@ -24,21 +24,21 @@ public class TbMemberCardController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Page<TbMemberCard>> selectAll(Page<TbMemberCard> page, TbMemberCard tbMemberCard) {
         return Result.success(this.tbMemberCardService.page(page, new QueryWrapper<>(tbMemberCard)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<TbMemberCard> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbMemberCardService.getById(id));
     }
 
     @Operation(summary = "查询我的会员卡")
     @GetMapping("/my-cards")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<TbMemberCard>> getMyCards(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         QueryWrapper<TbMemberCard> queryWrapper = new QueryWrapper<>();
@@ -49,21 +49,21 @@ public class TbMemberCardController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbMemberCard tbMemberCard) {
         return Result.success(this.tbMemberCardService.save(tbMemberCard));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody TbMemberCard tbMemberCard) {
         return Result.success(this.tbMemberCardService.updateById(tbMemberCard));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbMemberCardService.removeByIds(idList));
     }

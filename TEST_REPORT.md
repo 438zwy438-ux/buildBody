@@ -50,8 +50,8 @@
 - 角色代码与数据库不匹配
 
 **修复内容**:
-- 将`setRoleId(2L)`改为`setRoleCode("MEMBER")`
-- 将`setRoleId(3L)`改为`setRoleCode("COACH")`
+- 将`setRoleId(2L)`改为`setRoleCode("user")`
+- 将`setRoleId(3L)`改为`setRoleCode("coach")`
 - 修改`getUserRoles`方法，从数据库查询用户角色
 
 **影响文件**:

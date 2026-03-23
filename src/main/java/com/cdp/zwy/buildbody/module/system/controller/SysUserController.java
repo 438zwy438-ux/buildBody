@@ -35,14 +35,14 @@ public class SysUserController {
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<SysUser> selectOne(@PathVariable Serializable id) {
         return Result.success(this.sysUserService.getById(id));
     }
 
     @Operation(summary = "获取当前用户信息")
     @GetMapping("/info")
-    @RequireRole({"MEMBER", "VIP", "COACH", "ADMIN"})
+    @RequireRole({"user", "vip", "coach", "admin"})
     public Result<SysUser> getUserInfo(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return Result.success(this.sysUserService.getById(userId));
@@ -50,21 +50,21 @@ public class SysUserController {
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody SysUser sysUser) {
         return Result.success(this.sysUserService.save(sysUser));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> update(@RequestBody SysUser sysUser) {
         return Result.success(this.sysUserService.updateById(sysUser));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.sysUserService.removeByIds(idList));
     }
@@ -89,7 +89,7 @@ public class SysUserController {
 
     @Operation(summary = "添加教练")
     @PostMapping("/addCoach")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> addCoach(@RequestBody CoachAddDTO dto) {
         return Result.success(sysUserService.addCoach(dto));
     }

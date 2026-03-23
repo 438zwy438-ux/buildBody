@@ -37,49 +37,49 @@ public class TbCourseController {
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-    @RequireRole(requireLogin = false,value = {"MEMBER", "VIP"})
+    @RequireRole(requireLogin = false,value = {"user", "vip"})
     public Result<Page<TbCourse>> selectAll(Page<TbCourse> page, TbCourse tbCourse) {
         return Result.success(this.tbCourseService.page(page, new QueryWrapper<>(tbCourse)));
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole(requireLogin = false,value = {"MEMBER", "VIP"})
+    @RequireRole(requireLogin = false,value = {"user", "vip"})
     public Result<TbCourse> selectOne(@PathVariable Serializable id) {
         return Result.success(this.tbCourseService.getById(id));
     }
 
     @Operation(summary = "新增数据")
     @PostMapping("/insert")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> insert(@RequestBody TbCourse tbCourse) {
         return Result.success(this.tbCourseService.save(tbCourse));
     }
 
     @Operation(summary = "修改数据")
     @PutMapping("/update")
-    @RequireRole({"ADMIN", "COACH"})
+    @RequireRole({"admin", "coach"})
     public Result<Boolean> update(@RequestBody TbCourse tbCourse) {
         return Result.success(this.tbCourseService.updateById(tbCourse));
     }
 
     @Operation(summary = "删除数据")
     @DeleteMapping("/delete")
-    @RequireRole("ADMIN")
+    @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbCourseService.removeByIds(idList));
     }
 
     @Operation(summary = "添加私教课")
     @PostMapping("/addPrivate")
-    @RequireRole({"ADMIN", "COACH"})
+    @RequireRole({"admin", "coach"})
     public Result<Boolean> addPrivate(@RequestBody CourseAddDTO dto) {
         return Result.success(tbCourseService.addPrivateCourse(dto));
     }
     
     @Operation(summary = "购买课程")
     @PostMapping("/purchase")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<Long> purchaseCourse(@RequestBody CoursePurchaseDTO dto, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         dto.setUserId(userId);
@@ -106,7 +106,7 @@ public class TbCourseController {
 
     @Operation(summary = "查询用户的私教课程列表")
     @GetMapping("/my-courses")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<TbCourse>> getMyPrivateCourses(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         
@@ -144,7 +144,7 @@ public class TbCourseController {
     
     @Operation(summary = "查询用户的私教课订单")
     @GetMapping("/my-orders")
-    @RequireRole({"MEMBER", "VIP"})
+    @RequireRole({"user", "vip"})
     public Result<List<SysOrder>> getMyPrivateOrders(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         

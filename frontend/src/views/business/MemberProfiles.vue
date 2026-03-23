@@ -34,7 +34,7 @@
         <el-table-column prop="age" label="年龄" width="80" />
         <el-table-column prop="height" label="身高(cm)" />
         <el-table-column prop="weight" label="体重(kg)" />
-        <el-table-column prop="isVip" label="VIP" width="80">
+        <el-table-column prop="isVip" label="vip" width="80">
           <template #default="{ row }">
             <el-tag :type="row.isVip === 1 ? 'warning' : 'info'">{{ row.isVip === 1 ? '是' : '否' }}</el-tag>
           </template>
@@ -85,7 +85,7 @@
         <el-form-item label="体重(kg)" prop="weight">
           <el-input-number v-model="form.weight" :min="0" :precision="1" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="VIP" prop="isVip">
+        <el-form-item label="vip" prop="isVip">
           <el-radio-group v-model="form.isVip">
             <el-radio :label="1">是</el-radio>
             <el-radio :label="0">否</el-radio>

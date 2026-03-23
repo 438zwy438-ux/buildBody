@@ -12,7 +12,7 @@ public class JwtTest {
     public void testCreateToken() {
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", 1L);
-        payload.put("roles", java.util.List.of("ADMIN"));
+        payload.put("roles", java.util.List.of("admin"));
         
         String token = JwtUtils.createToken(payload);
         System.out.println("生成的Token: " + token);
@@ -25,7 +25,7 @@ public class JwtTest {
     public void testTokenValidation() {
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", 1L);
-        payload.put("roles", java.util.List.of("ADMIN"));
+        payload.put("roles", java.util.List.of("admin"));
         
         String token = JwtUtils.createToken(payload);
         
@@ -37,7 +37,7 @@ public class JwtTest {
     public void testExpiredToken() throws InterruptedException {
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", 1L);
-        payload.put("roles", java.util.List.of("ADMIN"));
+        payload.put("roles", java.util.List.of("admin"));
         
         String token = JwtUtils.createToken(payload, 1000); // 1秒过期
         

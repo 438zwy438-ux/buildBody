@@ -31,10 +31,8 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 系统用户表(SysUser)表服务实现类
@@ -234,37 +232,31 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
 
     @Override
     public List<String> getUserRoles(Long userId) {
-        SysUser user = this.getById(userId);
-        if (user == null) {
+        // 根据userId查询sys_user_role表获取所有记录
+        List<SysUserRole> userRoles = sysUserRoleService.list(
+            new QueryWrapper<SysUserRole>().eq("user_id", userId)
+        );
+        
+        if (userRoles.isEmpty()) {
             return java.util.Collections.emptyList();
         }
-
-        java.util.List<String> roles = new java.util.ArrayList<>();
-
-        // 管理员角色特殊处理，也可以考虑从sys_role表获取
-        if ("admin".equals(user.getUsername())) {
-            roles.add("admin"); // 使用sys_role表中的role_key
-        }
-
-        // 从数据库查询用户角色
-        List<SysUserRole> userRoles = sysUserRoleService.list(new QueryWrapper<SysUserRole>().eq("user_id", userId));
-        for (SysUserRole userRole : userRoles) {
-            // 优先使用role_id关联sys_role表获取role_key，如果role_id不存在则使用role_code
-            if (userRole.getRoleId() != null) {
-                // 通过sysRoleDao查询sys_role表获取role_key
-                SysRole sysRole = sysRoleDao.selectById(userRole.getRoleId());
-                if (sysRole != null && sysRole.getRoleKey() != null) {
-                    roles.add(sysRole.getRoleKey());
-                } else if (userRole.getRoleCode() != null) {
-                    // 如果关联查询失败，则使用role_code作为备选
-                    roles.add(userRole.getRoleCode());
-                }
-            } else if (userRole.getRoleCode() != null) {
-                roles.add(userRole.getRoleCode());
-            }
-        }
-
-        return roles;
+        
+        // 提取所有role_id并去重
+        Set<Long> roleIds = userRoles.stream()
+            .map(SysUserRole::getRoleId)
+            .filter(Objects::nonNull) // 过滤掉null值
+            .collect(Collectors.toSet());
+        
+        // 批量查询sys_role表获取对应的role_key
+        List<SysRole> roles = sysRoleDao.selectBatchIds(roleIds);
+        
+        // 提取role_key并返回
+        List<String> roleKeys = roles.stream()
+            .map(SysRole::getRoleKey)
+            .filter(Objects::nonNull) // 过滤掉null值
+            .collect(Collectors.toList());
+        
+        return roleKeys;
     }
 
     @Override
