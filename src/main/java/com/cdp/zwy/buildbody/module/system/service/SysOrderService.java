@@ -39,4 +39,20 @@ public interface SysOrderService extends IService<SysOrder> {
      * @return 支付结果
      */
     Boolean payOrder(Long orderId);
+
+    /**
+     * 取消订单（未支付的订单）
+     *
+     * @param orderId 订单ID
+     * @return 取消结果
+     */
+    Boolean cancelOrder(Long orderId);
+
+    /**
+     * 退款订单（已支付的订单）
+     *
+     * @param orderId 订单ID
+     * @return 退款结果
+     */
+    Boolean refundOrder(Long orderId);
 }

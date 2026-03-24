@@ -67,4 +67,18 @@ public class SysOrderController {
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.sysOrderService.removeByIds(idList));
     }
+
+    @Operation(summary = "取消订单")
+    @PostMapping("/cancel")
+    @RequireRole({"user", "vip"})
+    public Result<Boolean> cancelOrder(@RequestParam Long orderId) {
+        return Result.success(this.sysOrderService.cancelOrder(orderId));
+    }
+
+    @Operation(summary = "退款订单")
+    @PostMapping("/refund")
+    @RequireRole({"user", "vip"})
+    public Result<Boolean> refundOrder(@RequestParam Long orderId) {
+        return Result.success(this.sysOrderService.refundOrder(orderId));
+    }
 }
