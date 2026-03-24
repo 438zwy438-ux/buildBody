@@ -18,7 +18,7 @@ public class ImgRelation extends Model<ImgRelation> {
 //关联类型
     private Integer relationType;
 //关联表ID（对应关联类型表的主键）
-    private Integer relationId;
+    private Long relationId;
 //图片地址（URL）
     private String imgUrl;
 //记录创建时间
@@ -41,11 +41,11 @@ public class ImgRelation extends Model<ImgRelation> {
         this.relationType = relationType;
     }
 
-    public Integer getRelationId() {
+    public Long getRelationId() {
         return relationId;
     }
 
-    public void setRelationId(Integer relationId) {
+    public void setRelationId(Long relationId) {
         this.relationId = relationId;
     }
 
@@ -75,4 +75,3 @@ public class ImgRelation extends Model<ImgRelation> {
         return this.id;
     }
 }
-

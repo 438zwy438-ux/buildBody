@@ -22,6 +22,22 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="realName" label="姓名" />
         <el-table-column prop="specialty" label="专长" />
+        <el-table-column label="图片" width="150">
+          <template #default="{ row }">
+            <div v-if="row.images && row.images.length > 0" class="image-preview">
+              <el-image
+                v-for="(img, index) in row.images.slice(0, 3)"
+                :key="index"
+                :src="img"
+                :preview-src-list="row.images"
+                style="width: 40px; height: 40px; margin-right: 5px"
+                fit="cover"
+              />
+              <span v-if="row.images.length > 3" style="font-size: 12px; color: #999">+{{ row.images.length - 3 }}</span>
+            </div>
+            <span v-else style="color: #999; font-size: 12px">暂无图片</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="intro" label="简介" show-overflow-tooltip />
         <el-table-column prop="entryDate" label="入职日期" width="120" />
         <el-table-column prop="status" label="状态" width="80">
@@ -32,7 +48,6 @@
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handleUploadImage(row)">上传图片</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -50,7 +65,7 @@
       />
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="用户ID" prop="userId">
           <el-input v-model="form.userId" placeholder="请输入用户ID" />
@@ -79,55 +94,51 @@
             <el-radio :label="0">离职</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="教练照片">
+          <el-upload
+            v-model:file-list="fileList"
+            :action="uploadUrl"
+            list-type="picture-card"
+            :data="{ coachId: form.id }"
+            :on-preview="handlePicturePreview"
+            :on-success="handleUploadSuccess"
+            :on-remove="handleRemove"
+            :before-upload="beforeUpload"
+            :on-change="handleChange"
+            :auto-upload="true"
+            multiple
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <el-dialog v-model="previewVisible" title="图片预览" width="600px">
+            <img :src="previewImage" style="width: 100%" />
+          </el-dialog>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
-
-    <el-dialog v-model="uploadDialogVisible" title="上传教练图片" width="500px">
-      <el-upload
-        ref="uploadRef"
-        :action="uploadUrl"
-        :on-success="handleUploadSuccess"
-        :on-error="handleUploadError"
-        :before-upload="beforeUpload"
-        :show-file-list="false"
-        accept="image/*"
-        drag
-      >
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">
-          将图片拖到此处，或<em>点击上传</em>
-        </div>
-        <template #tip>
-          <div class="el-upload__tip">
-            只能上传 JPG/PNG 文件，且不超过 5MB
-          </div>
-        </template>
-      </el-upload>
-      <template #footer>
-        <el-button @click="uploadDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { getCoachList, addCoach, updateCoach, deleteCoach } from '@/api/coach'
+import { ref, reactive, onMounted } from 'vue'
+import { getCoachList, addCoach, updateCoach, deleteCoach, deleteCoachImageByUrl } from '@/api/coach'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
-const uploadDialogVisible = ref(false)
 const dialogTitle = ref('添加教练')
 const formRef = ref(null)
-const uploadRef = ref(null)
 const tableData = ref([])
-const currentCoachId = ref(null)
+const fileList = ref([])
+const previewVisible = ref(false)
+const previewImage = ref('')
+const uploadUrl = ref('/api/upload/coach/')
+const uploadedImageUrls = ref([])
 
 const searchForm = reactive({
   realName: ''
@@ -149,12 +160,6 @@ const form = reactive({
   status: 1
 })
 
-const uploadUrl = computed(() => {
-  return currentCoachId.value 
-    ? `http://localhost:8080/upload/coach/${currentCoachId.value}`
-    : ''
-})
-
 const rules = {
   userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
   realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
@@ -165,11 +170,14 @@ const rules = {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getCoachList({
+    const params = {
       current: pagination.page,
-      size: pagination.size,
-      ...searchForm
-    })
+      size: pagination.size
+    }
+    if (searchForm.realName) {
+      params.realName = searchForm.realName
+    }
+    const res = await getCoachList(params)
     tableData.value = res.data.records
     pagination.total = res.data.total
   } catch (error) {
@@ -199,10 +207,15 @@ const handleAdd = () => {
   form.intro = ''
   form.entryDate = ''
   form.status = 1
+  fileList.value = []
+  uploadedImageUrls.value = []
+  uploadUrl.value = '/api/upload/coach/'
   dialogVisible.value = true
 }
 
 const handleEdit = (row) => {
+  console.log('编辑教练数据:', row)
+  console.log('row.images:', row.images)
   dialogTitle.value = '编辑教练'
   form.id = row.id
   form.userId = row.userId
@@ -211,40 +224,89 @@ const handleEdit = (row) => {
   form.intro = row.intro
   form.entryDate = row.entryDate
   form.status = row.status
+  
+  fileList.value = []
+  uploadedImageUrls.value = []
+  if (row.images && row.images.length > 0) {
+    console.log('加载图片列表:', row.images)
+    row.images.forEach((imgUrl, index) => {
+      fileList.value.push({
+        name: `image-${index}.jpg`,
+        url: imgUrl,
+        uid: Date.now() + index,
+        status: 'success'
+      })
+      uploadedImageUrls.value.push(imgUrl)
+    })
+  } else {
+    console.log('没有找到 images 字段或为空')
+  }
+  
+  uploadUrl.value = `/api/upload/coach/${row.id}`
   dialogVisible.value = true
-}
-
-const handleUploadImage = (row) => {
-  currentCoachId.value = row.id
-  uploadDialogVisible.value = true
 }
 
 const beforeUpload = (file) => {
   const isImage = file.type.startsWith('image/')
   const isLt5M = file.size / 1024 / 1024 < 5
-
+  
   if (!isImage) {
     ElMessage.error('只能上传图片文件!')
     return false
   }
   if (!isLt5M) {
-    ElMessage.error('图片大小不能超过 5MB!')
+    ElMessage.error('图片大小不能超过5MB!')
     return false
   }
   return true
 }
 
-const handleUploadSuccess = (response) => {
+const handleChange = (file, fileList) => {
+  console.log('文件状态变化:', file.status, fileList)
+}
+
+const handleUploadSuccess = (response, file, fileList) => {
+  console.log('上传成功:', response, file, fileList)
   if (response.code === 200) {
     ElMessage.success('上传成功')
-    fetchData()
+    const imageUrl = response.data
+    if (imageUrl) {
+      file.url = imageUrl
+      uploadedImageUrls.value.push(imageUrl)
+    }
+    
+    if (!form.id) {
+      const newId = response.data?.coachId
+      if (newId) {
+        form.id = newId
+        uploadUrl.value = `/api/upload/coach/${newId}`
+      }
+    }
   } else {
-    ElMessage.error(response.message || '上传失败')
+    ElMessage.error(response.msg || '上传失败')
+    const index = fileList.indexOf(file)
+    if (index > -1) {
+      fileList.splice(index, 1)
+    }
   }
 }
 
-const handleUploadError = () => {
-  ElMessage.error('上传失败，请重试')
+const handleRemove = async (file) => {
+  const index = uploadedImageUrls.value.indexOf(file.url)
+  if (index > -1) {
+    uploadedImageUrls.value.splice(index, 1)
+  }
+  
+  try {
+    await deleteCoachImageByUrl(file.url)
+  } catch (error) {
+    console.error('删除图片失败:', error)
+  }
+}
+
+const handlePicturePreview = (file) => {
+  previewImage.value = file.url
+  previewVisible.value = true
 }
 
 const handleDelete = async (row) => {

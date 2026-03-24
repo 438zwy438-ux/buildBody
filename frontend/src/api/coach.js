@@ -38,3 +38,11 @@ export function deleteCoach(idList) {
     params: { idList }
   })
 }
+
+export function deleteCoachImageByUrl(imgUrl) {
+  return request({
+    url: '/imgRelation/deleteByUrl',
+    method: 'delete',
+    params: { imgUrl }
+  })
+}

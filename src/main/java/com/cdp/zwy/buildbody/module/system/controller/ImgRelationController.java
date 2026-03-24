@@ -76,7 +76,7 @@ public class ImgRelationController {
      */
     @Operation(summary = "批量保存图片关系")
     @PostMapping("/batchSave")
-    public Result<Boolean> batchSave(@RequestParam Integer relationType, @RequestParam Integer relationId, @RequestBody List<String> imgUrls) {
+    public Result<Boolean> batchSave(@RequestParam Integer relationType, @RequestParam Long relationId, @RequestBody List<String> imgUrls) {
         return Result.success(this.imgRelationService.batchSave(relationType, relationId, imgUrls));
     }
 
@@ -89,7 +89,7 @@ public class ImgRelationController {
      */
     @Operation(summary = "删除指定关联的所有图片")
     @DeleteMapping("/deleteByRelation")
-    public Result<Boolean> deleteByRelation(@RequestParam Integer relationType, @RequestParam Integer relationId) {
+    public Result<Boolean> deleteByRelation(@RequestParam Integer relationType, @RequestParam Long relationId) {
         return Result.success(this.imgRelationService.deleteByRelation(relationType, relationId));
     }
 

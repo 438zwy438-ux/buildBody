@@ -21,7 +21,7 @@ import java.util.List;
 public class ImgRelationServiceImpl extends ServiceImpl<ImgRelationDao, ImgRelation> implements ImgRelationService {
 
     @Override
-    public Boolean batchSave(Integer relationType, Integer relationId, List<String> imgUrls) {
+    public Boolean batchSave(Integer relationType, Long relationId, List<String> imgUrls) {
         if (imgUrls == null || imgUrls.isEmpty()) {
             return true;
         }
@@ -42,7 +42,7 @@ public class ImgRelationServiceImpl extends ServiceImpl<ImgRelationDao, ImgRelat
     }
 
     @Override
-    public Boolean deleteByRelation(Integer relationType, Integer relationId) {
+    public Boolean deleteByRelation(Integer relationType, Long relationId) {
         QueryWrapper<ImgRelation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("relation_type", relationType);
         queryWrapper.eq("relation_id", relationId);

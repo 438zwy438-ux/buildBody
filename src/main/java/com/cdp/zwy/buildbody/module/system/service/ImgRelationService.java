@@ -21,7 +21,7 @@ public interface ImgRelationService extends IService<ImgRelation> {
      * @param imgUrls 图片URL列表
      * @return 保存结果
      */
-    Boolean batchSave(Integer relationType, Integer relationId, List<String> imgUrls);
+    Boolean batchSave(Integer relationType, Long relationId, List<String> imgUrls);
 
     /**
      * 删除指定关联类型的所有图片
@@ -30,5 +30,5 @@ public interface ImgRelationService extends IService<ImgRelation> {
      * @param relationId 关联ID
      * @return 删除结果
      */
-    Boolean deleteByRelation(Integer relationType, Integer relationId);
+    Boolean deleteByRelation(Integer relationType, Long relationId);
 }

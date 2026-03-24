@@ -52,7 +52,7 @@ public class UploadController {
             
             ImgRelation imgRelation = new ImgRelation();
             imgRelation.setRelationType(1);
-            imgRelation.setRelationId(equipmentId.intValue());
+            imgRelation.setRelationId(equipmentId);
             imgRelation.setImgUrl(fileUrl);
             imgRelation.setCreateTime(new Date());
             
@@ -67,7 +67,7 @@ public class UploadController {
 
     @Operation(summary = "上传教练图片")
     @PostMapping("/coach/{coachId}")
-    public Result<Boolean> uploadCoachImage(
+    public Result<String> uploadCoachImage(
             @PathVariable Long coachId,
             @RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -79,13 +79,13 @@ public class UploadController {
             
             ImgRelation imgRelation = new ImgRelation();
             imgRelation.setRelationType(2);
-            imgRelation.setRelationId(coachId.intValue());
+            imgRelation.setRelationId(coachId);
             imgRelation.setImgUrl(fileUrl);
             imgRelation.setCreateTime(new Date());
             
             imgRelationService.save(imgRelation);
             
-            return Result.success(true);
+            return Result.success(fileUrl);
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("上传失败");
