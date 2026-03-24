@@ -45,3 +45,28 @@ export const deleteEquipment = (idList) => {
     params: { idList }
   })
 }
+
+export const batchSaveEquipmentImages = (equipmentId, imgUrls) => {
+  return request({
+    url: '/imgRelation/batchSave',
+    method: 'post',
+    params: { relationType: 1, relationId: equipmentId },
+    data: imgUrls
+  })
+}
+
+export const deleteEquipmentImages = (equipmentId) => {
+  return request({
+    url: '/imgRelation/deleteByRelation',
+    method: 'delete',
+    params: { relationType: 1, relationId: equipmentId }
+  })
+}
+
+export const deleteEquipmentImageByUrl = (imgUrl) => {
+  return request({
+    url: '/imgRelation/deleteByUrl',
+    method: 'delete',
+    params: { imgUrl }
+  })
+}

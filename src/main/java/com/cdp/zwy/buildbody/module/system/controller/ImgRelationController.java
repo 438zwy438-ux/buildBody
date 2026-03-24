@@ -67,6 +67,47 @@ public class ImgRelationController {
     }
 
     /**
+     * 批量保存图片关系
+     *
+     * @param relationType 关联类型
+     * @param relationId 关联ID
+     * @param imgUrls 图片URL列表
+     * @return 保存结果
+     */
+    @Operation(summary = "批量保存图片关系")
+    @PostMapping("/batchSave")
+    public Result<Boolean> batchSave(@RequestParam Integer relationType, @RequestParam Integer relationId, @RequestBody List<String> imgUrls) {
+        return Result.success(this.imgRelationService.batchSave(relationType, relationId, imgUrls));
+    }
+
+    /**
+     * 删除指定关联的所有图片
+     *
+     * @param relationType 关联类型
+     * @param relationId 关联ID
+     * @return 删除结果
+     */
+    @Operation(summary = "删除指定关联的所有图片")
+    @DeleteMapping("/deleteByRelation")
+    public Result<Boolean> deleteByRelation(@RequestParam Integer relationType, @RequestParam Integer relationId) {
+        return Result.success(this.imgRelationService.deleteByRelation(relationType, relationId));
+    }
+
+    /**
+     * 根据URL删除图片
+     *
+     * @param imgUrl 图片URL
+     * @return 删除结果
+     */
+    @Operation(summary = "根据URL删除图片")
+    @DeleteMapping("/deleteByUrl")
+    public Result<Boolean> deleteByUrl(@RequestParam String imgUrl) {
+        QueryWrapper<ImgRelation> wrapper = new QueryWrapper<>();
+        wrapper.eq("img_url", imgUrl);
+        return Result.success(this.imgRelationService.remove(wrapper));
+    }
+
+    /**
      * 修改数据
      *
      * @param imgRelation 实体对象

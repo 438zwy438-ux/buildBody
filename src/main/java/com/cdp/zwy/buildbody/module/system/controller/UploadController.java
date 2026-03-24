@@ -40,7 +40,7 @@ public class UploadController {
 
     @Operation(summary = "上传设备图片")
     @PostMapping("/equipment/{equipmentId}")
-    public Result<Boolean> uploadEquipmentImage(
+    public Result<String> uploadEquipmentImage(
             @PathVariable Long equipmentId,
             @RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -58,7 +58,7 @@ public class UploadController {
             
             imgRelationService.save(imgRelation);
             
-            return Result.success(true);
+            return Result.success(fileUrl);
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("上传失败");
