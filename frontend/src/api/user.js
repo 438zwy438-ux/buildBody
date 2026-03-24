@@ -54,3 +54,10 @@ export const deleteUser = (idList) => {
     params: { idList }
   })
 }
+
+export const getCurrentUserInfo = () => {
+  return request({
+    url: '/sysUser/info',
+    method: 'get'
+  })
+}

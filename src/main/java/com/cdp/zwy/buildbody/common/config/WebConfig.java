@@ -35,9 +35,12 @@ public class WebConfig implements WebMvcConfigurer {
         javaTimeModule.addDeserializer(LocalDateTime.class, 
                 new LocalDateTimeDeserializer(dateTimeFormatter));
         
+        // 配置Long类型序列化为字符串，避免JavaScript精度丢失
         return builder
                 .modules(javaTimeModule)
                 .timeZone(TimeZone.getTimeZone(ZoneId.of("Asia/Shanghai")))
+                .serializerByType(Long.class, com.fasterxml.jackson.databind.ser.std.ToStringSerializer.instance)
+                .serializerByType(Long.TYPE, com.fasterxml.jackson.databind.ser.std.ToStringSerializer.instance)
                 .build();
     }
 

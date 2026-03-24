@@ -4,7 +4,7 @@
       <el-col :span="8">
         <el-card class="user-card">
           <div class="user-info">
-            <el-avatar :size="100" :src="userInfo.faceImgUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
+            <el-avatar :size="100" :src="userInfo.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
             <h3>{{ userInfo.realName || userInfo.nickname }}</h3>
             <p>{{ userInfo.phone }}</p>
             <!-- 根据用户角色显示标签 -->
@@ -25,9 +25,7 @@
                 <el-form-item label="昵称" prop="nickname">
                   <el-input v-model="form.nickname" />
                 </el-form-item>
-                <el-form-item label="真实姓名" prop="realName">
-                  <el-input v-model="form.realName" />
-                </el-form-item>
+
                 <el-form-item label="手机号" prop="phone">
                   <el-input v-model="form.phone" />
                 </el-form-item>
@@ -37,15 +35,21 @@
                     <el-radio :label="1">女</el-radio>
                     <el-radio :label="2">未知</el-radio>
                   </el-radio-group>
+
                 </el-form-item>
-                <el-form-item label="出生日期" prop="birthDate">
-                  <el-date-picker
-                    v-model="form.birthDate"
-                    type="date"
-                    placeholder="选择出生日期"
-                    format="YYYY-MM-DD"
-                    value-format="YYYY-MM-DD"
-                  />
+                <el-form-item label="头像">
+                  <el-upload
+                    class="avatar-uploader"
+                    action="/api/common/upload"
+                    :data="{ folder: 'avatar' }"
+                    :show-file-list="false"
+                    :on-success="handleAvatarSuccess"
+                    :before-upload="beforeAvatarUpload"
+                    :headers="{ 'Authorization': `Bearer ${userStore.token}` }"
+                  >
+                    <img v-if="form.avatar" :src="form.avatar" class="avatar" />
+                    <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                  </el-upload>
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" @click="handleUpdate">更新信息</el-button>
@@ -110,14 +114,28 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { getMyMemberProfile, updateMemberProfile } from '@/api/memberProfile'
 import { getCoachProfileByUserId } from '@/api/coachProfile'
+import { getCurrentUserInfo, updateUser } from '@/api/user'
 import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
-const userInfo = ref(userStore.userInfo)
+const userInfo = ref({})
+
+// 获取完整的用户信息
+const fetchFullUserInfo = async () => {
+  try {
+    const res = await getCurrentUserInfo()
+    if (res.data) {
+      userInfo.value = res.data
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+}
 const memberProfile = ref({})
 const coachProfile = ref({})
 
@@ -125,12 +143,37 @@ const activeTab = ref('basic')
 const formRef = ref(null)
 const passwordFormRef = ref(null)
 
+// 头像上传相关函数
+const handleAvatarSuccess = (response, uploadFile) => {
+  if(typeof response === 'string') {
+    form.avatar = response
+  } else if(response.code === 200) {
+    form.avatar = response.data
+  } else {
+    ElMessage.error('头像上传失败')
+  }
+}
+
+const beforeAvatarUpload = (rawFile) => {
+  const isValidType = ['image/jpeg', 'image/jpg', 'image/png'].includes(rawFile.type)
+  const isLt2M = rawFile.size / 1024 / 1024 < 2
+
+  if (!isValidType) {
+    ElMessage.error('头像图片只能是 JPG/JPEG/PNG 格式!')
+  }
+  if (!isLt2M) {
+    ElMessage.error('头像图片大小不能超过 2MB!')
+  }
+  return isValidType && isLt2M
+}
+
 const form = reactive({
   username: '',
   nickname: '',
   realName: '',
   phone: '',
   gender: 0,
+  avatar: '',
   birthDate: null
 })
 
@@ -139,6 +182,8 @@ const passwordForm = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+
+
 
 const rules = {
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
@@ -206,7 +251,13 @@ const fetchMemberProfile = async () => {
 // 获取教练档案
 const fetchCoachProfile = async () => {
   try {
-    const res = await getCoachProfileByUserId(userInfo.value.id)
+    // 确保用户ID有效
+    const userId = userInfo.value.userId || userInfo.value.id
+    if (!userId || userId === 'undefined') {
+      console.error('用户ID无效:', userId)
+      return
+    }
+    const res = await getCoachProfileByUserId(userId)
     if (res.data) {
       coachProfile.value = res.data
     }
@@ -221,6 +272,26 @@ const handleUpdate = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        // 首先更新sys_user表中的基本信息
+         await updateUser({
+           userId: userInfo.value.userId,
+           username: form.username,
+           nickname: form.nickname,
+           phone: form.phone,
+           gender: form.gender,
+           avatar: form.avatar
+         })
+         
+         // 更新用户信息到store
+         userStore.setUserInfo({
+           ...userStore.userInfo,
+           username: form.username,
+           nickname: form.nickname,
+           phone: form.phone,
+           gender: form.gender,
+           avatar: form.avatar
+         })
+        
         if (hasRole('coach')) {
           // 教练更新基本信息到教练档案
           const updatedCoachProfile = {
@@ -268,26 +339,33 @@ const handleChangePassword = async () => {
 }
 
 onMounted(async () => {
+  // 获取完整的用户信息
+  await fetchFullUserInfo()
+
+  // 确保用户信息已加载
+  const userId = userInfo.value.userId || userInfo.value.id
+  if (!userId || userId === 'undefined' || userId === undefined) {
+    console.error('用户信息未正确加载')
+    return
+  }
+
+  // 设置基础信息表单
+  form.username = userInfo.value.username
+  form.nickname = userInfo.value.nickname
+  form.phone = userInfo.value.phone
+  form.avatar = userInfo.value.avatar
+  // gender可能来自用户信息或档案信息
+  form.gender = userInfo.value.gender || 0
+
   // 根据用户角色加载相应档案
   if (hasRole('coach')) {
     await fetchCoachProfile()
-    // 如果是教练，设置基础信息表单
-    form.username = userInfo.value.username
-    form.nickname = userInfo.value.nickname
-    form.realName = coachProfile.value.realName || userInfo.value.realName
-    form.phone = userInfo.value.phone
-    form.gender = userInfo.value.gender || 0
-    form.birthDate = null // 教练档案可能没有birthDate字段
-    
     // 如果是教练，默认显示教练档案标签
     activeTab.value = 'coach-profile'
   } else if (hasRole('user') || hasRole('vip')) {
     await fetchMemberProfile()
-    // 设置基础信息表单
-    form.username = userInfo.value.username
-    form.nickname = userInfo.value.nickname
-    form.realName = memberProfile.value.realName || userInfo.value.realName
-    form.phone = userInfo.value.phone
+    // 设置会员档案相关表单字段
+    form.realName = memberProfile.value.realName || userInfo.value.nickname
     form.gender = memberProfile.value.gender || userInfo.value.gender || 0
     form.birthDate = memberProfile.value.birthDate
   }
@@ -318,5 +396,32 @@ onMounted(async () => {
 .user-info p {
   margin: 0 0 15px 0;
   color: #999;
+}
+
+.avatar-uploader {
+  width: 100px;
+  height: 100px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader:hover {
+  border-color: #409eff;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
 }
 </style>
