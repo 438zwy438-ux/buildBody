@@ -45,3 +45,11 @@ export const getMyCards = () => {
     method: 'get'
   })
 }
+
+export const purchaseMemberCard = (data) => {
+  return request({
+    url: '/tbMemberCard/purchase',
+    method: 'post',
+    data
+  })
+}

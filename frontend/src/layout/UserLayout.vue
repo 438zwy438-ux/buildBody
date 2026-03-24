@@ -18,6 +18,7 @@
             active-text-color="#409eff"
           >
             <el-menu-item index="/user/home">首页</el-menu-item>
+            <el-menu-item index="/user/card-shop">会员卡中心</el-menu-item>
             <el-menu-item index="/user/courses" v-if="hasAnyRole(['user', 'vip'])">课程预约</el-menu-item>
             <el-menu-item index="/user/member-card" v-if="hasAnyRole(['user', 'vip'])">我的会员卡</el-menu-item>
             <el-menu-item index="/user/entry-records" v-if="hasAnyRole(['user', 'vip'])">入场记录</el-menu-item>

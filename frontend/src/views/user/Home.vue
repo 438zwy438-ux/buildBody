@@ -122,6 +122,11 @@
         <h3>专业教练</h3>
         <p>资深教练团队，为您提供专业指导</p>
       </div>
+      <div class="feature-item" @click="goToCardShop" style="cursor: pointer">
+        <el-icon :size="40" color="#667eea"><CreditCard /></el-icon>
+        <h3>会员卡</h3>
+        <p>多种会员卡，满足不同需求</p>
+      </div>
       <div class="feature-item">
         <el-icon :size="40" color="#667eea"><Star /></el-icon>
         <h3>优质服务</h3>
@@ -132,10 +137,21 @@
         <h3>灵活时间</h3>
         <p>24小时营业，随时随地健身</p>
       </div>
-      <div class="feature-item">
-        <el-icon :size="40" color="#667eea"><Medal /></el-icon>
-        <h3>先进设备</h3>
-        <p>国际一流品牌，保障训练效果</p>
+    </div>
+
+    <div class="card-promo-section">
+      <div class="promo-content">
+        <div class="promo-left">
+          <h2>会员卡中心</h2>
+          <p>选择适合您的会员卡，开启健身之旅</p>
+          <el-button type="primary" size="large" @click="goToCardShop">
+            立即查看
+            <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+          </el-button>
+        </div>
+        <div class="promo-right">
+          <el-icon :size="120" color="#667eea"><CreditCard /></el-icon>
+        </div>
       </div>
     </div>
   </div>
@@ -147,7 +163,7 @@ import { useRouter } from 'vue-router'
 import { getBannerList } from '@/api/banner'
 import { getEquipmentList } from '@/api/equipment'
 import { getCoachList } from '@/api/coach'
-import { Trophy, Star, Clock, Medal, Picture, User, ArrowRight } from '@element-plus/icons-vue'
+import { Trophy, Star, Clock, Medal, Picture, User, ArrowRight, CreditCard } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const banners = ref([])
@@ -155,9 +171,9 @@ const equipmentList = ref([])
 const coachList = ref([])
 
 const fetchBanners = async () => {
-  try {
+    try {
     const res = await getBannerList({
-      current: 1,
+      current:1,
       size: 10,
       status: 1
     })
@@ -175,7 +191,7 @@ const fetchBanners = async () => {
 const fetchEquipment = async () => {
   try {
     const res = await getEquipmentList({
-      current: 1,
+      current:1,
       size: 20,
       status: 1
     })
@@ -193,7 +209,7 @@ const fetchEquipment = async () => {
 const fetchCoach = async () => {
   try {
     const res = await getCoachList({
-      current: 1,
+      current:1,
       size: 4,
       status: 1
     })
@@ -215,6 +231,10 @@ const goToCoachDetail = (coachId) => {
 
 const goToCoachList = () => {
   router.push('/user/coach')
+}
+
+const goToCardShop = () => {
+  router.push('/user/card-shop')
 }
 
 const specialtyTags = (specialty) => {
@@ -503,6 +523,44 @@ onMounted(() => {
   color: #666;
   margin: 0;
   line-height: 1.6;
+}
+
+.card-promo-section {
+  max-width: 1400px;
+  margin: 40px auto 60px;
+  padding: 0 20px;
+}
+
+.promo-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+}
+
+.promo-left {
+  flex: 1;
+}
+
+.promo-left h2 {
+  font-size: 42px;
+  color: white;
+  margin: 0 0 16px 0;
+  font-weight: 700;
+}
+
+.promo-left p {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 30px 0;
+}
+
+.promo-right {
+  flex: 1;
+  text-align: center;
 }
 
 :deep(.el-carousel__arrow) {

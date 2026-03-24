@@ -4,9 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.business.controller.DTO.MemberCardPurchaseDTO;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.MemberCardVO;
+import com.cdp.zwy.buildbody.module.business.entity.TbCardTemplate;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
+import com.cdp.zwy.buildbody.module.business.service.TbCardTemplateService;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberCardService;
+import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
+import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -14,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -22,6 +28,12 @@ import java.util.List;
 public class TbMemberCardController {
     @Resource
     private TbMemberCardService tbMemberCardService;
+    
+    @Resource
+    private SysOrderService sysOrderService;
+    
+    @Resource
+    private TbCardTemplateService tbCardTemplateService;
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
@@ -64,5 +76,55 @@ public class TbMemberCardController {
     @RequireRole("admin")
     public Result<Boolean> delete(@RequestParam("idList") List<Long> idList) {
         return Result.success(this.tbMemberCardService.removeByIds(idList));
+    }
+
+    @Operation(summary = "购买会员卡")
+    @PostMapping("/purchase")
+    @RequireRole({"user", "vip"})
+    public Result<Long> purchaseMemberCard(@RequestBody MemberCardPurchaseDTO dto, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        dto.setUserId(userId);
+        
+        TbCardTemplate cardTemplate = tbCardTemplateService.getById(dto.getCardTemplateId());
+        if (cardTemplate == null) {
+            throw new RuntimeException("会员卡模板不存在");
+        }
+        
+        if (cardTemplate.getStatus() != 1) {
+            throw new RuntimeException("该会员卡已下架");
+        }
+        
+        Integer cardTimes = cardTemplate.getTimes() != null ? cardTemplate.getTimes() : 0;
+        Double amount = cardTemplate.getPrice().doubleValue() * dto.getQuantity();
+        
+        Long orderId = sysOrderService.createMemberCardOrder(dto.getUserId(), cardTimes, amount);
+        sysOrderService.payOrder(orderId);
+        
+        TbMemberCard memberCard = new TbMemberCard();
+        memberCard.setUserId(dto.getUserId());
+        memberCard.setTemplateId(dto.getCardTemplateId());
+        memberCard.setRemainCount(cardTimes);
+        memberCard.setTotalCount(cardTimes);
+        memberCard.setStatus(1);
+        memberCard.setActiveTime(new Date());
+        
+        String cardNo = "MB" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
+        memberCard.setCardNo(cardNo);
+        
+        if (cardTemplate.getType() == 1) {
+            Date expireTime = new Date(System.currentTimeMillis() + cardTemplate.getDurationDays() * 24L * 60 * 60 * 1000);
+            memberCard.setExpireTime(expireTime);
+        } else {
+            Date expireTime = new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000);
+            memberCard.setExpireTime(expireTime);
+        }
+        
+        tbMemberCardService.save(memberCard);
+        
+        SysOrder order = sysOrderService.getById(orderId);
+        order.setCardId(memberCard.getId());
+        sysOrderService.updateById(order);
+        
+        return Result.success(orderId);
     }
 }

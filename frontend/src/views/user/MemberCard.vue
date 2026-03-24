@@ -4,6 +4,7 @@
       <template #header>
         <div class="card-header">
           <span>我的会员卡</span>
+          <el-button type="primary" @click="handlePurchase">购买会员卡</el-button>
         </div>
       </template>
       
@@ -43,20 +44,46 @@
         </div>
       </div>
       
-      <el-empty v-else description="暂无会员卡，请联系管理员办理" />
+      <el-empty v-else description="暂无会员卡，点击上方按钮购买" />
     </el-card>
+
+    <el-dialog v-model="purchaseDialogVisible" title="购买会员卡" width="800px">
+      <el-row :gutter="20">
+        <el-col :span="8" v-for="template in cardTemplates" :key="template.id">
+          <el-card class="template-card" :class="{ selected: selectedTemplateId === template.id }" @click="selectTemplate(template)">
+            <div class="template-name">{{ template.name }}</div>
+            <div class="template-type">{{ getCardTypeText(template.type) }}</div>
+            <div class="template-price">¥{{ template.price }}</div>
+            <div class="template-desc">
+              <div v-if="template.type === 1">有效期：{{ template.durationDays }} 天</div>
+              <div v-else>包含次数：{{ template.times }} 次</div>
+            </div>
+            <div class="template-description">{{ template.description }}</div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <template #footer>
+        <el-button @click="purchaseDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmPurchase" :disabled="!selectedTemplateId">确认购买</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { getMyCards } from '@/api/memberCard'
+import { getMyCards, purchaseMemberCard } from '@/api/memberCard'
+import { getCardTemplateList } from '@/api/cardTemplate'
+import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
 const memberCardInfo = ref({})
+const purchaseDialogVisible = ref(false)
+const cardTemplates = ref([])
+const selectedTemplateId = ref(null)
 
 const fetchMemberCard = async () => {
   try {
@@ -66,6 +93,45 @@ const fetchMemberCard = async () => {
     }
   } catch (error) {
     console.error('获取会员卡信息失败:', error)
+  }
+}
+
+const fetchCardTemplates = async () => {
+  try {
+    const res = await getCardTemplateList({ status: 1 })
+    cardTemplates.value = res.data.records || []
+  } catch (error) {
+    console.error('获取会员卡模板失败:', error)
+  }
+}
+
+const handlePurchase = () => {
+  purchaseDialogVisible.value = true
+  fetchCardTemplates()
+}
+
+const selectTemplate = (template) => {
+  selectedTemplateId.value = template.id
+}
+
+const confirmPurchase = async () => {
+  if (!selectedTemplateId.value) {
+    ElMessage.warning('请选择会员卡')
+    return
+  }
+  
+  try {
+    await purchaseMemberCard({
+      cardTemplateId: selectedTemplateId.value,
+      quantity: 1
+    })
+    ElMessage.success('购买成功')
+    purchaseDialogVisible.value = false
+    selectedTemplateId.value = null
+    fetchMemberCard()
+  } catch (error) {
+    console.error('购买会员卡失败:', error)
+    ElMessage.error(error.message || '购买失败')
   }
 }
 
@@ -193,5 +259,54 @@ onMounted(() => {
 .card-info-detail {
   display: flex;
   align-items: center;
+}
+
+.template-card {
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+  border: 2px solid transparent;
+}
+
+.template-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.template-card.selected {
+  border-color: #409eff;
+  background-color: #f0f7ff;
+}
+
+.template-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.template-type {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.template-price {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f56c6c;
+  margin-bottom: 10px;
+}
+
+.template-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.template-description {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
 }
 </style>
