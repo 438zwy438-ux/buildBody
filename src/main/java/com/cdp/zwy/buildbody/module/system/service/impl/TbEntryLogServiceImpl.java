@@ -177,17 +177,12 @@ public class TbEntryLogServiceImpl extends ServiceImpl<TbEntryLogDao, TbEntryLog
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean confirmCheckOut(Long userId) {
-        // 查找最近一条未出场的记录
-        TbEntryLog lastLog = this.baseMapper.selectOne(new QueryWrapper<TbEntryLog>()
-                .eq("user_id", userId)
-                .isNull("exit_time")
-                .orderByDesc("entry_time")
-                .last("LIMIT 1"));
-
-        if (lastLog != null) {
-            lastLog.setExitTime(LocalDateTime.now());
-            this.baseMapper.updateById(lastLog);
+    public Boolean confirmCheckOut(Long id) {
+        TbEntryLog log = this.baseMapper.selectById(id);
+        if (log != null && log.getExitTime() == null) {
+            log.setExitTime(LocalDateTime.now());
+            log.setStatus("OUT");
+            this.baseMapper.updateById(log);
         }
         return true;
     }

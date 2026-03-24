@@ -24,11 +24,11 @@ export const checkIn = (userId) => {
   })
 }
 
-export const checkOut = (userId) => {
+export const checkOut = (id) => {
   return request({
     url: '/tbEntryLog/checkOut',
     method: 'post',
-    params: { userId }
+    params: { id }
   })
 }
 
@@ -60,5 +60,12 @@ export const deleteEntryLog = (idList) => {
     url: '/tbEntryLog/delete',
     method: 'delete',
     params: { idList }
+  })
+}
+
+export const getMyLogs = () => {
+  return request({
+    url: '/tbEntryLog/my-logs',
+    method: 'get'
   })
 }

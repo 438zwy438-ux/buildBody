@@ -10,54 +10,49 @@
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="entryTime" label="入场时间" />
         <el-table-column prop="exitTime" label="出场时间" />
-        <el-table-column prop="duration" label="时长(分钟)" />
+        <el-table-column label="时长(分钟)">
+          <template #default="{ row }">
+            {{ calculateDuration(row) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态">
           <template #default="{ row }">
-            <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
+            <el-tag :type="row.status === 'IN' ? 'success' : 'info'">{{ row.status === 'IN' ? '在场' : '已出场' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120">
+          <template #default="{ row }">
+            <el-button 
+              type="primary" 
+              size="small"
+              :disabled="row.status !== 'IN'"
+              @click="handleCheckOut(row)"
+            >
+              出场
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
-
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.size"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="margin-top: 20px; justify-content: flex-end"
-      />
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getMyLogs, checkOut } from '@/api/entryLog'
 import { useUserStore } from '@/stores/user'
-import { getEntryLogList } from '@/api/entryLog'
+import dayjs from 'dayjs'
 
 const userStore = useUserStore()
-const userInfo = ref(userStore.userInfo)
 const loading = ref(false)
 const tableData = ref([])
-
-const pagination = reactive({
-  page: 1,
-  size: 10,
-  total: 0
-})
 
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getEntryLogList({
-      current: pagination.page,
-      size: pagination.size,
-      userId: userInfo.value.id
-    })
-    tableData.value = res.data.records
-    pagination.total = res.data.total
+    const res = await getMyLogs()
+    tableData.value = res.data
   } catch (error) {
     console.error('获取入场记录失败:', error)
   } finally {
@@ -65,14 +60,22 @@ const fetchData = async () => {
   }
 }
 
-const handleSizeChange = (val) => {
-  pagination.size = val
-  fetchData()
+const calculateDuration = (row) => {
+  if (!row.exitTime) return '-'
+  const entryTime = dayjs(row.entryTime)
+  const exitTime = dayjs(row.exitTime)
+  const duration = exitTime.diff(entryTime, 'minute', true)
+  return Math.round(duration)
 }
 
-const handleCurrentChange = (val) => {
-  pagination.page = val
-  fetchData()
+const handleCheckOut = async (row) => {
+  try {
+    await checkOut(row.id)
+    ElMessage.success('出场成功')
+    fetchData()
+  } catch (error) {
+    ElMessage.error('出场失败: ' + (error.message || '未知错误'))
+  }
 }
 
 onMounted(() => {

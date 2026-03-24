@@ -18,5 +18,5 @@ import java.util.List;
 public interface TbEntryLogService extends IService<TbEntryLog> {
     List<MemberCheckVO> searchMemberForCheckIn(String phone);
     Boolean confirmCheckIn(Long userId, Long adminId);
-    Boolean confirmCheckOut(Long userId);
+    Boolean confirmCheckOut(Long id);
 }
