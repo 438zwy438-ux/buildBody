@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.business.controller.DTO.MemberCardVO;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberCardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,12 +40,9 @@ public class TbMemberCardController {
     @Operation(summary = "查询我的会员卡")
     @GetMapping("/my-cards")
     @RequireRole({"user", "vip"})
-    public Result<List<TbMemberCard>> getMyCards(HttpServletRequest request) {
+    public Result<List<MemberCardVO>> getMyCards(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        QueryWrapper<TbMemberCard> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
-        queryWrapper.orderByDesc("create_time");
-        return Result.success(this.tbMemberCardService.list(queryWrapper));
+        return Result.success(this.tbMemberCardService.getMyCardsWithDetails(userId));
     }
 
     @Operation(summary = "新增数据")

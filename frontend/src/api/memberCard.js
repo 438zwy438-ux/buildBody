@@ -38,3 +38,10 @@ export const deleteMemberCard = (idList) => {
     params: { idList }
   })
 }
+
+export const getMyCards = () => {
+  return request({
+    url: '/tbMemberCard/my-cards',
+    method: 'get'
+  })
+}

@@ -56,10 +56,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
+import { getMyCards } from '@/api/memberCard'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,6 +92,27 @@ const handleCommand = async (command) => {
     router.push('/user/profile')
   }
 }
+
+const fetchMyCards = async () => {
+  try {
+    const res = await getMyCards()
+    console.log('我的会员卡列表：', res.data)
+  } catch (error) {
+    console.error('获取会员卡失败：', error)
+  }
+}
+
+watch(() => route.path, (newPath) => {
+  if (newPath === '/user/member-card' && isAuthenticated.value) {
+    fetchMyCards()
+  }
+})
+
+onMounted(() => {
+  if (route.path === '/user/member-card' && isAuthenticated.value) {
+    fetchMyCards()
+  }
+})
 </script>
 
 <style scoped>

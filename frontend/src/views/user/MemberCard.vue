@@ -14,7 +14,7 @@
             <div class="card-number">{{ memberCardInfo.cardNo }}</div>
             <div class="card-info">
               <div class="card-holder">{{ memberCardInfo.cardName }}</div>
-              <div class="card-balance">余额: ¥{{ memberCardInfo.balance }}</div>
+              <div class="card-type">{{ getCardTypeText(memberCardInfo.cardType) }}</div>
             </div>
           </div>
         </div>
@@ -22,10 +22,21 @@
           <el-descriptions :column="1" border>
             <el-descriptions-item label="卡号">{{ memberCardInfo.cardNo }}</el-descriptions-item>
             <el-descriptions-item label="会员卡类型">{{ memberCardInfo.cardName }}</el-descriptions-item>
-            <el-descriptions-item label="余额">¥{{ memberCardInfo.balance }}</el-descriptions-item>
+            <el-descriptions-item label="卡种类型">{{ getCardTypeText(memberCardInfo.cardType) }}</el-descriptions-item>
+            <template v-if="memberCardInfo.cardType === 2">
+              <el-descriptions-item label="剩余次数">{{ memberCardInfo.remainCount }} 次</el-descriptions-item>
+              <el-descriptions-item label="有效期止">{{ formatDate(memberCardInfo.expireTime) }}</el-descriptions-item>
+            </template>
+            <template v-else-if="memberCardInfo.cardType === 1">
+              <el-descriptions-item label="有效期起">{{ formatDate(memberCardInfo.activeTime) }}</el-descriptions-item>
+              <el-descriptions-item label="有效期至">{{ formatDate(memberCardInfo.expireTime) }}</el-descriptions-item>
+            </template>
+            <el-descriptions-item label="订单编号">{{ memberCardInfo.orderNo }}</el-descriptions-item>
+            <el-descriptions-item label="购买金额">¥{{ memberCardInfo.totalAmount }}</el-descriptions-item>
+            <el-descriptions-item label="购买时间">{{ formatDate(memberCardInfo.payTime) }}</el-descriptions-item>
             <el-descriptions-item label="状态">
-              <el-tag :type="memberCardInfo.status === 1 ? 'success' : 'danger'">
-                {{ memberCardInfo.status === 1 ? '正常' : '已过期' }}
+              <el-tag :type="getStatusType(memberCardInfo.status)">
+                {{ getStatusText(memberCardInfo.status) }}
               </el-tag>
             </el-descriptions-item>
           </el-descriptions>
@@ -40,7 +51,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { getMemberCardList } from '@/api/memberCard'
+import { getMyCards } from '@/api/memberCard'
+import dayjs from 'dayjs'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
@@ -48,17 +60,44 @@ const memberCardInfo = ref({})
 
 const fetchMemberCard = async () => {
   try {
-    const res = await getMemberCardList({
-      current: 1,
-      size: 1,
-      userId: userInfo.value.id
-    })
-    if (res.data.records && res.data.records.length > 0) {
-      memberCardInfo.value = res.data.records[0]
+    const res = await getMyCards()
+    if (res.data && res.data.length > 0) {
+      memberCardInfo.value = res.data[0]
     }
   } catch (error) {
     console.error('获取会员卡信息失败:', error)
   }
+}
+
+const getCardTypeText = (type) => {
+  const typeMap = {
+    1: '时间卡',
+    2: '次卡'
+  }
+  return typeMap[type] || '未知'
+}
+
+const getStatusType = (status) => {
+  const typeMap = {
+    1: 'success',
+    0: 'danger',
+    2: 'warning'
+  }
+  return typeMap[status] || 'info'
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    1: '正常',
+    0: '已过期',
+    2: '冻结'
+  }
+  return statusMap[status] || '未知'
+}
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
 }
 
 onMounted(() => {
@@ -146,9 +185,9 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.card-balance {
-  font-size: 18px;
-  font-weight: bold;
+.card-type {
+  font-size: 14px;
+  opacity: 0.9;
 }
 
 .card-info-detail {
