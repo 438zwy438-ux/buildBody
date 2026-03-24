@@ -38,3 +38,26 @@ export const deleteOrder = (idList) => {
     params: { idList }
   })
 }
+
+export const getMyOrders = () => {
+  return request({
+    url: '/sysOrder/my-orders',
+    method: 'get'
+  })
+}
+
+export const cancelOrder = (orderId) => {
+  return request({
+    url: '/sysOrder/cancel',
+    method: 'post',
+    params: { orderId }
+  })
+}
+
+export const refundOrder = (orderId) => {
+  return request({
+    url: '/sysOrder/refund',
+    method: 'post',
+    params: { orderId }
+  })
+}

@@ -75,9 +75,8 @@ public class TbEntryLogController {
 
     @Operation(summary = "确认出场")
     @PostMapping("/checkOut")
-    @RequireRole("admin")
-    public Result<Boolean> checkOut(@RequestParam Long userId) {
-        return Result.success(tbEntryLogService.confirmCheckOut(userId));
+    public Result<Boolean> checkOut(@RequestParam Long id) {
+        return Result.success(tbEntryLogService.confirmCheckOut(id));
     }
 
     @Operation(summary = "查询我的出勤记录")

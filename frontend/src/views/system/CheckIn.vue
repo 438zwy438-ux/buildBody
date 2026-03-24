@@ -30,13 +30,15 @@
                   <p><strong>姓名:</strong> {{ item.realName }}</p>
                   <p><strong>手机:</strong> {{ item.phone }}</p>
                   <p><strong>会员卡:</strong> {{ item.cardName }}</p>
-                  <p><strong>状态:</strong> 
-                    <el-tag :type="item.status === '在场' ? 'success' : 'info'">{{ item.status }}</el-tag>
+                  <p><strong>会员卡状态:</strong> 
+                    <el-tag :type="getCardStatusType(item.cardStatusStr)">{{ item.cardStatusStr }}</el-tag>
                   </p>
+                  <p v-if="item.expireTime"><strong>过期时间:</strong> {{ formatDateTime(item.expireTime) }}</p>
+                  <p v-if="item.remainCount !== null"><strong>剩余次数:</strong> {{ item.remainCount }}</p>
                 </div>
                 <div class="result-actions">
                   <el-button 
-                    v-if="item.status !== '在场'" 
+                    v-if="item.canEntry" 
                     type="primary" 
                     size="small" 
                     @click="handleCheckIn(item.userId)"
@@ -45,9 +47,25 @@
                   </el-button>
                   <el-button 
                     v-else 
+                    type="primary" 
+                    size="small" 
+                    disabled
+                  >
+                    确认入场
+                  </el-button>
+                  <el-button 
+                    v-if="item.canEntry" 
                     type="warning" 
                     size="small" 
                     @click="handleCheckOut(item.userId)"
+                  >
+                    确认出场
+                  </el-button>
+                  <el-button 
+                    v-else 
+                    type="warning" 
+                    size="small" 
+                    disabled
                   >
                     确认出场
                   </el-button>
@@ -96,6 +114,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getEntryLogList, searchMember, checkIn, checkOut } from '@/api/entryLog'
 import { ElMessage } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const searchLoading = ref(false)
@@ -107,7 +126,7 @@ const searchForm = reactive({
 })
 
 const pagination = reactive({
-  page: 1,
+  page:1,
   size: 10,
   total: 0
 })
@@ -148,6 +167,22 @@ const handleSearch = async () => {
 const handleReset = () => {
   searchForm.phone = ''
   searchResult.value = []
+}
+
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss')
+}
+
+const getCardStatusType = (status) => {
+  const statusMap = {
+    '正常': 'success',
+    '已过期': 'danger',
+    '次数不足': 'warning',
+    '卡状态异常(冻结/作废)': 'danger',
+    '无会员卡': 'info'
+  }
+  return statusMap[status] || 'info'
 }
 
 const handleCheckIn = async (userId) => {

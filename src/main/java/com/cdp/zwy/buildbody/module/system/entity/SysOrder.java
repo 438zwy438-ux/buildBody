@@ -1,5 +1,6 @@
 package com.cdp.zwy.buildbody.module.system.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
@@ -24,12 +25,18 @@ public class SysOrder extends Model<SysOrder> {
     private Integer remainCount;
 //订单总金额
     private Double totalAmount;
+//退款金额
+    private Double refundAmount;
 //支付方式（1微信 2支付宝 3余额）
     private Integer payType;
 //状态（0待支付 1已支付 2已取消 3已退款）
     private Integer status;
 //支付时间
     private Date payTime;
+//取消时间
+    private Date cancelTime;
+//退款时间
+    private Date refundTime;
 //下单时间
     private Date createTime;
 //订单类型（1会员卡2私教课）
@@ -90,6 +97,14 @@ public class SysOrder extends Model<SysOrder> {
         this.totalAmount = totalAmount;
     }
 
+    public Double getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(Double refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
     public Integer getPayType() {
         return payType;
     }
@@ -112,6 +127,22 @@ public class SysOrder extends Model<SysOrder> {
 
     public void setPayTime(Date payTime) {
         this.payTime = payTime;
+    }
+
+    public Date getCancelTime() {
+        return cancelTime;
+    }
+
+    public void setCancelTime(Date cancelTime) {
+        this.cancelTime = cancelTime;
+    }
+
+    public Date getRefundTime() {
+        return refundTime;
+    }
+
+    public void setRefundTime(Date refundTime) {
+        this.refundTime = refundTime;
     }
 
     public Date getCreateTime() {

@@ -272,13 +272,12 @@ const handleUpdate = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        // 首先更新sys_user表中的基本信息
+        // 首先更新sys_user表中的基本信息（不包含gender）
          await updateUser({
            userId: userInfo.value.userId,
            username: form.username,
            nickname: form.nickname,
            phone: form.phone,
-           gender: form.gender,
            avatar: form.avatar
          })
          
@@ -288,7 +287,6 @@ const handleUpdate = async () => {
            username: form.username,
            nickname: form.nickname,
            phone: form.phone,
-           gender: form.gender,
            avatar: form.avatar
          })
         
@@ -302,9 +300,10 @@ const handleUpdate = async () => {
           // 教练档案更新通常由管理员完成，这里暂不实现
           console.log('教练档案更新功能待完善')
         } else {
-          // 会员更新基本信息到会员档案
+          // 会员更新基本信息到会员档案（包含gender）
           await updateMemberProfile({
             ...memberProfile.value,
+            userId: userInfo.value.userId,
             realName: form.realName,
             nickname: form.nickname,
             phone: form.phone,
