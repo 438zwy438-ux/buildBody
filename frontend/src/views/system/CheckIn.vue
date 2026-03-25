@@ -76,23 +76,27 @@
         </el-col>
         
         <el-col :span="16">
-          <el-card shadow="hover">
+          <el-card shadow="hover" class="table-card">
             <template #header>
               <span>今日入场记录</span>
             </template>
-            <el-table :data="tableData" v-loading="loading" border>
-              <el-table-column prop="userId" label="用户ID" width="80" />
-              <el-table-column prop="realName" label="姓名" />
-              <el-table-column prop="phone" label="手机号" />
-              <el-table-column prop="entryTime" label="入场时间" />
-              <el-table-column prop="exitTime" label="出场时间" />
-              <el-table-column prop="status" label="状态" width="80">
-                <template #default="{ row }">
-                  <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
-                </template>
-              </el-table-column>
-            </el-table>
-
+            <div class="table-container">
+              <el-table :data="tableData" v-loading="loading" border>
+                <el-table-column prop="userId" label="用户ID" width="80" />
+                <el-table-column prop="realName" label="姓名" />
+                <el-table-column prop="phone" label="手机号" />
+                <el-table-column prop="entryTime" label="入场时间" />
+                <el-table-column prop="exitTime" label="出场时间" />
+                <el-table-column prop="status" label="状态" width="80">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-card>
+          
+          <div class="pagination-wrapper">
             <el-pagination
               v-model:current-page="pagination.page"
               v-model:page-size="pagination.size"
@@ -101,9 +105,8 @@
               layout="total, sizes, prev, pager, next, jumper"
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
-              style="margin-top: 20px; justify-content: flex-end"
             />
-          </el-card>
+          </div>
         </el-col>
       </el-row>
     </el-card>
@@ -138,10 +141,12 @@ const fetchData = async () => {
       current: pagination.page,
       size: pagination.size
     })
-    tableData.value = res.data.records
-    pagination.total = res.data.total
+    tableData.value = res.data?.records || []
+    pagination.total = Number(res.data?.total || 0)
   } catch (error) {
     console.error('获取入场记录失败:', error)
+    tableData.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -229,6 +234,17 @@ onMounted(() => {
   align-items: center;
 }
 
+.search-form {
+  margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding: 10px 0;
+}
+
 .search-result {
   margin-top: 20px;
 }
@@ -249,5 +265,25 @@ onMounted(() => {
 .result-actions {
   margin-top: 10px;
   text-align: right;
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+.table-container {
+  min-height: 200px;
+  max-height: 500px;
+  overflow: auto;
+}
+
+:deep(.el-table) {
+  flex: 1;
+}
+
+:deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 </style>

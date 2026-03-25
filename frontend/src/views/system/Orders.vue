@@ -42,16 +42,17 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.size"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="margin-top: 20px; justify-content: flex-end"
-      />
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
@@ -121,15 +122,23 @@ const rules = {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getOrderList({
+    const params = {
       current: pagination.page,
-      size: pagination.size,
-      ...searchForm
-    })
-    tableData.value = res.data.records
-    pagination.total = res.data.total
+      size: pagination.size
+    }
+    if (searchForm.orderNo) {
+      params.orderNo = searchForm.orderNo
+    }
+    if (searchForm.userId) {
+      params.userId = searchForm.userId
+    }
+    const res = await getOrderList(params)
+    tableData.value = res.data?.records || []
+    pagination.total = Number(res.data?.total || 0)
   } catch (error) {
     console.error('获取订单列表失败:', error)
+    tableData.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -227,5 +236,11 @@ onMounted(() => {
 
 .search-form {
   margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 </style>

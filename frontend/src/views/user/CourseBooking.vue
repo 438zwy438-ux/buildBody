@@ -36,16 +36,17 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.size"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="margin-top: 20px; justify-content: flex-end"
-      />
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="purchaseDialogVisible" title="购买课程" width="500px">
@@ -116,17 +117,25 @@ const totalAmount = computed(() => {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getCourseList({
+    const params = {
       current: pagination.page,
       size: pagination.size,
       type: 1,
-      status: 1,
-      ...searchForm
-    })
-    tableData.value = res.data.records
-    pagination.total = res.data.total
+      status: 1
+    }
+    if (searchForm.courseName) {
+      params.courseName = searchForm.courseName
+    }
+    if (searchForm.coachName) {
+      params.coachName = searchForm.coachName
+    }
+    const res = await getCourseList(params)
+    tableData.value = res.data?.records || []
+    pagination.total = Number(res.data?.total || 0)
   } catch (error) {
     console.error('获取课程列表失败:', error)
+    tableData.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -201,5 +210,19 @@ onMounted(() => {
 
 .search-form {
   margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  min-height: 32px;
+  z-index: 1;
+}
+
+:deep(.el-pagination) {
+  display: flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 </style>

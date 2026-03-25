@@ -53,16 +53,17 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.size"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="margin-top: 20px; justify-content: flex-end"
-      />
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.size"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px">
@@ -178,10 +179,12 @@ const fetchData = async () => {
       params.realName = searchForm.realName
     }
     const res = await getCoachList(params)
-    tableData.value = res.data.records
-    pagination.total = res.data.total
+    tableData.value = res.data?.records || []
+    pagination.total = Number(res.data?.total || 0)
   } catch (error) {
     console.error('获取教练列表失败:', error)
+    tableData.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -369,6 +372,41 @@ onMounted(() => {
 
 .search-form {
   margin-bottom: 20px;
+}
+
+.pagination-wrapper {
+  display: flex !important;
+  justify-content: flex-end;
+  margin-top: 20px;
+  min-height: 40px;
+  align-items: center;
+  padding: 10px 0;
+  z-index: 1;
+}
+
+:deep(.el-pagination) {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+:deep(.el-pagination .el-pagination__total) {
+  margin-right: 10px;
+}
+
+:deep(.el-pagination .el-pagination__sizes) {
+  margin-right: 10px;
+}
+
+:deep(.el-pagination .btn-prev),
+:deep(.el-pagination .btn-next) {
+  margin: 0 5px;
+}
+
+:deep(.el-pagination .el-pager) {
+  margin: 0 5px;
 }
 
 .el-icon--upload {

@@ -11,6 +11,13 @@ html, body, #app {
 }
 
 .el-pagination {
-  display: flex;
+  display: flex !important;
   justify-content: flex-end;
+  align-items: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.el-card .el-card__body {
+  overflow: visible !important;
 }
