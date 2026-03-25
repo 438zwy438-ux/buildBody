@@ -34,7 +34,11 @@
             <el-tag v-else-if="row.role === 3" type="warning">教练</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column prop="createTime" label="创建时间">
+          <template #default="{ row }">
+            {{ row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -101,6 +105,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getUserList, updateUser, deleteUser, addCoach } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

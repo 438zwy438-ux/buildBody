@@ -91,4 +91,31 @@ public class UploadController {
             return Result.error("上传失败");
         }
     }
+
+    @Operation(summary = "上传课程图片")
+    @PostMapping("/course/{courseId}")
+    public Result<String> uploadCourseImage(
+            @PathVariable Long courseId,
+            @RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("文件不能为空");
+        }
+
+        try {
+            String fileUrl = minioUtil.upload(file, "course");
+            
+            ImgRelation imgRelation = new ImgRelation();
+            imgRelation.setRelationType(3);
+            imgRelation.setRelationId(courseId);
+            imgRelation.setImgUrl(fileUrl);
+            imgRelation.setCreateTime(new Date());
+            
+            imgRelationService.save(imgRelation);
+            
+            return Result.success(fileUrl);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("上传失败");
+        }
+    }
 }

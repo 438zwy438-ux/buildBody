@@ -39,7 +39,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="intro" label="简介" show-overflow-tooltip />
-        <el-table-column prop="entryDate" label="入职日期" width="120" />
+        <el-table-column prop="entryDate" label="入职日期" width="120">
+          <template #default="{ row }">
+            {{ row.entryDate ? dayjs(row.entryDate).format('YYYY-MM-DD') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '在职' : '离职' }}</el-tag>
@@ -129,6 +133,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { getCoachList, addCoach, updateCoach, deleteCoach, deleteCoachImageByUrl } from '@/api/coach'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

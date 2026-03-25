@@ -23,12 +23,32 @@
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="userId" label="用户ID" />
-        <el-table-column prop="cardTemplateId" label="模板ID" />
+        <el-table-column prop="templateId" label="模板ID" />
         <el-table-column prop="cardNo" label="卡号" />
-        <el-table-column prop="balance" label="余额" />
-        <el-table-column prop="status" label="状态" width="80">
+        <el-table-column prop="totalCount" label="总次数" width="100" />
+        <el-table-column prop="remainCount" label="剩余次数" width="100" />
+        <el-table-column prop="activeTime" label="激活时间" width="180">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '已过期' }}</el-tag>
+            {{ row.activeTime ? dayjs(row.activeTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="expireTime" label="过期时间" width="180">
+          <template #default="{ row }">
+            {{ row.expireTime ? dayjs(row.expireTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="购买时间" width="180">
+          <template #default="{ row }">
+            {{ row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag 
+              :type="row.status === 1 ? 'success' : row.status === 2 ? 'warning' : 'info'"
+            >
+              {{ row.status === 1 ? '正常' : row.status === 2 ? '冻结' : '已过期' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200">
@@ -53,23 +73,43 @@
     </el-card>
 
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
         <el-form-item label="用户ID" prop="userId">
           <el-input v-model="form.userId" placeholder="请输入用户ID" />
         </el-form-item>
-        <el-form-item label="模板ID" prop="cardTemplateId">
-          <el-input v-model="form.cardTemplateId" placeholder="请输入会员卡模板ID" />
+        <el-form-item label="模板ID" prop="templateId">
+          <el-input v-model="form.templateId" placeholder="请输入会员卡模板ID" />
         </el-form-item>
         <el-form-item label="卡号" prop="cardNo">
           <el-input v-model="form.cardNo" placeholder="请输入卡号" />
         </el-form-item>
-        <el-form-item label="余额" prop="balance">
-          <el-input-number v-model="form.balance" :min="0" :precision="2" style="width: 100%" />
+        <el-form-item label="总次数" prop="totalCount">
+          <el-input-number v-model="form.totalCount" :min="0" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="剩余次数" prop="remainCount">
+          <el-input-number v-model="form.remainCount" :min="0" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="激活时间" prop="activeTime">
+          <el-date-picker
+            v-model="form.activeTime"
+            type="datetime"
+            placeholder="选择激活时间"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="过期时间" prop="expireTime">
+          <el-date-picker
+            v-model="form.expireTime"
+            type="datetime"
+            placeholder="选择过期时间"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio :label="1">正常</el-radio>
+            <el-radio :label="2">冻结</el-radio>
             <el-radio :label="0">已过期</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -86,6 +126,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getMemberCardList, createMemberCard, updateMemberCard, deleteMemberCard } from '@/api/memberCard'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -107,17 +148,23 @@ const pagination = reactive({
 const form = reactive({
   id: null,
   userId: null,
-  cardTemplateId: null,
+  templateId: null,
   cardNo: '',
-  balance: 0,
+  totalCount: 0,
+  remainCount: 0,
+  activeTime: null,
+  expireTime: null,
   status: 1
 })
 
 const rules = {
   userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
-  cardTemplateId: [{ required: true, message: '请输入会员卡模板ID', trigger: 'blur' }],
+  templateId: [{ required: true, message: '请输入会员卡模板ID', trigger: 'blur' }],
   cardNo: [{ required: true, message: '请输入卡号', trigger: 'blur' }],
-  balance: [{ required: true, message: '请输入余额', trigger: 'blur' }],
+  totalCount: [{ required: true, message: '请输入总次数', trigger: 'blur' }],
+  remainCount: [{ required: true, message: '请输入剩余次数', trigger: 'blur' }],
+  activeTime: [{ required: true, message: '请选择激活时间', trigger: 'change' }],
+  expireTime: [{ required: true, message: '请选择过期时间', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -162,9 +209,12 @@ const handleAdd = () => {
   dialogTitle.value = '添加会员卡'
   form.id = null
   form.userId = null
-  form.cardTemplateId = null
+  form.templateId = null
   form.cardNo = ''
-  form.balance = 0
+  form.totalCount = 0
+  form.remainCount = 0
+  form.activeTime = null
+  form.expireTime = null
   form.status = 1
   dialogVisible.value = true
 }
@@ -173,9 +223,12 @@ const handleEdit = (row) => {
   dialogTitle.value = '编辑会员卡'
   form.id = row.id
   form.userId = row.userId
-  form.cardTemplateId = row.cardTemplateId
+  form.templateId = row.templateId
   form.cardNo = row.cardNo
-  form.balance = row.balance
+  form.totalCount = row.totalCount
+  form.remainCount = row.remainCount
+  form.activeTime = row.activeTime
+  form.expireTime = row.expireTime
   form.status = row.status
   dialogVisible.value = true
 }

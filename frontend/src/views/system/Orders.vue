@@ -33,7 +33,11 @@
             <el-tag v-else type="info">已取消</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" />
+        <el-table-column prop="createTime" label="创建时间">
+          <template #default="{ row }">
+            {{ row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -86,6 +90,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getOrderList, createOrder, updateOrder, deleteOrder } from '@/api/order'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

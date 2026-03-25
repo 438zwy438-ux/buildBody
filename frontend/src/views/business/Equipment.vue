@@ -30,7 +30,11 @@
         <el-table-column prop="name" label="器材名称" />
         <el-table-column prop="code" label="编号" />
         <el-table-column prop="location" label="位置" />
-        <el-table-column prop="buyDate" label="购买日期" />
+        <el-table-column prop="buyDate" label="购买日期">
+          <template #default="{ row }">
+            {{ row.buyDate ? dayjs(row.buyDate).format('YYYY-MM-DD') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column label="图片" width="150">
           <template #default="{ row }">
             <div v-if="row.images && row.images.length > 0" class="image-preview">
@@ -143,6 +147,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { getEquipmentList, createEquipment, updateEquipment, deleteEquipment, deleteEquipmentImageByUrl } from '@/api/equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

@@ -31,7 +31,11 @@
         <el-table-column prop="location" label="位置" />
         <el-table-column prop="userId" label="使用人ID" />
         <el-table-column prop="userName" label="使用人" />
-        <el-table-column prop="startTime" label="开始使用时间" />
+        <el-table-column prop="startTime" label="开始使用时间">
+          <template #default="{ row }">
+            {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag v-if="row.status === 1" type="success">空闲</el-tag>
@@ -91,6 +95,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getLockerList, createLocker, updateLocker, deleteLocker, lockLocker, unlockLocker } from '@/api/locker'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

@@ -30,8 +30,16 @@
         <el-table-column prop="equipmentId" label="器材ID" />
         <el-table-column prop="equipmentName" label="器材名称" />
         <el-table-column prop="faultDesc" label="故障描述" />
-        <el-table-column prop="reportTime" label="报修时间" />
-        <el-table-column prop="fixTime" label="维修时间" />
+        <el-table-column prop="reportTime" label="报修时间">
+          <template #default="{ row }">
+            {{ row.reportTime ? dayjs(row.reportTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="fixTime" label="维修时间">
+          <template #default="{ row }">
+            {{ row.fixTime ? dayjs(row.fixTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag v-if="row.status === 1" type="danger">待维修</el-tag>
@@ -110,6 +118,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getFixLogList, createFixLog, updateFixLog, deleteFixLog } from '@/api/fixLog'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
