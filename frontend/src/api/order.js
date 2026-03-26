@@ -39,6 +39,13 @@ export const deleteOrder = (idList) => {
   })
 }
 
+export const getMyCoursesOrders = () => {
+  return request({
+    url: '/sysOrder/my-courses-orders',
+    method: 'get'
+  })
+}
+
 export const getMyOrders = () => {
   return request({
     url: '/sysOrder/my-orders',

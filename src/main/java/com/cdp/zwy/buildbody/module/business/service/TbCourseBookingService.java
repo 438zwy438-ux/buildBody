@@ -5,6 +5,8 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCourseBooking;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 课程预约记录表(TbCourseBooking)表服务接口
@@ -15,8 +17,10 @@ import java.util.Date;
 public interface TbCourseBookingService extends IService<TbCourseBooking> {
 
     @Transactional(rollbackFor = Exception.class)
-    Long bookCourse(Long userId, Long coachUserId, Long courseId, Date scheduleTime);
+    Long bookCourse(Long userId, Long courseId, Date scheduleTime);
 
     @Transactional(rollbackFor = Exception.class)
     Boolean checkCourse(Long bookingId);
+    
+    List<Map<String, Object>> getAvailableSlots(Long coachId);
 }

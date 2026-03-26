@@ -1,7 +1,10 @@
 package com.cdp.zwy.buildbody.module.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cdp.zwy.buildbody.module.system.controller.VO.CourseOrderVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
+
+import java.util.List;
 
 /**
  * 系统订单表(SysOrder)表服务接口
@@ -55,4 +58,12 @@ public interface SysOrderService extends IService<SysOrder> {
      * @return 退款结果
      */
     Boolean refundOrder(Long orderId);
+
+    /**
+     * 查询我的私教课订单（多表查询）
+     *
+     * @param userId 用户ID
+     * @return 私教课订单列表
+     */
+    List<CourseOrderVO> getMyCourseOrders(Long userId);
 }

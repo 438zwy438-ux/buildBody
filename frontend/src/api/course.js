@@ -68,3 +68,19 @@ export const getMyPrivateOrders = (userId) => {
     method: 'get'
   })
 }
+
+export const getAvailableSlots = (coachId) => {
+  return request({
+    url: '/tbCourseBooking/available-slots',
+    method: 'get',
+    params: { coachId }
+  })
+}
+
+export const bookCourse = (data) => {
+  return request({
+    url: '/tbCourseBooking/book',
+    method: 'post',
+    params: data
+  })
+}

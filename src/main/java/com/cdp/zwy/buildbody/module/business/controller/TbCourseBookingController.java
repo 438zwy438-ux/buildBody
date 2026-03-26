@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Tag(name = "课程预约记录相关接口")
@@ -62,12 +63,11 @@ public class TbCourseBookingController {
     @Operation(summary = "预约课程")
     @PostMapping("/book")
     @RequireRole("vip")
-    public Result<Long> bookCourse(@RequestParam Long coachUserId,
-                                  @RequestParam Long courseId,
+    public Result<Long> bookCourse(@RequestParam Long courseId,
                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date scheduleTime,
                                   HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        Long bookingId = tbCourseBookingService.bookCourse(userId, coachUserId, courseId, scheduleTime);
+        Long bookingId = tbCourseBookingService.bookCourse(userId, courseId, scheduleTime);
         return Result.success(bookingId);
     }
     
@@ -115,5 +115,13 @@ public class TbCourseBookingController {
         }
         queryWrapper.orderByDesc("create_time");
         return Result.success(tbCourseBookingService.list(queryWrapper));
+    }
+    
+
+    @Operation(summary = "查询教练可用时间槽")
+    @GetMapping("/available-slots")
+    @RequireRole({"user", "vip"})
+    public Result<List<Map<String, Object>>> getAvailableSlots(@RequestParam Long coachId) {
+        return Result.success(tbCourseBookingService.getAvailableSlots(coachId));
     }
 }

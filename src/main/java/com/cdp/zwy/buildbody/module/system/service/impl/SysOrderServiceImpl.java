@@ -3,9 +3,14 @@ package com.cdp.zwy.buildbody.module.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cdp.zwy.buildbody.module.business.dao.TbCardTemplateDao;
+import com.cdp.zwy.buildbody.module.business.dao.TbCoachProfileDao;
+import com.cdp.zwy.buildbody.module.business.dao.TbCourseDao;
 import com.cdp.zwy.buildbody.module.business.dao.TbMemberCardDao;
 import com.cdp.zwy.buildbody.module.business.entity.TbCardTemplate;
+import com.cdp.zwy.buildbody.module.business.entity.TbCoachProfile;
+import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
+import com.cdp.zwy.buildbody.module.system.controller.VO.CourseOrderVO;
 import com.cdp.zwy.buildbody.module.system.dao.SysOrderDao;
 import com.cdp.zwy.buildbody.module.system.dao.SysUserDao;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
@@ -20,7 +25,9 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -40,6 +47,12 @@ public class SysOrderServiceImpl extends ServiceImpl<SysOrderDao, SysOrder> impl
 
     @Resource
     private SysUserDao sysUserDao;
+
+    @Resource
+    private TbCourseDao tbCourseDao;
+
+    @Resource
+    private TbCoachProfileDao tbCoachProfileDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -227,5 +240,70 @@ public class SysOrderServiceImpl extends ServiceImpl<SysOrderDao, SysOrder> impl
         Random random = new Random();
         int randomNum = random.nextInt(10000);
         return "ORD" + timeStr + String.format("%04d", randomNum);
+    }
+
+    @Override
+    public List<CourseOrderVO> getMyCourseOrders(Long userId) {
+        // 1. 查询用户的私教课订单
+        QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
+        orderQuery.eq("user_id", userId);
+        orderQuery.eq("type", 2); // 2-私教课
+        orderQuery.eq("status", 1); // 1-已支付
+        orderQuery.orderByDesc("create_time");
+        List<SysOrder> orders = this.list(orderQuery);
+
+        if (orders.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 2. 构建结果列表
+        List<CourseOrderVO> result = new ArrayList<>();
+
+        for (SysOrder order : orders) {
+            CourseOrderVO vo = new CourseOrderVO();
+
+            // 复制订单字段
+            vo.setId(order.getId());
+            vo.setOrderNo(order.getOrderNo());
+            vo.setUserId(order.getUserId());
+            vo.setSubject(order.getSubject());
+            vo.setRemainCount(order.getRemainCount());
+            vo.setTotalAmount(order.getTotalAmount());
+            vo.setRefundAmount(order.getRefundAmount());
+            vo.setPayType(order.getPayType());
+            vo.setStatus(order.getStatus());
+            vo.setPayTime(order.getPayTime());
+            vo.setCancelTime(order.getCancelTime());
+            vo.setRefundTime(order.getRefundTime());
+            vo.setCreateTime(order.getCreateTime());
+            vo.setType(order.getType());
+            vo.setTotalCount(order.getTotalCount());
+            vo.setCourseId(order.getCourseId());
+            vo.setCardId(order.getCardId());
+
+            // 查询课程信息
+            if (order.getCourseId() != null) {
+                TbCourse course = tbCourseDao.selectById(order.getCourseId());
+                if (course != null) {
+                    vo.setCourseName(course.getName());
+                    vo.setCoachUserId(course.getCoachUserId());
+
+                    // 查询教练信息
+                    if (course.getCoachUserId() != null) {
+                        QueryWrapper<TbCoachProfile> coachQuery = new QueryWrapper<>();
+                        coachQuery.eq("user_id", course.getCoachUserId());
+                        coachQuery.eq("status", 1); // 1-在职
+                        TbCoachProfile coach = tbCoachProfileDao.selectOne(coachQuery);
+                        if (coach != null) {
+                            vo.setCoachRealName(coach.getRealName());
+                        }
+                    }
+                }
+            }
+
+            result.add(vo);
+        }
+
+        return result;
     }
 }

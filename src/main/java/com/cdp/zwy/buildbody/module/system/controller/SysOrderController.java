@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.system.controller.VO.CourseOrderVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
 import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,6 +46,14 @@ public class SysOrderController {
         queryWrapper.eq("user_id", userId);
         queryWrapper.orderByDesc("create_time");
         return Result.success(this.sysOrderService.list(queryWrapper));
+    }
+    @Operation(summary = "查询我的私教课订单")
+    @GetMapping("/my-courses-orders")
+    @RequireRole({ "vip"})
+    public Result<List<CourseOrderVO>> getMyCoursesOrders(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        List<CourseOrderVO> courseOrders = sysOrderService.getMyCourseOrders(userId);
+        return Result.success(courseOrders);
     }
 
     @Operation(summary = "新增数据")

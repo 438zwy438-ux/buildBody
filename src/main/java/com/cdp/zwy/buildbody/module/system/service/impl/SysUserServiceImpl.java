@@ -250,10 +250,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         // 批量查询sys_role表获取对应的role_key
         List<SysRole> roles = sysRoleDao.selectBatchIds(roleIds);
         
-        // 提取role_key并返回
+        // 提取role_key并返回，过滤掉null和空字符串
         List<String> roleKeys = roles.stream()
             .map(SysRole::getRoleKey)
-            .filter(Objects::nonNull) // 过滤掉null值
+            .filter(roleKey -> roleKey != null && !roleKey.trim().isEmpty()) // 过滤掉null和空字符串
             .collect(Collectors.toList());
         
         return roleKeys;
