@@ -83,6 +83,24 @@ const routes = [
         meta: { title: '课程预约', requiresAuth: true, requiredRoles: ['user', 'vip'] }
       },
       {
+        path: 'private-courses',
+        name: 'PrivateCourses',
+        component: () => import('@/views/user/PrivateCourses.vue'),
+        meta: { title: '私教课程', requiresAuth: false }
+      },
+      {
+        path: 'private-courses/:id',
+        name: 'PrivateCourseDetail',
+        component: () => import('@/views/user/PrivateCourseDetail.vue'),
+        meta: { title: '课程详情', requiresAuth: false }
+      },
+      {
+        path: 'course-purchase',
+        name: 'CoursePurchase',
+        component: () => import('@/views/user/CoursePurchase.vue'),
+        meta: { title: '购买课程', requiresAuth: true, requiredRoles: ['user', 'vip'] }
+      },
+      {
         path: 'entry-records',
         name: 'UserEntryRecords',
         component: () => import('@/views/user/EntryRecords.vue'),

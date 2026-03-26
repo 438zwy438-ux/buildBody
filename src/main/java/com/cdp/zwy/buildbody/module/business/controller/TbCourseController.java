@@ -11,7 +11,9 @@ import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.business.service.TbCourseService;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberProfileService;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
+import com.cdp.zwy.buildbody.module.system.entity.SysUserRole;
 import com.cdp.zwy.buildbody.module.system.service.SysOrderService;
+import com.cdp.zwy.buildbody.module.system.service.SysUserRoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -34,6 +36,9 @@ public class TbCourseController {
     
     @Resource
     private TbMemberProfileService memberProfileService;
+    
+    @Resource
+    private SysUserRoleService sysUserRoleService;
 
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
@@ -99,6 +104,19 @@ public class TbCourseController {
         if (memberProfile != null) {
             memberProfile.setIsVip(1);
             memberProfileService.updateById(memberProfile);
+        }
+        
+        // 为用户添加VIP角色 (role_id=4)
+        QueryWrapper<SysUserRole> roleQuery = new QueryWrapper<>();
+        roleQuery.eq("user_id", dto.getUserId());
+        roleQuery.eq("role_id", 4);
+        SysUserRole existingRole = sysUserRoleService.getOne(roleQuery);
+        
+        if (existingRole == null) {
+            SysUserRole userRole = new SysUserRole();
+            userRole.setUserId(dto.getUserId());
+            userRole.setRoleId(4L); // VIP角色ID
+            sysUserRoleService.save(userRole);
         }
         
         return Result.success(orderId);
