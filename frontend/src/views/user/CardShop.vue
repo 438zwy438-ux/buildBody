@@ -5,7 +5,7 @@
       <p>选择适合您的会员卡，开启健身之旅</p>
     </div>
 
-    <div class="user-status" v-if="userInfo">
+    <div class="user-status" v-if="hasAnyRole(['user'])">
       <el-card>
         <div class="status-content">
           <div class="status-info">
@@ -62,9 +62,9 @@
               size="large" 
               class="purchase-btn"
               @click="handlePurchase(template)"
-              :disabled="template.status !== 1"
+              :disabled="template.status !== 1 || !hasAnyRole(['user'])"
             >
-              {{ template.status === 1 ? '立即购买' : '已下架' }}
+              {{ template.status === 1 ? (hasAnyRole(['user']) ? '立即购买' : '请先成为会员') : '已下架' }}
             </el-button>
           </el-card>
         </el-col>
@@ -126,6 +126,10 @@ import { User, Clock, Tickets, Check, Warning } from '@element-plus/icons-vue'
 const router = useRouter()
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
+const hasAnyRole = (roleList) => {
+  return roleList.some(role => userStore.roles.includes(role))
+}
+
 const cardTemplates = ref([])
 const memberCardInfo = ref({})
 const purchaseDialogVisible = ref(false)
@@ -211,7 +215,9 @@ const scrollToCards = () => {
 
 onMounted(() => {
   fetchCardTemplates()
-  fetchMyCard()
+  if (hasAnyRole(['user'])) {
+    fetchMyCard()
+  }
 })
 </script>
 
