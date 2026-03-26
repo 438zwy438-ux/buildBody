@@ -73,22 +73,77 @@
             </el-tab-pane>
             <!-- 会员档案标签页 - 仅对普通会员和VIP会员显示 -->
             <el-tab-pane v-if="hasRole('user') || hasRole('vip')" label="会员档案" name="member-profile">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="真实姓名">{{ memberProfile.realName }}</el-descriptions-item>
-                <el-descriptions-item label="性别">{{ memberProfile.gender === 0 ? '男' : memberProfile.gender === 1 ? '女' : '未知' }}</el-descriptions-item>
-                <el-descriptions-item label="出生日期">{{ memberProfile.birthDate || '未填写' }}</el-descriptions-item>
-                <el-descriptions-item label="年龄">{{ calculateAge(memberProfile.birthDate) }}岁</el-descriptions-item>
-                <el-descriptions-item label="账户余额">{{ memberProfile.balance }}元</el-descriptions-item>
-                <el-descriptions-item label="积分">{{ memberProfile.points }}</el-descriptions-item>
-                <el-descriptions-item label="VIP状态">
-                  <el-tag :type="memberProfile.isVip === 1 ? 'warning' : 'info'">
-                    {{ memberProfile.isVip === 1 ? '是' : '否' }}
-                  </el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="VIP到期时间" v-if="memberProfile.isVip === 1">
-                  {{ memberProfile.vipExpireTime }}
-                </el-descriptions-item>
-              </el-descriptions>
+              <!-- 只读资产信息展示 -->
+              <el-card class="asset-card" style="margin-bottom: 20px;">
+                <template #header>
+                  <div class="card-header">
+                    <span>资产信息</span>
+                  </div>
+                </template>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="账户余额">
+                    <span style="color: #67c23a; font-weight: bold;">{{ memberForm.balance }}元</span>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="VIP状态">
+                    <el-tag :type="memberForm.isVip === 1 ? 'warning' : 'info'">
+                      {{ memberForm.isVip === 1 ? 'VIP会员' : '普通会员' }}
+                    </el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item v-if="memberForm.isVip === 1" label="VIP到期时间" :span="2">
+                    <span>{{ memberForm.vipExpireTime }}</span>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </el-card>
+              
+              <!-- 可编辑的个人信息表单 -->
+              <el-form :model="memberForm" :rules="memberRules" ref="memberFormRef" label-width="120px">
+                <el-form-item label="真实姓名" prop="realName">
+                  <el-input v-model="memberForm.realName" />
+                </el-form-item>
+                <el-form-item label="性别" prop="gender">
+                  <el-radio-group v-model="memberForm.gender">
+                    <el-radio :label="0">男</el-radio>
+                    <el-radio :label="1">女</el-radio>
+                    <el-radio :label="2">未知</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+                <el-form-item label="出生日期" prop="birthDate">
+                  <el-date-picker
+                    v-model="memberForm.birthDate"
+                    type="date"
+                    placeholder="选择出生日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+                <el-form-item label="年龄">
+                  <span>{{ calculateAge(memberForm.birthDate) }}岁</span>
+                </el-form-item>
+                <el-form-item label="人脸照片" prop="faceImgUrl">
+                  <el-upload
+                    class="face-uploader"
+                    action="/api/common/upload"
+                    :data="{ folder: 'face' }"
+                    :show-file-list="false"
+                    :on-success="handleFaceSuccess"
+                    :before-upload="beforeFaceUpload"
+                    :headers="{ 'Authorization': `Bearer ${userStore.token}` }"
+                  >
+                    <div class="face-uploader-content">
+                      <img v-if="memberForm.faceImgUrl" :src="memberForm.faceImgUrl" class="face-image" />
+                      <div v-else class="face-uploader-placeholder">
+                        <el-icon><Camera /></el-icon>
+                        <div class="upload-text">上传本人清晰正面照</div>
+                        <div class="upload-hint">用于入场核验，请确保照片清晰</div>
+                      </div>
+                    </div>
+                  </el-upload>
+                  <div class="upload-tip">请上传本人清晰正面照以便入场核验（支持 JPG/PNG 格式，不超过 5MB）</div>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleUpdateMemberProfile">更新档案信息</el-button>
+                </el-form-item>
+              </el-form>
             </el-tab-pane>
             <el-tab-pane label="修改密码" name="password">
               <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="120px">
@@ -115,7 +170,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Camera } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { getMyMemberProfile, updateMemberProfile } from '@/api/memberProfile'
 import { getCoachProfileByUserId } from '@/api/coachProfile'
@@ -142,6 +197,19 @@ const coachProfile = ref({})
 const activeTab = ref('basic')
 const formRef = ref(null)
 const passwordFormRef = ref(null)
+const memberFormRef = ref(null)
+const faceUploading = ref(false)
+
+// 会员档案表单数据
+const memberForm = reactive({
+  realName: '',
+  gender: 2,
+  birthDate: null,
+  faceImgUrl: '',
+  balance: 0,
+  isVip: 0,
+  vipExpireTime: null
+})
 
 // 头像上传相关函数
 const handleAvatarSuccess = (response, uploadFile) => {
@@ -165,6 +233,42 @@ const beforeAvatarUpload = (rawFile) => {
     ElMessage.error('头像图片大小不能超过 2MB!')
   }
   return isValidType && isLt2M
+}
+
+// 人脸照片上传相关函数
+const handleFaceSuccess = (response, uploadFile) => {
+  faceUploading.value = false
+  console.log('人脸照片上传响应:', response) // 添加调试日志
+  
+  if (typeof response === 'string') {
+    memberForm.faceImgUrl = response
+    ElMessage.success('人脸照片上传成功')
+  } else if (response.code === 200) {
+    memberForm.faceImgUrl = response.data
+    ElMessage.success('人脸照片上传成功')
+  } else {
+    ElMessage.error('人脸照片上传失败')
+  }
+  
+  console.log('当前人脸照片URL:', memberForm.faceImgUrl) // 添加调试日志
+}
+
+const beforeFaceUpload = (rawFile) => {
+  faceUploading.value = true
+  const isValidType = ['image/jpeg', 'image/jpg', 'image/png'].includes(rawFile.type)
+  const isLt5M = rawFile.size / 1024 / 1024 < 5
+
+  if (!isValidType) {
+    faceUploading.value = false
+    ElMessage.error('人脸照片只能是 JPG/JPEG/PNG 格式!')
+    return false
+  }
+  if (!isLt5M) {
+    faceUploading.value = false
+    ElMessage.error('人脸照片大小不能超过 5MB!')
+    return false
+  }
+  return isValidType && isLt5M
 }
 
 const form = reactive({
@@ -215,6 +319,14 @@ const passwordRules = {
   ]
 }
 
+// 会员档案校验规则
+const memberRules = {
+  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
+  birthDate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
+  faceImgUrl: [{ required: true, message: '请上传本人清晰正面照以便入场核验', trigger: 'change' }]
+}
+
 // 角色检查函数
 const hasRole = (role) => {
   return userStore.roles.includes(role)
@@ -242,9 +354,16 @@ const fetchMemberProfile = async () => {
     const res = await getMyMemberProfile()
     if (res.data) {
       memberProfile.value = res.data
+      console.log('获取会员档案成功:', res.data)
+    } else {
+      // 会员档案不存在，初始化空对象
+      memberProfile.value = {}
+      console.log('会员档案不存在，需要创建新档案')
     }
   } catch (error) {
     console.error('获取会员档案失败:', error)
+    // 发生错误时也初始化空对象
+    memberProfile.value = {}
   }
 }
 
@@ -337,6 +456,48 @@ const handleChangePassword = async () => {
   })
 }
 
+// 更新会员档案（可编辑的个人信息）
+const handleUpdateMemberProfile = async () => {
+  if (!memberFormRef.value) return
+  
+  await memberFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        // 确保有用户ID
+        const userId = userInfo.value.userId || userInfo.value.id
+        if (!userId) {
+          ElMessage.error('用户信息未加载，请刷新页面重试')
+          return
+        }
+        
+        // 构建更新数据，包含userId让后端自动处理档案创建
+        const updateData = {
+          userId: userId,
+          realName: memberForm.realName,
+          gender: memberForm.gender,
+          birthDate: memberForm.birthDate,
+          faceImgUrl: memberForm.faceImgUrl
+        }
+        
+        // 如果已有档案ID，也一并传递（后端会优先使用ID更新）
+        if (memberProfile.value.id) {
+          updateData.id = memberProfile.value.id
+        }
+        
+        console.log('更新会员档案数据:', updateData)
+        await updateMemberProfile(updateData)
+        ElMessage.success('档案信息更新成功')
+        
+        // 更新成功后重新加载会员档案数据
+        await fetchMemberProfile()
+      } catch (error) {
+        console.error('更新档案信息失败:', error)
+        ElMessage.error('更新档案信息失败')
+      }
+    }
+  })
+}
+
 onMounted(async () => {
   // 获取完整的用户信息
   await fetchFullUserInfo()
@@ -367,6 +528,15 @@ onMounted(async () => {
     form.realName = memberProfile.value.realName || userInfo.value.nickname
     form.gender = memberProfile.value.gender || userInfo.value.gender || 0
     form.birthDate = memberProfile.value.birthDate
+    
+    // 初始化会员档案表单数据
+    memberForm.realName = memberProfile.value.realName || userInfo.value.nickname
+    memberForm.gender = memberProfile.value.gender || 2
+    memberForm.birthDate = memberProfile.value.birthDate
+    memberForm.faceImgUrl = memberProfile.value.faceImgUrl || ''
+    memberForm.balance = memberProfile.value.balance || 0
+    memberForm.isVip = memberProfile.value.isVip || 0
+    memberForm.vipExpireTime = memberProfile.value.vipExpireTime
   }
 })
 </script>
@@ -422,5 +592,61 @@ onMounted(async () => {
   display: block;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* 人脸照片上传样式 */
+.face-uploader {
+  width: 100%;
+}
+
+.face-uploader-content {
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.face-uploader-content:hover {
+  border-color: #409eff;
+}
+
+.face-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.face-uploader-placeholder {
+  text-align: center;
+  color: #8c939d;
+}
+
+.face-uploader-placeholder .el-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  line-height: 1.4;
 }
 </style>

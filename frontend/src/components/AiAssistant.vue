@@ -1,9 +1,14 @@
-<template>
+·<template>
   <div class="ai-assistant">
     <Transition name="fade">
       <div v-if="isOpen" class="chat-window">
         <div class="chat-header">
-          <span class="chat-title">AI 智能助手</span>
+          <div class="header-left">
+            <el-icon :size="20" class="ai-icon">
+              <ChatDotRound />
+            </el-icon>
+            <span class="chat-title">AI 健身助手</span>
+          </div>
           <el-button
             class="close-btn"
             type="text"
@@ -38,7 +43,7 @@
             v-model="inputMessage"
             type="textarea"
             :rows="3"
-            placeholder="请输入您的问题..."
+            placeholder="请输入您的健身问题..."
             @keydown.enter.prevent="handleSend"
             :disabled="loading"
           />
@@ -55,22 +60,43 @@
       </div>
     </Transition>
     
+    <!-- 悬浮按钮区域 -->
     <Transition name="bounce">
-      <div
-        v-if="!isOpen"
-        class="floating-ball"
-        @click="toggleChat"
-      >
-        <el-icon :size="24">
-          <ChatDotRound />
-        </el-icon>
+      <div v-if="!isOpen" class="floating-container">
+        <!-- 气泡提示（显示5秒后自动隐藏） -->
+        <Transition name="slide-fade">
+          <div v-if="showBubble" class="speech-bubble">
+            <div class="bubble-content">
+              <span>Hi，我是您的AI教练，有什么可以帮您？</span>
+              <div class="bubble-tail"></div>
+            </div>
+          </div>
+        </Transition>
+        
+        <!-- 悬浮按钮 -->
+        <el-tooltip
+          effect="dark"
+          content="AI 健身助手"
+          placement="left"
+          :show-after="500"
+        >
+          <div
+             class="floating-ball"
+             @click="toggleChat"
+           >
+             <el-icon :size="28" class="ai-icon">
+               <ChatDotRound />
+             </el-icon>
+             <div class="pulse-ring"></div>
+           </div>
+        </el-tooltip>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { Close, ChatDotRound, Promotion } from '@element-plus/icons-vue'
 import { aiChat } from '@/api/ai'
 import { ElMessage } from 'element-plus'
@@ -84,6 +110,8 @@ const messages = ref([])
 const loading = ref(false)
 const chatContentRef = ref(null)
 const typingMessage = ref('')
+const showBubble = ref(true)
+let bubbleTimer = null
 
 const toggleChat = () => {
   isOpen.value = !isOpen.value
@@ -167,9 +195,20 @@ onMounted(() => {
   messages.value = [
     {
       role: 'assistant',
-      content: '您好！我是AI智能助手，有什么可以帮助您的吗？'
+      content: '您好！我是AI健身助手，有什么健身问题可以帮您解答吗？'
     }
   ]
+  
+  // 5秒后自动隐藏气泡提示
+  bubbleTimer = setTimeout(() => {
+    showBubble.value = false
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (bubbleTimer) {
+    clearTimeout(bubbleTimer)
+  }
 })
 </script>
 
@@ -181,23 +220,80 @@ onMounted(() => {
   z-index: 9999;
 }
 
+.floating-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* 气泡对话框样式 */
+.speech-bubble {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 200px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.bubble-content {
+  position: relative;
+  font-size: 12px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.bubble-tail {
+  position: absolute;
+  right: 20px;
+  bottom: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+}
+
+/* 悬浮按钮样式 */
 .floating-ball {
-  width: 60px;
-  height: 60px;
+  position: relative;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
   transition: all 0.3s ease;
   color: white;
+  animation: breathing 2s ease-in-out infinite;
 }
 
 .floating-ball:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+  transform: scale(1.15);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.7);
+  animation: none;
+}
+
+/* 呼吸灯动效 */
+.pulse-ring {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 2px solid rgba(102, 126, 234, 0.6);
+  border-radius: 50%;
+  animation: pulse 2s ease-out infinite;
+}
+
+.ai-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .chat-window {
@@ -214,6 +310,51 @@ onMounted(() => {
   overflow: hidden;
 }
 
+/* 动画关键帧 */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 过渡动画 */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
 .chat-header {
   padding: 16px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -221,6 +362,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .chat-title {

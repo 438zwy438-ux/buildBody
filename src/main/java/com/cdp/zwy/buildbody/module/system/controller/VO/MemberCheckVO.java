@@ -1,5 +1,6 @@
 package com.cdp.zwy.buildbody.module.system.controller.VO;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,17 +12,36 @@ import java.time.LocalDateTime;
  * @date 2026/2/19 09:56
  */
 @Data
+@Schema(description = "会员核验视图对象")
 public class MemberCheckVO {
+    @Schema(description = "用户ID")
     private Long userId;
+    
+    @Schema(description = "真实姓名")
     private String realName;
+    
+    @Schema(description = "手机号")
     private String phone;
-    private String faceImgUrl; // 核心：用于管理员人工比对
-    private Double balance;    // 余额
+    
+    @Schema(description = "会员人像照片URL")
+    private String faceImgUrl;
+    
+    @Schema(description = "账户余额")
+    private Double balance;
 
     // --- 卡状态信息 ---
-    private String cardName;      // 例如：季卡
-    private String cardStatusStr; // "正常", "已过期", "次数不足"
-    private boolean canEntry;     // 系统判定是否允许入场
-    private LocalDateTime expireTime;      // 过期时间
-    private Integer remainCount;  // 剩余次数（如果是次卡）
+    @Schema(description = "会员卡名称")
+    private String cardName;
+    
+    @Schema(description = "卡状态描述")
+    private String cardStatusStr;
+    
+    @Schema(description = "是否允许入场")
+    private boolean canEntry;
+    
+    @Schema(description = "过期时间")
+    private LocalDateTime expireTime;
+    
+    @Schema(description = "剩余次数（次卡）")
+    private Integer remainCount;
 }

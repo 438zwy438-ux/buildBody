@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
+import com.cdp.zwy.buildbody.module.business.controller.VO.MemberDetailVO;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.business.service.TbMemberProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,11 +39,23 @@ public class TbMemberProfileController {
 
     @Operation(summary = "查询我的会员信息")
     @GetMapping("/myProfile")
-   
+    @RequireRole({"user", "vip"})
+//    不加RequireRole注解，所有用户都可以访问，包括未登录用户和管理员用户，且不会解析token中的角色
     public Result<TbMemberProfile> getMyProfile(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         TbMemberProfile profile = tbMemberProfileService.getOne(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
         return Result.success(profile);
+    }
+
+    @Operation(summary = "查询会员详情信息")
+    @GetMapping("/detail/{userId}")
+    @RequireRole("admin")
+    public Result<MemberDetailVO> getMemberDetail(@PathVariable Long userId) {
+        MemberDetailVO memberDetail = tbMemberProfileService.getMemberDetailByUserId(userId);
+        if (memberDetail == null) {
+            return Result.error("会员信息不存在");
+        }
+        return Result.success(memberDetail);
     }
 
     @Operation(summary = "新增数据")
@@ -62,7 +75,19 @@ public class TbMemberProfileController {
         if (!"admin".equals(role) && !tbMemberProfile.getUserId().equals(userId)) {
             return Result.error("只能修改自己的信息");
         }
-        return Result.success(this.tbMemberProfileService.updateById(tbMemberProfile));
+        
+        // 如果传入了id，使用updateById方法
+        if (tbMemberProfile.getId() != null) {
+            return Result.success(this.tbMemberProfileService.updateById(tbMemberProfile));
+        } 
+        // 如果没有传入id但传入了userId，使用updateByUserId方法
+        else if (tbMemberProfile.getUserId() != null) {
+            return Result.success(this.tbMemberProfileService.updateByUserId(tbMemberProfile));
+        }
+        // 如果既没有id也没有userId，返回错误
+        else {
+            return Result.error("更新失败：缺少必要的标识信息");
+        }
     }
 
     @Operation(summary = "删除数据")

@@ -35,6 +35,10 @@ public class TbMemberProfile extends Model<TbMemberProfile> {
     private Date vipExpireTime;
 //出生日期
     private Date birthDate;
+//创建时间
+    private Date createTime;
+//更新时间
+    private Date updateTime;
 
 
     public Long getId() {
@@ -123,6 +127,22 @@ public class TbMemberProfile extends Model<TbMemberProfile> {
 
     public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 
     /**

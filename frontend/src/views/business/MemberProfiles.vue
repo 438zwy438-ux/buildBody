@@ -4,42 +4,98 @@
       <template #header>
         <div class="card-header">
           <span>会员档案管理</span>
-          <el-button type="primary" @click="handleAdd">添加档案</el-button>
+          <div>
+            <el-button type="primary" @click="handleAdd">新增会员</el-button>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="selectedRows.length === 0">
+              批量删除
+            </el-button>
+          </div>
         </div>
       </template>
       
+      <!-- 搜索条件区 -->
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="真实姓名">
           <el-input v-model="searchForm.realName" placeholder="请输入真实姓名" clearable />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
+        <el-form-item label="VIP状态">
+          <el-select v-model="searchForm.isVip" placeholder="请选择VIP状态" clearable>
+            <el-option label="普通会员" :value="0" />
+            <el-option label="VIP会员" :value="1" />
+          </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
 
-      <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="userId" label="用户ID" />
-        <el-table-column prop="realName" label="真实姓名" />
-        <el-table-column prop="phone" label="手机号" />
-        <el-table-column prop="gender" label="性别" width="80">
+      <!-- 数据表格 -->
+      <el-table 
+        :data="tableData" 
+        v-loading="loading" 
+        border
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="id" label="档案ID" width="80" align="center" />
+        <el-table-column prop="userId" label="用户ID" width="100" align="center" />
+        <el-table-column prop="realName" label="真实姓名" width="120" />
+        <el-table-column prop="gender" label="性别" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.gender === 0 ? 'primary' : 'danger'">{{ row.gender === 0 ? '男' : '女' }}</el-tag>
+            <el-tag 
+              :type="row.gender === 0 ? 'primary' : row.gender === 1 ? 'danger' : 'info'"
+              size="small"
+            >
+              {{ row.gender === 0 ? '男' : row.gender === 1 ? '女' : '未知' }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="age" label="年龄" width="80" />
-        <el-table-column prop="height" label="身高(cm)" />
-        <el-table-column prop="weight" label="体重(kg)" />
-        <el-table-column prop="isVip" label="vip" width="80">
+        <el-table-column prop="age" label="年龄" width="80" align="center" />
+        <el-table-column prop="faceImgUrl" label="人脸照片" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.isVip === 1 ? 'warning' : 'info'">{{ row.isVip === 1 ? '是' : '否' }}</el-tag>
+            <el-image
+              v-if="row.faceImgUrl"
+              :src="row.faceImgUrl"
+              :preview-src-list="[row.faceImgUrl]"
+              fit="cover"
+              style="width: 50px; height: 50px; border-radius: 4px;"
+            >
+              <template #error>
+                <div class="image-error">
+                  <el-icon><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="image-placeholder">
+              <el-icon><User /></el-icon>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="balance" label="账户余额" width="120" align="right">
+          <template #default="{ row }">
+            <span>{{ formatCurrency(row.balance) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="points" label="积分" width="100" align="center" />
+        <el-table-column prop="isVip" label="VIP状态" width="120" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.isVip === 1 ? 'warning' : 'info'" size="small">
+              {{ row.isVip === 1 ? 'VIP' : '普通会员' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="vipExpireTime" label="VIP过期时间" width="180" align="center">
+          <template #default="{ row }">
+            <span>{{ formatDateTime(row.vipExpireTime) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="birthDate" label="出生日期" width="120" align="center">
+          <template #default="{ row }">
+            <span>{{ formatDate(row.birthDate) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
@@ -47,6 +103,7 @@
         </el-table-column>
       </el-table>
 
+      <!-- 分页组件 -->
       <div class="pagination-wrapper">
         <el-pagination
           v-model:current-page="pagination.page"
@@ -60,122 +117,238 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog 
+      v-model="dialogVisible" 
+      :title="dialogTitle" 
+      width="600px"
+      :before-close="handleDialogClose"
+    >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="用户ID" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入用户ID" />
+          <el-input v-model="form.userId" placeholder="请输入关联系统用户ID" />
         </el-form-item>
         <el-form-item label="真实姓名" prop="realName">
           <el-input v-model="form.realName" placeholder="请输入真实姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="性别" prop="gender">
           <el-radio-group v-model="form.gender">
             <el-radio :label="0">男</el-radio>
             <el-radio :label="1">女</el-radio>
+            <el-radio :label="2">未知</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="年龄" prop="age">
-          <el-input-number v-model="form.age" :min="1" :max="120" style="width: 100%" />
+          <el-input-number 
+            v-model="form.age" 
+            :min="1" 
+            :max="120" 
+            style="width: 100%" 
+            placeholder="请输入年龄"
+          />
         </el-form-item>
-        <el-form-item label="身高(cm)" prop="height">
-          <el-input-number v-model="form.height" :min="0" style="width: 100%" />
+        <el-form-item label="人脸照片" prop="faceImgUrl">
+          <el-upload
+            class="avatar-uploader"
+            action="/api/common/upload"
+            :data="{ folder: 'face' }"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            :headers="{}"
+          >
+            <div class="avatar-uploader-content">
+              <img v-if="form.faceImgUrl" :src="form.faceImgUrl" class="avatar" />
+              <div v-else class="avatar-uploader-placeholder">
+                <el-icon><Camera /></el-icon>
+                <div class="upload-text">上传人脸照片</div>
+              </div>
+            </div>
+          </el-upload>
+          <div class="upload-tip">支持 JPG/PNG 格式，不超过 5MB</div>
         </el-form-item>
-        <el-form-item label="体重(kg)" prop="weight">
-          <el-input-number v-model="form.weight" :min="0" :precision="1" style="width: 100%" />
+        <el-form-item label="账户余额" prop="balance">
+          <el-input-number 
+            v-model="form.balance" 
+            :min="0" 
+            :precision="2" 
+            style="width: 100%" 
+            placeholder="请输入账户余额"
+          />
         </el-form-item>
-        <el-form-item label="vip" prop="isVip">
+        <el-form-item label="积分" prop="points">
+          <el-input-number 
+            v-model="form.points" 
+            :min="0" 
+            style="width: 100%" 
+            placeholder="请输入积分"
+          />
+        </el-form-item>
+        <el-form-item label="VIP状态" prop="isVip">
           <el-radio-group v-model="form.isVip">
-            <el-radio :label="1">是</el-radio>
-            <el-radio :label="0">否</el-radio>
+            <el-radio :label="0">普通会员</el-radio>
+            <el-radio :label="1">VIP会员</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="健康备注" prop="healthNotes">
-          <el-input v-model="form.healthNotes" type="textarea" :rows="3" placeholder="请输入健康备注" />
+        <el-form-item label="VIP过期时间" prop="vipExpireTime">
+          <el-date-picker
+            v-model="form.vipExpireTime"
+            type="datetime"
+            placeholder="选择VIP过期时间"
+            style="width: 100%"
+            value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </el-form-item>
+        <el-form-item label="出生日期" prop="birthDate">
+          <el-date-picker
+            v-model="form.birthDate"
+            type="date"
+            placeholder="选择出生日期"
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button @click="handleDialogClose">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getMemberProfileList, createMemberProfile, updateMemberProfile, deleteMemberProfile } from '@/api/memberProfile'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Picture, User, Camera } from '@element-plus/icons-vue'
 
+// 响应式数据定义
 const loading = ref(false)
 const dialogVisible = ref(false)
-const dialogTitle = ref('添加档案')
+const dialogTitle = ref('新增会员')
+const submitLoading = ref(false)
 const formRef = ref(null)
 const tableData = ref([])
+const selectedRows = ref([])
 
+// 搜索表单
 const searchForm = reactive({
   realName: '',
-  phone: ''
+  isVip: null
 })
 
+// 分页配置
 const pagination = reactive({
   page: 1,
   size: 10,
   total: 0
 })
 
+// 表单数据
 const form = reactive({
   id: null,
   userId: null,
   realName: '',
-  phone: '',
-  gender: 0,
-  age: 20,
-  height: 170,
-  weight: 65,
+  gender: 2,
+  age: null,
+  faceImgUrl: '',
+  balance: 0.00,
+  points: 0,
   isVip: 0,
-  healthNotes: ''
+  vipExpireTime: null,
+  birthDate: null
 })
 
+// 表单校验规则
 const rules = {
-  userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
-  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  userId: [
+    { required: true, message: '请输入用户ID', trigger: 'blur' },
+    { pattern: /^\d+$/, message: '用户ID必须为数字', trigger: 'blur' }
   ],
-  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  age: [{ required: true, message: '请输入年龄', trigger: 'blur' }],
-  isVip: [{ required: true, message: '请选择VIP状态', trigger: 'change' }]
+  realName: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' },
+    { min: 2, max: 50, message: '姓名长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
+  ],
+  age: [
+    { required: true, message: '请输入年龄', trigger: 'blur' },
+    { type: 'number', min: 1, max: 120, message: '年龄必须在 1-120 之间', trigger: 'blur' }
+  ],
+  balance: [
+    { type: 'number', min: 0, message: '余额不能为负数', trigger: 'blur' }
+  ],
+  points: [
+    { type: 'number', min: 0, message: '积分不能为负数', trigger: 'blur' }
+  ]
 }
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const params = {
-      current: pagination.page,
-      size: pagination.size
-    }
-    if (searchForm.realName) {
-      params.realName = searchForm.realName
-    }
-    if (searchForm.phone) {
-      params.phone = searchForm.phone
-    }
-    const res = await getMemberProfileList(params)
-    tableData.value = res.data?.records || []
-    pagination.total = Number(res.data?.total || 0)
-  } catch (error) {
-    console.error('获取会员档案列表失败:', error)
-    tableData.value = []
-    pagination.total = 0
-  } finally {
-    loading.value = false
+// 格式化函数
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return '¥0.00'
+  return `¥${parseFloat(value).toFixed(2)}`
+}
+
+const formatDateTime = (value) => {
+  if (!value) return '-'
+  return value.replace('T', ' ').substring(0, 16)
+}
+
+const formatDate = (value) => {
+  if (!value) return '-'
+  return value.substring(0, 10)
+}
+
+// 文件上传处理
+const handleAvatarSuccess = (response, uploadFile) => {
+  console.log('人脸照片上传响应:', response)
+  
+  if (typeof response === 'string') {
+    form.faceImgUrl = response
+  } else if (response.code === 200) {
+    form.faceImgUrl = response.data
+  } else {
+    ElMessage.error('人脸照片上传失败')
+    return
   }
+  
+  ElMessage.success('人脸照片上传成功')
 }
 
+const beforeAvatarUpload = (rawFile) => {
+  const isValidType = ['image/jpeg', 'image/jpg', 'image/png'].includes(rawFile.type)
+  const isLt5M = rawFile.size / 1024 / 1024 < 5
+
+  if (!isValidType) {
+    ElMessage.error('人脸照片只能是 JPG/JPEG/PNG 格式!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('人脸照片大小不能超过 5MB!')
+    return false
+  }
+  return true
+}
+
+// 表格选择处理
+const handleSelectionChange = (selection) => {
+  selectedRows.value = selection
+}
+
+// 分页处理
+const handleSizeChange = (size) => {
+  pagination.size = size
+  pagination.page = 1
+  fetchData()
+}
+
+const handleCurrentChange = (page) => {
+  pagination.page = page
+  fetchData()
+}
+
+// 搜索和重置
 const handleSearch = () => {
   pagination.page = 1
   fetchData()
@@ -183,93 +356,248 @@ const handleSearch = () => {
 
 const handleReset = () => {
   searchForm.realName = ''
-  searchForm.phone = ''
+  searchForm.isVip = null
   pagination.page = 1
   fetchData()
 }
 
-const handleAdd = () => {
-  dialogTitle.value = '添加档案'
-  form.id = null
-  form.userId = null
-  form.realName = ''
-  form.phone = ''
-  form.gender = 0
-  form.age = 20
-  form.height = 170
-  form.weight = 65
-  form.isVip = 0
-  form.healthNotes = ''
-  dialogVisible.value = true
+// 弹窗处理
+const handleDialogClose = () => {
+  dialogVisible.value = false
+  resetForm()
 }
 
-const handleEdit = (row) => {
-  dialogTitle.value = '编辑档案'
-  form.id = row.id
-  form.userId = row.userId
-  form.realName = row.realName
-  form.phone = row.phone
-  form.gender = row.gender
-  form.age = row.age
-  form.height = row.height
-  form.weight = row.weight
-  form.isVip = row.isVip
-  form.healthNotes = row.healthNotes
-  dialogVisible.value = true
-}
-
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该会员档案吗?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    await deleteMemberProfile([row.id])
-    ElMessage.success('删除成功')
-    fetchData()
-  } catch (error) {
-    console.log('取消删除')
+const resetForm = () => {
+  if (formRef.value) {
+    formRef.value.resetFields()
   }
-}
-
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        if (form.id) {
-          await updateMemberProfile(form)
-        } else {
-          await createMemberProfile(form)
-        }
-        ElMessage.success(form.id ? '更新成功' : '添加成功')
-        dialogVisible.value = false
-        fetchData()
-      } catch (error) {
-        console.error('提交失败:', error)
-      }
-    }
+  Object.assign(form, {
+    id: null,
+    userId: null,
+    realName: '',
+    gender: 2,
+    age: null,
+    faceImgUrl: '',
+    balance: 0.00,
+    points: 0,
+    isVip: 0,
+    vipExpireTime: null,
+    birthDate: null
   })
 }
 
-const handleSizeChange = (val) => {
-  pagination.size = val
-  fetchData()
+// 新增操作
+const handleAdd = () => {
+  dialogTitle.value = '新增会员'
+  dialogVisible.value = true
+  nextTick(() => {
+    resetForm()
+  })
 }
 
-const handleCurrentChange = (val) => {
-  pagination.page = val
-  fetchData()
+// 编辑操作
+const handleEdit = (row) => {
+  dialogTitle.value = '编辑会员'
+  dialogVisible.value = true
+  nextTick(() => {
+    Object.assign(form, { ...row })
+  })
 }
 
+// 删除操作
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除会员 "${row.realName}" 的档案吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // 调用删除接口
+    await handleDeleteRecord(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) return
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 条会员档案吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    const ids = selectedRows.value.map(item => item.id)
+    // 调用批量删除接口
+    await handleBatchDeleteRecords(ids)
+    ElMessage.success(`成功删除 ${ids.length} 条记录`)
+    selectedRows.value = []
+    fetchData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error('批量删除失败')
+    }
+  }
+}
+
+// 表单提交
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  
+  try {
+    const valid = await formRef.value.validate()
+    if (!valid) return
+    
+    submitLoading.value = true
+    
+    if (form.id) {
+      // 编辑操作
+      await handleUpdateRecord(form)
+      ElMessage.success('更新成功')
+    } else {
+      // 新增操作
+      await handleAddRecord(form)
+      ElMessage.success('新增成功')
+    }
+    
+    dialogVisible.value = false
+    fetchData()
+  } catch (error) {
+    console.error('提交失败:', error)
+    ElMessage.error('提交失败')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+// API 接口方法（预留）
+const fetchData = async () => {
+  loading.value = true
+  try {
+    // 模拟数据 - 实际项目中替换为真实的 API 调用
+    const mockData = [
+      {
+        id: 1,
+        userId: 1001,
+        realName: '张三',
+        gender: 0,
+        age: 28,
+        faceImgUrl: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+        balance: 500.50,
+        points: 1200,
+        isVip: 1,
+        vipExpireTime: '2024-12-31 23:59:59',
+        birthDate: '1995-05-15'
+      },
+      {
+        id: 2,
+        userId: 1002,
+        realName: '李四',
+        gender: 1,
+        age: 25,
+        faceImgUrl: '',
+        balance: 200.00,
+        points: 800,
+        isVip: 0,
+        vipExpireTime: null,
+        birthDate: '1998-08-20'
+      }
+    ]
+    
+    // 过滤数据（模拟搜索）
+    let filteredData = mockData
+    if (searchForm.realName) {
+      filteredData = filteredData.filter(item => 
+        item.realName.includes(searchForm.realName)
+      )
+    }
+    if (searchForm.isVip !== null) {
+      filteredData = filteredData.filter(item => item.isVip === searchForm.isVip)
+    }
+    
+    // 模拟分页
+    const start = (pagination.page - 1) * pagination.size
+    const end = start + pagination.size
+    tableData.value = filteredData.slice(start, end)
+    pagination.total = filteredData.length
+    
+    // 实际项目中的 API 调用示例：
+    // const params = {
+    //   current: pagination.page,
+    //   size: pagination.size,
+    //   ...searchForm
+    // }
+    // const res = await getMemberProfileList(params)
+    // tableData.value = res.data?.records || []
+    // pagination.total = Number(res.data?.total || 0)
+    
+  } catch (error) {
+    console.error('获取会员档案列表失败:', error)
+    tableData.value = []
+    pagination.total = 0
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleAddRecord = async (data) => {
+  // 实际项目中的 API 调用示例：
+  // return await createMemberProfile(data)
+  console.log('新增会员:', data)
+  return Promise.resolve()
+}
+
+const handleUpdateRecord = async (data) => {
+  // 实际项目中的 API 调用示例：
+  // return await updateMemberProfile(data)
+  console.log('更新会员:', data)
+  return Promise.resolve()
+}
+
+const handleDeleteRecord = async (id) => {
+  // 实际项目中的 API 调用示例：
+  // return await deleteMemberProfile([id])
+  console.log('删除会员ID:', id)
+  return Promise.resolve()
+}
+
+const handleBatchDeleteRecords = async (ids) => {
+  // 实际项目中的 API 调用示例：
+  // return await deleteMemberProfile(ids)
+  console.log('批量删除会员IDs:', ids)
+  return Promise.resolve()
+}
+
+// 生命周期
 onMounted(() => {
   fetchData()
 })
 </script>
 
 <style scoped>
+.member-profiles-page {
+  padding: 20px;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -281,10 +609,67 @@ onMounted(() => {
 }
 
 .pagination-wrapper {
-  display: flex;
-  justify-content: flex-end;
   margin-top: 20px;
-  min-height: 40px;
+  text-align: right;
+}
+
+.avatar-uploader-content {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.avatar-uploader-content:hover {
+  border-color: #409eff;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.avatar-uploader-placeholder {
+  text-align: center;
+  color: #8c939d;
+}
+
+.avatar-uploader-placeholder .el-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+}
+
+.image-error,
+.image-placeholder {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  border-radius: 4px;
+  color: #909399;
+}
+
+.image-placeholder .el-icon {
+  font-size: 24px;
 }
 </style>
