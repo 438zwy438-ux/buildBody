@@ -111,6 +111,18 @@ const routes = [
         name: 'UserOrders',
         component: () => import('@/views/user/Orders.vue'),
         meta: { title: '我的订单', requiresAuth: true, requiredRoles: ['user', 'vip'] }
+      },
+      {
+        path: 'bookings',
+        name: 'UserBookings',
+        component: () => import('@/views/user/Bookings.vue'),
+        meta: { title: '我的预约', requiresAuth: true, requiredRoles: ['user', 'vip'] }
+      },
+      {
+        path: 'coach-course-check',
+        name: 'CoachCourseCheck',
+        component: () => import('@/views/user/CoachCourseCheck.vue'),
+        meta: { title: '课程核销', requiresAuth: true, requiredRoles: ['coach'] }
       }
     ]
   },
@@ -178,6 +190,12 @@ const routes = [
         name: 'Courses',
         component: () => import('@/views/business/Courses.vue'),
         meta: { title: '课程管理', requiresAuth: true, requiredRoles: ['admin'] }
+      },
+      {
+        path: 'course-check',
+        name: 'CourseCheck',
+        component: () => import('@/views/admin/CourseCheck.vue'),
+        meta: { title: '课程核销', requiresAuth: true, requiredRoles: ['admin', 'coach'] }
       },
       {
         path: 'coach-profiles',

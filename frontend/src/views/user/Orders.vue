@@ -27,7 +27,11 @@
                 <el-tag v-else-if="row.status === 3" type="danger">已退款</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" label="创建时间">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
               <template #default="{ row }">
                 <el-button v-if="row.status === 0" type="primary" size="small" @click="handlePay(row)">支付</el-button>
@@ -48,7 +52,11 @@
               </template>
             </el-table-column>
             <el-table-column prop="totalAmount" label="金额" />
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" label="创建时间">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
               <template #default="{ row }">
                 <el-button type="primary" size="small" @click="handlePay(row)">支付</el-button>
@@ -76,7 +84,11 @@
                 <el-tag v-else-if="row.status === 3" type="danger">已退款</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" label="创建时间">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
               <template #default="{ row }">
                 <el-button v-if="row.status === 1" type="warning" size="small" @click="handleRefund(row)">退款</el-button>
@@ -100,7 +112,11 @@
                 {{ formatDateTime(row.cancelTime) }}
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" label="创建时间">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
           </el-table>
         </el-tab-pane>
         
@@ -124,7 +140,11 @@
                 {{ formatDateTime(row.refundTime) }}
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" />
+            <el-table-column prop="createTime" label="创建时间">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>

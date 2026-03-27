@@ -35,7 +35,7 @@ public class SysUserController {
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
-    @RequireRole("admin")
+    @RequireRole({"admin", "coach"})
     public Result<SysUser> selectOne(@PathVariable Serializable id) {
         return Result.success(this.sysUserService.getById(id));
     }

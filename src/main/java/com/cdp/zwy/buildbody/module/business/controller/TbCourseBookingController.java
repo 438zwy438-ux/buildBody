@@ -124,4 +124,24 @@ public class TbCourseBookingController {
     public Result<List<Map<String, Object>>> getAvailableSlots(@RequestParam Long coachId) {
         return Result.success(tbCourseBookingService.getAvailableSlots(coachId));
     }
+    
+    @Operation(summary = "取消预约")
+    @PostMapping("/cancel")
+    @RequireRole({"admin", "coach","vip"})
+    public Result<Boolean> cancelBooking(@RequestParam Long bookingId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        
+        // 验证预约是否属于当前用户
+        TbCourseBooking booking = tbCourseBookingService.getById(bookingId);
+        if (booking == null) {
+            return Result.error("预约记录不存在");
+        }
+        
+        if (!booking.getUserId().equals(userId)) {
+            return Result.error("只能取消自己的预约");
+        }
+        
+        Boolean result = tbCourseBookingService.cancelBooking(bookingId);
+        return Result.success(result);
+    }
 }

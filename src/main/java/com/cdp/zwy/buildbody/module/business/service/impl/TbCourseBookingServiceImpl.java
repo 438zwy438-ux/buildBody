@@ -130,6 +130,33 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean cancelBooking(Long bookingId) {
+        // 1. 获取预约记录
+        TbCourseBooking booking = this.getById(bookingId);
+        if (booking == null) {
+            throw new RuntimeException("预约记录不存在");
+        }
+        
+        if (booking.getStatus() != 0) {
+            throw new RuntimeException("只能取消待核销的预约");
+        }
+        
+        // 2. 更新预约状态为已取消
+        booking.setStatus(2); // 2-已取消
+        this.updateById(booking);
+        
+        // 3. 恢复订单的剩余次数
+        SysOrder order = sysOrderService.getById(booking.getOrderId());
+        if (order != null) {
+            order.setRemainCount(order.getRemainCount() + 1);
+            sysOrderService.updateById(order);
+        }
+        
+        return true;
+    }
+
+    @Override
     public List<Map<String, Object>> getAvailableSlots(Long coachId) {
         //1. 定义固定的工作时间段
         String[] timeSlots = {
@@ -159,7 +186,10 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
         
         List<TbCourseBooking> bookedSlots = this.list(queryWrapper);
         
-        //4. 构建返回结果
+        //4. 获取当前时间
+        Date now = new Date();
+        
+        //5. 构建返回结果
         List<Map<String, Object>> result = new ArrayList<>();
         
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -194,6 +224,11 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
                         isBooked = true;
                         break;
                     }
+                }
+                
+                // 对于当天的时间段，检查是否已经过了当前时间
+                if (i == 0 && startTime.before(now)) {
+                    isBooked = true;
                 }
                 
                 Map<String, Object> slotMap = new HashMap<>();

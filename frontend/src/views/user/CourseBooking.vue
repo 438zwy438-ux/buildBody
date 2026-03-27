@@ -13,7 +13,11 @@
         <el-table-column prop="totalCount" label="总次数" />
         <el-table-column prop="remainCount" label="剩余次数" />
         <el-table-column prop="totalAmount" label="总金额" />
-        <el-table-column prop="createTime" label="购买时间" />
+        <el-table-column prop="createTime" label="购买时间">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createTime) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleBook(row)" :disabled="row.remainCount <= 0">预约上课</el-button>
@@ -54,6 +58,7 @@ import { useUserStore } from '@/stores/user'
 import { getMyCoursesOrders } from '@/api/order'
 import { getAvailableSlots, bookCourse } from '@/api/course'
 import { ElMessage } from 'element-plus'
+import dayjs from 'dayjs'
 
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
@@ -66,6 +71,11 @@ const selectedSlot = ref('')
 const selectedStartTime = ref('')
 const selectedEndTime = ref('')
 const currentOrder = ref(null)
+
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss')
+}
 
 const fetchOrderList = async () => {
   loading.value = true

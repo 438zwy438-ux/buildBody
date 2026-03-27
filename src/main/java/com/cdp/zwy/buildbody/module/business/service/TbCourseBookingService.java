@@ -21,6 +21,9 @@ public interface TbCourseBookingService extends IService<TbCourseBooking> {
 
     @Transactional(rollbackFor = Exception.class)
     Boolean checkCourse(Long bookingId);
+
+    @Transactional(rollbackFor = Exception.class)
+    Boolean cancelBooking(Long bookingId);
     
     List<Map<String, Object>> getAvailableSlots(Long coachId);
 }

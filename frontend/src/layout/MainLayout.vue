@@ -36,6 +36,7 @@
           <el-menu-item index="/admin/member-cards">会员卡管理</el-menu-item>
           <el-menu-item index="/admin/card-templates">会员卡模板</el-menu-item>
           <el-menu-item index="/admin/courses">课程管理</el-menu-item>
+          <el-menu-item index="/admin/course-check">课程核销</el-menu-item>
           <el-menu-item index="/admin/coach-profiles">教练档案</el-menu-item>
           <el-menu-item index="/admin/member-profiles">会员档案</el-menu-item>
           <el-menu-item index="/admin/equipment">器材管理</el-menu-item>
