@@ -9,8 +9,8 @@
       </template>
       
       <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="标题" />
+        <el-table-column prop="id" label="ID" width="240" />
+
         <el-table-column prop="imgUrl" label="图片">
           <template #default="{ row }">
             <el-image
@@ -51,9 +51,7 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入标题" />
-        </el-form-item>
+
         <el-form-item label="图片" prop="imgUrl">
           <el-upload
             class="avatar-uploader"
@@ -117,7 +115,7 @@ const form = reactive({
 })
 
 const rules = {
-  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
+
   imgUrl: [{ required: true, message: '请上传图片', trigger: 'change' }],
   sort: [{ required: true, message: '请输入排序', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]

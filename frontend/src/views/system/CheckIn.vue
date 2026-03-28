@@ -47,7 +47,7 @@
                         :preview-src-list="[item.faceImgUrl]"
                         fit="cover"
                         class="member-photo"
-                        :alt="item.realName + '的人像照片'"
+                        :alt="item.userName + '的人像照片'"
                       >
                         <template #error>
                           <div class="image-error">
@@ -67,7 +67,7 @@
                   <!-- 会员信息区域 -->
                   <div class="member-info-section">
                     <div class="info-header">
-                      <h4 class="member-name">{{ item.realName }}</h4>
+                      <h4 class="member-name">{{ item.userName }}</h4>
                       <el-tag 
                         :type="getCardStatusType(item.cardStatusStr)" 
                         size="small"
@@ -137,18 +137,38 @@
         <el-col :span="16">
           <el-card shadow="hover" class="table-card">
             <template #header>
-              <span>今日入场记录</span>
+              <span>入场记录</span>
             </template>
             <div class="table-container">
               <el-table :data="tableData" v-loading="loading" border>
-                <el-table-column prop="userId" label="用户ID" width="80" />
-                <el-table-column prop="realName" label="姓名" />
+                <el-table-column prop="userId" label="用户ID" width="200" />
+                <el-table-column prop="userName" label="姓名" width="80" />
                 <el-table-column prop="phone" label="手机号" />
-                <el-table-column prop="entryTime" label="入场时间" />
-                <el-table-column prop="exitTime" label="出场时间" />
+                <el-table-column prop="entryTime" label="入场时间">
+                  <template #default="{ row }">
+                    {{ formatDateTime(row.entryTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="exitTime" label="出场时间">
+                  <template #default="{ row }">
+                    {{ formatDateTime(row.exitTime) }}
+                  </template>
+                </el-table-column>
                 <el-table-column prop="status" label="状态" width="80">
                   <template #default="{ row }">
-                    <el-tag :type="row.status === '在场' ? 'success' : 'info'">{{ row.status }}</el-tag>
+                    <el-tag :type="row.status === 'IN' ? 'success' : 'info'">{{ row.status === 'IN' ? '在场' : '已离场' }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100">
+                  <template #default="{ row }">
+                    <el-button 
+                      v-if="row.status === 'IN'" 
+                      type="warning" 
+                      size="small" 
+                      @click="handleTableCheckOut(row)"
+                    >
+                      确认出场
+                    </el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -266,6 +286,16 @@ const handleCheckOut = async (userId) => {
     await checkOut(userId)
     ElMessage.success('出场成功')
     handleSearch()
+    fetchData()
+  } catch (error) {
+    console.error('出场失败:', error)
+  }
+}
+
+const handleTableCheckOut = async (row) => {
+  try {
+    await checkOut(row.id)
+    ElMessage.success('出场成功')
     fetchData()
   } catch (error) {
     console.error('出场失败:', error)

@@ -14,7 +14,7 @@ import java.io.Serializable;
 public class TbLocker extends Model<TbLocker> {
 //储物柜ID
     private Long id;
-//区域编号(A区)
+//man表示男子更衣室的储物柜，woman表示女子更衣室的储物柜
     private String areaCode;
 //柜号
     private Integer boxNo;

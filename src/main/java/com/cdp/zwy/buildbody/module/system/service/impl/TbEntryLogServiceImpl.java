@@ -166,7 +166,12 @@ public class TbEntryLogServiceImpl extends ServiceImpl<TbEntryLogDao, TbEntryLog
         log.setUserType(1); // 会员
         log.setEntryTime(LocalDateTime.now());
         log.setVerifyMode(3); // 3-人工核验 (对应任务书场景)
+        log.setStatus("IN");
         log.setAdminId(adminId);
+        TbMemberProfile profile = memberProfileDao.selectById(userId);
+        log.setUserName(profile.getRealName());
+        SysUser user = sysUserDao.selectById(userId);
+        log.setPhone(user.getPhone());
         this.baseMapper.insert(log);
 
         return true;

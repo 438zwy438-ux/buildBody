@@ -10,13 +10,19 @@
       
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="柜号">
-          <el-input v-model="searchForm.lockerNumber" placeholder="请输入柜号" clearable />
+          <el-input v-model="searchForm.boxNo" placeholder="请输入柜号" clearable />
+        </el-form-item>
+        <el-form-item label="位置">
+          <el-select v-model="searchForm.areaCode" placeholder="请选择位置" clearable>
+            <el-option label="男子更衣室" value="man" />
+            <el-option label="女子更衣室" value="woman" />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="空闲" :value="1" />
-            <el-option label="使用中" :value="2" />
-            <el-option label="维修中" :value="3" />
+            <el-option label="空闲" :value="0" />
+            <el-option label="使用中" :value="1" />
+            <el-option label="故障" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -27,28 +33,34 @@
 
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="lockerNumber" label="柜号" />
-        <el-table-column prop="location" label="位置" />
-        <el-table-column prop="userId" label="使用人ID" />
-        <el-table-column prop="userName" label="使用人" />
-        <el-table-column prop="startTime" label="开始使用时间">
+        <el-table-column prop="boxNo" label="柜号" />
+        <el-table-column prop="areaCode" label="位置">
           <template #default="{ row }">
-            {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+            {{ row.areaCode === 'man' ? '男子更衣室' : '女子更衣室' }}
           </template>
         </el-table-column>
+        <el-table-column prop="currentUserId" label="使用人ID" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag v-if="row.status === 1" type="success">空闲</el-tag>
-            <el-tag v-else-if="row.status === 2" type="warning">使用中</el-tag>
-            <el-tag v-else type="info">维修中</el-tag>
+            <el-tag v-if="row.status === 0" type="success">空闲</el-tag>
+            <el-tag v-else-if="row.status === 1" type="warning">使用中</el-tag>
+            <el-tag v-else type="info">故障</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column prop="isLocker" label="锁状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.isLocker === 1 ? 'warning' : 'success'">
+              {{ row.isLocker === 1 ? '已上锁' : '已开锁' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="350">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-if="row.status === 2" type="warning" size="small" @click="handleRelease(row)">释放</el-button>
-            <el-button v-if="row.status === 1" type="success" size="small" @click="handleLock(row)">上锁</el-button>
-            <el-button v-if="row.status === 2" type="info" size="small" @click="handleUnlock(row)">解锁</el-button>
+            <el-button v-if="row.status === 1" type="warning" size="small" @click="handleRelease(row)">释放</el-button>
+            <el-button v-if="row.status === 1 && row.isLocker === 1" type="success" size="small" @click="handleUnlock(row)">开锁</el-button>
+            <el-button v-if="row.status === 1 && row.isLocker === 0" type="info" size="small" @click="handleLock(row)">上锁</el-button>
+            <el-button v-if="row.status === 0" type="primary" size="small" @click="handleTempOpen(row)">临时开柜</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -69,17 +81,20 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="柜号" prop="lockerNumber">
-          <el-input v-model="form.lockerNumber" placeholder="请输入柜号" />
+        <el-form-item label="柜号" prop="boxNo">
+          <el-input v-model="form.boxNo" placeholder="请输入柜号" />
         </el-form-item>
-        <el-form-item label="位置" prop="location">
-          <el-input v-model="form.location" placeholder="请输入位置" />
+        <el-form-item label="位置" prop="areaCode">
+          <el-select v-model="form.areaCode" placeholder="请选择位置" style="width: 100%">
+            <el-option label="男子更衣室" value="man" />
+            <el-option label="女子更衣室" value="woman" />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
-            <el-option label="空闲" :value="1" />
-            <el-option label="使用中" :value="2" />
-            <el-option label="维修中" :value="3" />
+            <el-option label="空闲" :value="0" />
+            <el-option label="使用中" :value="1" />
+            <el-option label="故障" :value="2" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -93,9 +108,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getLockerList, createLocker, updateLocker, deleteLocker, lockLocker, unlockLocker } from '@/api/locker'
+import { getLockerList, createLocker, updateLocker, deleteLocker, lockLockerAdmin, adminUnlockLocker, adminReleaseLocker } from '@/api/locker'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -104,7 +118,8 @@ const formRef = ref(null)
 const tableData = ref([])
 
 const searchForm = reactive({
-  lockerNumber: '',
+  boxNo: '',
+  areaCode: '',
   status: null
 })
 
@@ -116,14 +131,14 @@ const pagination = reactive({
 
 const form = reactive({
   id: null,
-  lockerNumber: '',
-  location: '',
-  status: 1
+  boxNo: '',
+  areaCode: 'man',
+  status: 0
 })
 
 const rules = {
-  lockerNumber: [{ required: true, message: '请输入柜号', trigger: 'blur' }],
-  location: [{ required: true, message: '请输入位置', trigger: 'blur' }],
+  boxNo: [{ required: true, message: '请输入柜号', trigger: 'blur' }],
+  areaCode: [{ required: true, message: '请选择位置', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -134,8 +149,11 @@ const fetchData = async () => {
       current: pagination.page,
       size: pagination.size
     }
-    if (searchForm.lockerNumber) {
-      params.lockerNumber = searchForm.lockerNumber
+    if (searchForm.boxNo) {
+      params.boxNo = searchForm.boxNo
+    }
+    if (searchForm.areaCode) {
+      params.areaCode = searchForm.areaCode
     }
     if (searchForm.status !== null && searchForm.status !== '') {
       params.status = searchForm.status
@@ -158,7 +176,8 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  searchForm.lockerNumber = ''
+  searchForm.boxNo = ''
+  searchForm.areaCode = ''
   searchForm.status = null
   pagination.page = 1
   fetchData()
@@ -167,17 +186,17 @@ const handleReset = () => {
 const handleAdd = () => {
   dialogTitle.value = '添加储物柜'
   form.id = null
-  form.lockerNumber = ''
-  form.location = ''
-  form.status = 1
+  form.boxNo = ''
+  form.areaCode = 'man'
+  form.status = 0
   dialogVisible.value = true
 }
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑储物柜'
   form.id = row.id
-  form.lockerNumber = row.lockerNumber
-  form.location = row.location
+  form.boxNo = row.boxNo
+  form.areaCode = row.areaCode
   form.status = row.status
   dialogVisible.value = true
 }
@@ -189,9 +208,7 @@ const handleRelease = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    form.id = row.id
-    form.status = 1
-    await updateLocker(form)
+    await adminReleaseLocker(row.id)
     ElMessage.success('释放成功')
     fetchData()
   } catch (error) {
@@ -201,7 +218,7 @@ const handleRelease = async (row) => {
 
 const handleLock = async (row) => {
   try {
-    await lockLocker(row.id)
+    await lockLockerAdmin(row.id)
     ElMessage.success('上锁成功')
     fetchData()
   } catch (error) {
@@ -231,6 +248,21 @@ const handleDelete = async (row) => {
     fetchData()
   } catch (error) {
     console.log('取消删除')
+  }
+}
+
+const handleTempOpen = async (row) => {
+  try {
+    await ElMessageBox.confirm('确定要临时开柜吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+    await adminUnlockLocker(row.id)
+    ElMessage.success('临时开柜成功')
+    fetchData()
+  } catch (error) {
+    console.log('取消临时开柜')
   }
 }
 

@@ -28,7 +28,9 @@ public class TbEntryLogController {
     @GetMapping("/selectAll")
     @RequireRole("admin")
     public Result<Page<TbEntryLog>> selectAll(Page<TbEntryLog> page, TbEntryLog tbEntryLog) {
-        return Result.success(this.tbEntryLogService.page(page, new QueryWrapper<>(tbEntryLog)));
+        QueryWrapper<TbEntryLog> queryWrapper = new QueryWrapper<>(tbEntryLog);
+        queryWrapper.orderByDesc("entry_time");
+        return Result.success(this.tbEntryLogService.page(page, queryWrapper));
     }
 
     @Operation(summary = "通过主键查询单条数据")

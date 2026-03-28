@@ -123,6 +123,12 @@ const routes = [
         name: 'CoachCourseCheck',
         component: () => import('@/views/user/CoachCourseCheck.vue'),
         meta: { title: '课程核销', requiresAuth: true, requiredRoles: ['coach'] }
+      },
+      {
+        path: 'locker-usage',
+        name: 'LockerUsage',
+        component: () => import('@/views/user/LockerUsage.vue'),
+        meta: { title: '储物柜使用', requiresAuth: true, requiredRoles: ['user', 'vip'] }
       }
     ]
   },

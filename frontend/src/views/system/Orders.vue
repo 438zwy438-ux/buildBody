@@ -22,10 +22,10 @@
       </el-form>
 
       <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="id" label="ID" width="240" />
         <el-table-column prop="orderNo" label="订单号" />
         <el-table-column prop="userId" label="用户ID" />
-        <el-table-column prop="amount" label="金额" />
+        <el-table-column prop="totalAmount" label="金额" />
         <el-table-column prop="status" label="状态">
           <template #default="{ row }">
             <el-tag v-if="row.status === 1" type="success">已支付</el-tag>
@@ -67,8 +67,8 @@
         <el-form-item label="用户ID" prop="userId">
           <el-input v-model="form.userId" placeholder="请输入用户ID" />
         </el-form-item>
-        <el-form-item label="金额" prop="amount">
-          <el-input-number v-model="form.amount" :min="0" :precision="2" style="width: 100%" />
+        <el-form-item label="金额" prop="totalAmount">
+          <el-input-number v-model="form.totalAmount" :min="0" :precision="2" style="width: 100%" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
@@ -113,14 +113,14 @@ const form = reactive({
   id: null,
   orderNo: '',
   userId: null,
-  amount: 0,
+  totalAmount: 0,
   status: 0
 })
 
 const rules = {
   orderNo: [{ required: true, message: '请输入订单号', trigger: 'blur' }],
   userId: [{ required: true, message: '请输入用户ID', trigger: 'blur' }],
-  amount: [{ required: true, message: '请输入金额', trigger: 'blur' }],
+  totalAmount: [{ required: true, message: '请输入金额', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
@@ -166,7 +166,7 @@ const handleAdd = () => {
   form.id = null
   form.orderNo = ''
   form.userId = null
-  form.amount = 0
+  form.totalAmount = 0
   form.status = 0
   dialogVisible.value = true
 }
@@ -176,7 +176,7 @@ const handleEdit = (row) => {
   form.id = row.id
   form.orderNo = row.orderNo
   form.userId = row.userId
-  form.amount = row.amount
+  form.totalAmount = row.totalAmount
   form.status = row.status
   dialogVisible.value = true
 }

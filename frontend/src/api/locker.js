@@ -1,17 +1,65 @@
 import request from '@/utils/request'
 
-export const getLockerList = (params) => {
+export const verifyMemberByPhone = (data) => {
   return request({
-    url: '/tbLocker/selectAll',
+    url: '/tbLocker/verify',
+    method: 'post',
+    data
+  })
+}
+
+export const getAvailableLockers = (params) => {
+  return request({
+    url: '/tbLocker/available',
     method: 'get',
     params
   })
 }
 
-export const getLockerById = (id) => {
+export const useLocker = (data) => {
   return request({
-    url: `/tbLocker/${id}`,
-    method: 'get'
+    url: '/tbLocker/use',
+    method: 'post',
+    data
+  })
+}
+
+export const tempOpenLocker = (data) => {
+  return request({
+    url: '/tbLocker/tempOpen',
+    method: 'post',
+    data
+  })
+}
+
+export const returnLocker = () => {
+  return request({
+    url: '/tbLocker/return',
+    method: 'post'
+  })
+}
+
+export const getMyLocker = (params) => {
+  return request({
+    url: '/tbLocker/myLocker',
+    method: 'get',
+    params
+  })
+}
+
+export const lockLocker = (data) => {
+  return request({
+    url: '/tbLocker/lock',
+    method: 'post',
+    data
+  })
+}
+
+export const getLockerList = (params) => {
+  return request({
+    url: '/tbLocker/selectAll',
+    method: 'get',
+    params
   })
 }
 
@@ -39,7 +87,7 @@ export const deleteLocker = (idList) => {
   })
 }
 
-export const lockLocker = (id) => {
+export const lockLockerAdmin = (id) => {
   return request({
     url: `/tbLocker/lock/${id}`,
     method: 'put'
@@ -50,5 +98,19 @@ export const unlockLocker = (id) => {
   return request({
     url: `/tbLocker/unlock/${id}`,
     method: 'put'
+  })
+}
+
+export const adminUnlockLocker = (id) => {
+  return request({
+    url: `/tbLocker/adminUnlock/${id}`,
+    method: 'put'
+  })
+}
+
+export const adminReleaseLocker = (id) => {
+  return request({
+    url: `/tbLocker/adminRelease/${id}`,
+    method: 'post'
   })
 }

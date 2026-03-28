@@ -10,7 +10,7 @@
       
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="模板名称">
-          <el-input v-model="searchForm.cardName" placeholder="请输入模板名称" clearable />
+          <el-input v-model="searchForm.name" placeholder="请输入模板名称" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -20,9 +20,15 @@
 
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="cardName" label="模板名称" />
+        <el-table-column prop="name" label="模板名称" />
+        <el-table-column prop="type" label="类型" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.type === 1 ? 'success' : 'warning'">{{ row.type === 1 ? '时间卡' : '次卡' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="times" label="次数" width="100" />
         <el-table-column prop="price" label="价格" />
-        <el-table-column prop="duration" label="有效期(天)" />
+        <el-table-column prop="durationDays" label="有效期(天)" />
         <el-table-column prop="description" label="描述" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
@@ -51,15 +57,24 @@
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="模板名称" prop="cardName">
-          <el-input v-model="form.cardName" placeholder="请输入模板名称" />
+      <el-form :model="form" :rules="getFormRules()" ref="formRef" label-width="100px">
+        <el-form-item label="模板名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入模板名称" />
+        </el-form-item>
+        <el-form-item label="类型" prop="type">
+          <el-radio-group v-model="form.type">
+            <el-radio :label="1">时间卡</el-radio>
+            <el-radio :label="2">次卡</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="form.type === 2" label="次数" prop="times">
+          <el-input-number v-model="form.times" :min="0" style="width: 100%" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="有效期(天)" prop="duration">
-          <el-input-number v-model="form.duration" :min="1" style="width: 100%" />
+        <el-form-item label="有效期(天)" prop="durationDays">
+          <el-input-number v-model="form.durationDays" :min="0" style="width: 100%" :placeholder="form.type === 2 ? '次卡可留空' : '请输入有效期'" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入描述" />
@@ -80,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { getCardTemplateList, createCardTemplate, updateCardTemplate, deleteCardTemplate } from '@/api/cardTemplate'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -91,7 +106,7 @@ const formRef = ref(null)
 const tableData = ref([])
 
 const searchForm = reactive({
-  cardName: ''
+  name: ''
 })
 
 const pagination = reactive({
@@ -102,19 +117,41 @@ const pagination = reactive({
 
 const form = reactive({
   id: null,
-  cardName: '',
+  name: '',
+  type: 1,
+  times: 0,
   price: 0,
-  duration: 30,
+  durationDays: 30,
   description: '',
   status: 1
 })
 
-const rules = {
-  cardName: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
-  price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-  duration: [{ required: true, message: '请输入有效期', trigger: 'blur' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+const getFormRules = () => {
+  const dynamicRules = {
+    name: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
+    type: [{ required: true, message: '请选择类型', trigger: 'change' }],
+    price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
+    status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  }
+  
+  if (form.type === 2) {
+    dynamicRules.times = [{ required: true, message: '请输入次数', trigger: 'blur' }]
+  } else {
+    dynamicRules.durationDays = [{ required: true, message: '请输入有效期', trigger: 'blur' }]
+  }
+  
+  return dynamicRules
 }
+
+watch(() => form.type, (newType, oldType) => {
+  if (oldType !== null) {
+    if (newType === 1) {
+      form.times = 0
+    } else {
+      form.durationDays = 0
+    }
+  }
+})
 
 const fetchData = async () => {
   loading.value = true
@@ -123,8 +160,8 @@ const fetchData = async () => {
       current: pagination.page,
       size: pagination.size
     }
-    if (searchForm.cardName) {
-      params.cardName = searchForm.cardName
+    if (searchForm.name) {
+      params.name = searchForm.name
     }
     const res = await getCardTemplateList(params)
     tableData.value = res.data?.records || []
@@ -144,7 +181,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  searchForm.cardName = ''
+  searchForm.name = ''
   pagination.page = 1
   fetchData()
 }
@@ -152,9 +189,11 @@ const handleReset = () => {
 const handleAdd = () => {
   dialogTitle.value = '添加模板'
   form.id = null
-  form.cardName = ''
+  form.name = ''
+  form.type = 1
+  form.times = 0
   form.price = 0
-  form.duration = 30
+  form.durationDays = 30
   form.description = ''
   form.status = 1
   dialogVisible.value = true
@@ -163,9 +202,11 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   dialogTitle.value = '编辑模板'
   form.id = row.id
-  form.cardName = row.cardName
+  form.name = row.name
+  form.type = row.type
+  form.times = row.times
   form.price = row.price
-  form.duration = row.duration
+  form.durationDays = row.durationDays
   form.description = row.description
   form.status = row.status
   dialogVisible.value = true
