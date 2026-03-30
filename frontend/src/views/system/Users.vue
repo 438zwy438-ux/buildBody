@@ -4,7 +4,10 @@
       <template #header>
         <div class="card-header">
           <span>用户管理</span>
-          <el-button type="primary" @click="handleAdd">添加用户</el-button>
+          <div>
+            <el-button type="success" @click="goToRegister">注册并办卡</el-button>
+            <el-button type="primary" @click="handleAdd">添加用户</el-button>
+          </div>
         </div>
       </template>
       
@@ -103,10 +106,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getUserList, updateUser, deleteUser, addCoach } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 
+const router = useRouter()
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('添加用户')
@@ -199,6 +204,10 @@ const handleAdd = () => {
   form.specialty = ''
   form.intro = ''
   dialogVisible.value = true
+}
+
+const goToRegister = () => {
+  router.push('/user/register')
 }
 
 const handleRoleChange = (value) => {

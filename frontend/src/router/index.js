@@ -20,7 +20,7 @@ const routes = [
   {
     path: '/user/register',
     name: 'UserRegister',
-    component: () => import('@/views/user/Register.vue'),
+    component: () => import('@/views/Register.vue'),
     meta: { title: '会员注册' }
   },
   {
@@ -266,7 +266,11 @@ router.beforeEach((to, from, next) => {
       next()
     }
   } else if ((to.path === '/user/login' || to.path === '/user/register') && token) {
-    next('/user/home')
+    if (roles.includes('admin')) {
+      next()
+    } else {
+      next('/user/home')
+    }
   } else if ((to.path === '/admin/login' || to.path === '/admin/register') && token) {
     if (roles.includes('admin')) {
       next('/admin/dashboard')

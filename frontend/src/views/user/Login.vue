@@ -32,10 +32,6 @@
         </el-form-item>
         <el-form-item>
           <div class="login-footer">
-            <span>还没有账号?</span>
-            <el-link type="primary" @click="goToRegister">立即注册</el-link>
-          </div>
-          <div class="login-footer">
             <el-link type="info" @click="goToAdminLogin">管理员登录</el-link>
           </div>
         </el-form-item>
@@ -93,10 +89,6 @@ const handleLogin = async () => {
       }
     }
   })
-}
-
-const goToRegister = () => {
-  router.push('/user/register')
 }
 
 const goToAdminLogin = () => {

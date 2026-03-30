@@ -45,7 +45,6 @@
           </template>
           <template v-else>
             <el-button type="primary" @click="router.push('/user/login')">登录</el-button>
-            <el-button @click="router.push('/user/register')">注册</el-button>
           </template>
         </div>
       </el-header>
