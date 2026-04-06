@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cdp.zwy.buildbody.common.annotation.RequireRole;
 import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachRegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
@@ -99,5 +100,11 @@ public class SysUserController {
     @RequireRole("admin")
     public Result<Boolean> addCoach(@RequestBody CoachAddDTO dto) {
         return Result.success(sysUserService.addCoach(dto));
+    }
+
+    @Operation(summary = "教练注册")
+    @PostMapping("/registerCoach")
+    public Result<Boolean> registerCoach(@RequestBody CoachRegisterDTO dto) {
+        return Result.success(sysUserService.registerCoach(dto));
     }
 }

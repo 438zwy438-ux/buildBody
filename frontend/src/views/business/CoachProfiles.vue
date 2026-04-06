@@ -4,7 +4,10 @@
       <template #header>
         <div class="card-header">
           <span>教练档案管理</span>
-          <el-button type="primary" @click="handleAdd">添加教练</el-button>
+          <div>
+            <el-button type="success" @click="handleRegisterCoach">注册教练账号</el-button>
+            <el-button type="primary" @click="handleAdd">添加教练</el-button>
+          </div>
         </div>
       </template>
       
@@ -130,11 +133,13 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getCoachList, addCoach, updateCoach, deleteCoach, deleteCoachImageByUrl } from '@/api/coach'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 
+const router = useRouter()
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('添加教练')
@@ -204,6 +209,10 @@ const handleReset = () => {
   searchForm.realName = ''
   pagination.page = 1
   fetchData()
+}
+
+const handleRegisterCoach = () => {
+  router.push('/admin/register-coach')
 }
 
 const handleAdd = () => {

@@ -146,6 +146,12 @@ const routes = [
     meta: { title: '管理员注册' }
   },
   {
+    path: '/admin/register-coach',
+    name: 'RegisterCoach',
+    component: () => import('@/views/RegisterCoach.vue'),
+    meta: { title: '教练注册', requiresAuth: true, requiredRoles: ['admin'] }
+  },
+  {
     path: '/admin',
     component: () => import('@/layout/MainLayout.vue'),
     redirect: '/admin/dashboard',

@@ -24,6 +24,14 @@ export const addCoach = (data) => {
   })
 }
 
+export const registerCoach = (data) => {
+  return request({
+    url: '/sysUser/registerCoach',
+    method: 'post',
+    data
+  })
+}
+
 export const getUserList = (params) => {
   return request({
     url: '/sysUser/selectAll',

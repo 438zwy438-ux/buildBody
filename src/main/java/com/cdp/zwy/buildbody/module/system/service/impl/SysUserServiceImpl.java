@@ -15,6 +15,7 @@ import com.cdp.zwy.buildbody.module.business.entity.TbCoachProfile;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
 import com.cdp.zwy.buildbody.module.business.entity.TbMemberProfile;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachAddDTO;
+import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachRegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
@@ -62,6 +63,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
     
     @Resource
     private SysRoleDao sysRoleDao;
+    
+    @Resource
+    private com.cdp.zwy.buildbody.module.system.service.ImgRelationService imgRelationService;
+
 
     /**
      * 备注：一个账号只有一个角色
@@ -226,6 +231,58 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         profile.setIntro(dto.getIntro());
         profile.setStatus(1); // 1在职
         coachProfileDao.insert(profile);
+
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean registerCoach(CoachRegisterDTO dto) {
+        // 1. 校验账号/手机号是否重复
+        Long count = this.baseMapper.selectCount(new QueryWrapper<SysUser>()
+                .eq("username", dto.getUsername()).or().eq("phone", dto.getPhone()));
+        if (count > 0) {
+            throw new RuntimeException("账号或手机号已存在！");
+        }
+
+        // 2. 插入系统账号 (sys_user)
+        SysUser user = new SysUser();
+        user.setUsername(dto.getUsername());
+        user.setPassword(BCrypt.hashpw(dto.getPassword()));
+        user.setNickname(dto.getRealName());
+        user.setPhone(dto.getPhone());
+        user.setAvatar("https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png");
+        user.setStatus(1);
+        user.setCreateTime(new Date());
+        this.baseMapper.insert(user);
+
+        // 3. 插入教练档案 (tb_coach_profile)
+        TbCoachProfile profile = new TbCoachProfile();
+        profile.setUserId(user.getUserId());
+        profile.setRealName(dto.getRealName());
+        profile.setSpecialty(dto.getSpecialty());
+        profile.setIntro(dto.getIntro());
+        profile.setEntryDate(new Date());
+        profile.setStatus(1);
+        
+        // 证书图片列表转为JSON字符串保存到certificates字段
+        if (dto.getCertificates() != null && !dto.getCertificates().isEmpty()) {
+            profile.setCertificates(cn.hutool.json.JSONUtil.toJsonStr(dto.getCertificates()));
+        }
+        
+        coachProfileDao.insert(profile);
+
+        // 4. 插入用户角色关系表 (sys_user_role)，角色id 3表示教练
+        SysUserRole userRole = new SysUserRole();
+        userRole.setUserId(user.getUserId());
+        userRole.setRoleId(3L);
+        userRole.setRoleCode("coach");
+        sysUserRoleService.save(userRole);
+
+        // 5. 插入教练美照到 img_relation 表
+        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+            imgRelationService.batchSave(2, profile.getId(), dto.getImages());
+        }
 
         return true;
     }
