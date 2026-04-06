@@ -98,18 +98,13 @@
 <script setup>
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { Close, ChatDotRound, Promotion } from '@element-plus/icons-vue'
-import { aiChat } from '@/api/ai'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/user'
-
-const userStore = useUserStore()
 
 const isOpen = ref(false)
 const inputMessage = ref('')
 const messages = ref([])
 const loading = ref(false)
 const chatContentRef = ref(null)
-const typingMessage = ref('')
 const showBubble = ref(true)
 let bubbleTimer = null
 
@@ -144,51 +139,58 @@ const handleSend = async () => {
   loading.value = true
   scrollToBottom()
 
+  const aiMessageIndex = messages.value.length
+  messages.value.push({
+    role: 'assistant',
+    content: ''
+  })
+
   try {
-    const history = messages.value.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }))
+    const token = localStorage.getItem('token')
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
 
-    const response = await aiChat({
-      userId: userStore.userInfo?.id || 0,
-      message: userMessage,
-      history: history
+    const response = await fetch(`http://localhost:8080/api/ai/streamChat?message=${encodeURIComponent(userMessage)}`, {
+      method: 'GET',
+      headers: headers
     })
 
-    const assistantMessage = response.data
-    
-    messages.value.push({
-      role: 'assistant',
-      content: ''
-    })
-    
-    await typeWriterEffect(assistantMessage, messages.value.length - 1)
+    if (!response.ok) {
+      throw new Error('请求失败')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data:') && line !== 'data:') {
+          const content = line.substring(5).trim()
+          if (content) {
+            messages.value[aiMessageIndex].content += content
+            scrollToBottom()
+          }
+        }
+      }
+    }
   } catch (error) {
     ElMessage.error('发送失败，请重试')
+    messages.value[aiMessageIndex].content = '抱歉，发生了错误，请重试。'
   } finally {
     loading.value = false
   }
-}
-
-const typeWriterEffect = (text, messageIndex) => {
-  return new Promise((resolve) => {
-    let index = 0
-    const speed = 30
-    
-    const type = () => {
-      if (index < text.length) {
-        messages.value[messageIndex].content += text.charAt(index)
-        index++
-        scrollToBottom()
-        setTimeout(type, speed)
-      } else {
-        resolve()
-      }
-    }
-    
-    type()
-  })
 }
 
 onMounted(() => {
