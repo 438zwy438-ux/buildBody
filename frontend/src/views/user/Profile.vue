@@ -70,6 +70,23 @@
                   </el-tag>
                 </el-descriptions-item>
               </el-descriptions>
+              
+              <!-- 教练美照 -->
+              <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">教练美照</h4>
+                <div v-if="coachImages && coachImages.length > 0" class="coach-images">
+                  <el-image
+                    v-for="(img, index) in coachImages"
+                    :key="index"
+                    :src="img"
+                    :preview-src-list="coachImages"
+                    :initial-index="index"
+                    fit="cover"
+                    style="width: 150px; height: 150px; margin-right: 10px; margin-bottom: 10px; border-radius: 8px;"
+                  />
+                </div>
+                <el-empty v-else description="暂无教练美照" :image-size="100" />
+              </div>
             </el-tab-pane>
             <!-- 会员档案标签页 - 仅对普通会员和VIP会员显示 -->
             <el-tab-pane v-if="hasRole('user') || hasRole('vip')" label="会员档案" name="member-profile">
@@ -193,6 +210,7 @@ const fetchFullUserInfo = async () => {
 }
 const memberProfile = ref({})
 const coachProfile = ref({})
+const coachImages = ref([])
 
 const activeTab = ref('basic')
 const formRef = ref(null)
@@ -378,7 +396,13 @@ const fetchCoachProfile = async () => {
     }
     const res = await getCoachProfileByUserId(userId)
     if (res.data) {
-      coachProfile.value = res.data
+      // 处理返回的 Map 数据
+      if (res.data.coach) {
+        coachProfile.value = res.data.coach
+      }
+      if (res.data.images) {
+        coachImages.value = res.data.images
+      }
     }
   } catch (error) {
     console.error('获取教练档案失败:', error)
@@ -648,5 +672,12 @@ onMounted(async () => {
   color: #999;
   margin-top: 8px;
   line-height: 1.4;
+}
+
+/* 教练美照样式 */
+.coach-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 </style>

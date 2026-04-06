@@ -27,12 +27,19 @@ public class TbCoachProfileController {
     @Operation(summary = "通过用户ID获取教练档案")
     @GetMapping("/by-user-id/{userId}")
     @RequireRole(requireLogin = true)
-    public Result<TbCoachProfile> getByUserId(@PathVariable Long userId) {
+    public Result<Map<String, Object>> getByUserId(@PathVariable Long userId) {
         TbCoachProfile coachProfile = this.tbCoachProfileService.getByUserId(userId);
         if (coachProfile == null) {
             return Result.error("未找到教练档案");
         }
-        return Result.success(coachProfile);
+        
+        List<String> images = this.tbCoachProfileService.getCoachImages(coachProfile.getId());
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("coach", coachProfile);
+        result.put("images", images);
+        
+        return Result.success(result);
     }
 
     @Operation(summary = "分页查询所有数据")
