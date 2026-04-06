@@ -24,7 +24,8 @@
             :class="['message', msg.role]"
           >
             <div class="message-content">
-              <div class="message-text">{{ msg.content }}</div>
+              <div v-if="msg.role === 'user'" class="message-text">{{ msg.content }}</div>
+              <div v-else class="message-text markdown-content" v-html="renderMarkdown(msg.content)"></div>
             </div>
           </div>
           <div v-if="loading" class="message assistant">
@@ -99,6 +100,7 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { Close, ChatDotRound, Promotion } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { marked } from 'marked'
 
 const isOpen = ref(false)
 const inputMessage = ref('')
@@ -107,6 +109,10 @@ const loading = ref(false)
 const chatContentRef = ref(null)
 const showBubble = ref(true)
 let bubbleTimer = null
+
+const renderMarkdown = (content) => {
+  return marked(content)
+}
 
 const toggleChat = () => {
   isOpen.value = !isOpen.value
@@ -154,7 +160,7 @@ const handleSend = async () => {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`http://localhost:8080/api/ai/streamChat?message=${encodeURIComponent(userMessage)}`, {
+    const response = await fetch(`/api/ai/streamChat?message=${encodeURIComponent(userMessage)}`, {
       method: 'GET',
       headers: headers
     })
@@ -179,8 +185,16 @@ const handleSend = async () => {
         if (line.startsWith('data:') && line !== 'data:') {
           const content = line.substring(5).trim()
           if (content) {
-            messages.value[aiMessageIndex].content += content
-            scrollToBottom()
+            try {
+              const jsonData = JSON.parse(content)
+              if (jsonData.content) {
+                messages.value[aiMessageIndex].content += jsonData.content
+                scrollToBottom()
+              }
+            } catch (e) {
+              messages.value[aiMessageIndex].content += content
+              scrollToBottom()
+            }
           }
         }
       }
@@ -429,6 +443,80 @@ onUnmounted(() => {
   color: #333;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-bottom-left-radius: 4px;
+}
+
+.markdown-content {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin: 12px 0 8px 0;
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 1.4em;
+}
+
+.markdown-content h2 {
+  font-size: 1.2em;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+}
+
+.markdown-content p {
+  margin: 8px 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin: 4px 0;
+}
+
+.markdown-content code {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #667eea;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #666;
 }
 
 .typing {

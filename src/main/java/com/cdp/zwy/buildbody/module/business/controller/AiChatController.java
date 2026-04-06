@@ -6,9 +6,19 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cdp.zwy.buildbody.common.result.Result;
 import com.cdp.zwy.buildbody.module.business.controller.DTO.AiChatDTO;
+import com.cdp.zwy.buildbody.module.business.dao.TbCoachProfileDao;
+import com.cdp.zwy.buildbody.module.business.dao.TbCourseDao;
 import com.cdp.zwy.buildbody.module.business.dao.TbEquipmentDao;
+import com.cdp.zwy.buildbody.module.business.dao.TbMemberCardDao;
+import com.cdp.zwy.buildbody.module.business.entity.TbCoachProfile;
+import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
 import com.cdp.zwy.buildbody.module.business.entity.TbEquipment;
+import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
 import com.cdp.zwy.buildbody.module.business.service.impl.AiChatServiceImpl;
+import com.cdp.zwy.buildbody.module.system.dao.SysOrderDao;
+import com.cdp.zwy.buildbody.module.system.dao.TbEntryLogDao;
+import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
+import com.cdp.zwy.buildbody.module.system.entity.TbEntryLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -49,6 +59,21 @@ public class AiChatController {
     @Resource
     private TbEquipmentDao equipmentDao;
 
+    @Resource
+    private TbCoachProfileDao coachProfileDao;
+
+    @Resource
+    private TbCourseDao courseDao;
+
+    @Resource
+    private TbMemberCardDao memberCardDao;
+
+    @Resource
+    private SysOrderDao orderDao;
+
+    @Resource
+    private TbEntryLogDao entryLogDao;
+
     @Value("${ai.api-key}")
     private String apiKey;
 
@@ -58,8 +83,12 @@ public class AiChatController {
     @Value("${ai.model}")
     private String model;
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final OkHttpClient httpClient = new OkHttpClient();
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .build();
 
     @Operation(summary = "发送对话")
     @PostMapping("/chat")
@@ -72,7 +101,7 @@ public class AiChatController {
     }
 
     @Operation(summary = "流式对话")
-    @GetMapping("/streamChat")
+    @GetMapping(value = "/streamChat", produces = "text/event-stream;charset=UTF-8")
     public SseEmitter streamChat(@RequestParam String message) {
         SseEmitter emitter = new SseEmitter(60000L);
 
@@ -101,6 +130,173 @@ public class AiChatController {
                     }
 
                     systemPrompt += " 当前健身房器材实时状态如下：" + equipmentArray.toJSONString() + "。请根据这些信息回答用户关于器材的问题。";
+                }
+
+                if (message.contains("教练") || message.contains("私教") || message.contains("老师")) {
+                    QueryWrapper<TbCoachProfile> wrapper = new QueryWrapper<>();
+                    wrapper.select("real_name", "specialty", "intro", "entry_date");
+                    wrapper.eq("status", 1);
+                    
+                    String coachName = extractCoachName(message);
+                    if (coachName != null && !coachName.isEmpty()) {
+                        wrapper.like("real_name", coachName);
+                    }
+                    
+                    List<Map<String, Object>> coachList = coachProfileDao.selectMaps(wrapper);
+
+                    JSONArray coachArray = new JSONArray();
+                    for (Map<String, Object> coach : coachList) {
+                        JSONObject coachObj = new JSONObject();
+                        coachObj.put("name", coach.get("real_name"));
+                        coachObj.put("specialty", coach.get("specialty"));
+                        coachObj.put("intro", coach.get("intro"));
+                        coachObj.put("entry_date", coach.get("entry_date"));
+                        coachArray.add(coachObj);
+                    }
+
+                    if (coachName != null && !coachName.isEmpty()) {
+                        systemPrompt += " 教练[" + coachName + "]的资料如下：" + coachArray.toJSONString() + "。请根据这些信息回答用户关于该教练的问题。";
+                    } else {
+                        systemPrompt += " 当前健身房在职教练列表如下：" + coachArray.toJSONString() + "。请根据这些信息回答用户关于教练的问题。";
+                    }
+                }
+
+                if (message.contains("课程") || message.contains("私教课") || message.contains("团课")) {
+                    QueryWrapper<TbCourse> wrapper = new QueryWrapper<>();
+                    wrapper.select("name", "type", "price", "duration", "description");
+                    wrapper.eq("status", 1);
+                    List<Map<String, Object>> courseList = courseDao.selectMaps(wrapper);
+
+                    JSONArray courseArray = new JSONArray();
+                    for (Map<String, Object> course : courseList) {
+                        JSONObject courseObj = new JSONObject();
+                        courseObj.put("name", course.get("name"));
+                        courseObj.put("type", course.get("type"));
+                        courseObj.put("price", course.get("price"));
+                        courseObj.put("duration", course.get("duration"));
+                        courseObj.put("description", course.get("description"));
+                        courseArray.add(courseObj);
+                    }
+
+                    systemPrompt += " 当前健身房在售课程列表如下：" + courseArray.toJSONString() + "。请根据这些信息回答用户关于课程的问题。";
+                }
+
+                if (message.contains("订单") || message.contains("购买") || message.contains("支付")) {
+                    QueryWrapper<SysOrder> wrapper = new QueryWrapper<>();
+                    wrapper.select("order_no", "subject", "type", "status", "total_amount", "create_time");
+                    wrapper.orderByDesc("create_time");
+                    wrapper.last("LIMIT 10");
+                    List<Map<String, Object>> orderList = orderDao.selectMaps(wrapper);
+
+                    JSONArray orderArray = new JSONArray();
+                    for (Map<String, Object> order : orderList) {
+                        JSONObject orderObj = new JSONObject();
+                        orderObj.put("order_no", order.get("order_no"));
+                        orderObj.put("subject", order.get("subject"));
+                        orderObj.put("type", order.get("type"));
+                        orderObj.put("status", order.get("status"));
+                        orderObj.put("total_amount", order.get("total_amount"));
+                        orderObj.put("create_time", order.get("create_time"));
+                        orderArray.add(orderObj);
+                    }
+
+                    systemPrompt += " 最近订单记录如下：" + orderArray.toJSONString() + "。请根据这些信息回答用户关于订单的问题。";
+                }
+
+                if (message.contains("会员卡") || message.contains("卡种") || message.contains("健身卡")) {
+                    QueryWrapper<TbMemberCard> wrapper = new QueryWrapper<>();
+                    wrapper.select("card_no", "template_id", "total_count", "remain_count", "active_time", "expire_time", "status");
+                    wrapper.eq("status", 1);
+                    wrapper.last("LIMIT 10");
+                    List<Map<String, Object>> cardList = memberCardDao.selectMaps(wrapper);
+
+                    JSONArray cardArray = new JSONArray();
+                    for (Map<String, Object> card : cardList) {
+                        JSONObject cardObj = new JSONObject();
+                        cardObj.put("card_no", card.get("card_no"));
+                        cardObj.put("template_id", card.get("template_id"));
+                        cardObj.put("total_count", card.get("total_count"));
+                        cardObj.put("remain_count", card.get("remain_count"));
+                        cardObj.put("active_time", card.get("active_time"));
+                        cardObj.put("expire_time", card.get("expire_time"));
+                        cardObj.put("status", card.get("status"));
+                        cardArray.add(cardObj);
+                    }
+
+                    systemPrompt += " 会员卡信息如下：" + cardArray.toJSONString() + "。请根据这些信息回答用户关于会员卡的问题。";
+                }
+
+                if (message.contains("人多") || message.contains("人流量") || message.contains("拥挤") || 
+                    (message.contains("现在") && (message.contains("人") || message.contains("忙")))) {
+                    QueryWrapper<TbEntryLog> wrapper = new QueryWrapper<>();
+                    wrapper.select("user_name", "entry_time", "exit_time", "status");
+                    wrapper.orderByDesc("entry_time");
+                    wrapper.last("LIMIT 20");
+                    List<Map<String, Object>> entryList = entryLogDao.selectMaps(wrapper);
+
+                    int currentInGym = 0;
+                    int totalToday = 0;
+                    java.time.LocalDateTime now = java.time.LocalDateTime.now();
+                    java.time.LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+
+                    JSONArray entryArray = new JSONArray();
+                    for (Map<String, Object> entry : entryList) {
+                        JSONObject entryObj = new JSONObject();
+                        entryObj.put("user_name", entry.get("user_name"));
+                        entryObj.put("entry_time", entry.get("entry_time"));
+                        entryObj.put("exit_time", entry.get("exit_time"));
+                        entryObj.put("status", entry.get("status"));
+                        entryArray.add(entryObj);
+
+                        java.time.LocalDateTime entryTime = (java.time.LocalDateTime) entry.get("entry_time");
+                        java.time.LocalDateTime exitTime = (java.time.LocalDateTime) entry.get("exit_time");
+
+                        if (entryTime != null && entryTime.isAfter(todayStart)) {
+                            totalToday++;
+                            if (exitTime == null || entryTime.isAfter(exitTime)) {
+                                currentInGym++;
+                            }
+                        }
+                    }
+
+                    JSONObject crowdInfo = new JSONObject();
+                    crowdInfo.put("current_in_gym", currentInGym);
+                    crowdInfo.put("total_today", totalToday);
+                    crowdInfo.put("recent_entries", entryArray);
+
+                    String crowdLevel = "空闲";
+                    if (currentInGym >= 50) {
+                        crowdLevel = "拥挤";
+                    } else if (currentInGym >= 30) {
+                        crowdLevel = "繁忙";
+                    } else if (currentInGym >= 15) {
+                        crowdLevel = "适中";
+                    }
+                    crowdInfo.put("crowd_level", crowdLevel);
+
+                    systemPrompt += " 当前健身房人流情况如下：" + crowdInfo.toJSONString() + 
+                        "。请根据这些信息回答用户关于人流量的问题。";
+                }
+
+                if (message.contains("入场") || message.contains("签到") || message.contains("打卡") || message.contains("进出")) {
+                    QueryWrapper<TbEntryLog> wrapper = new QueryWrapper<>();
+                    wrapper.select("user_name", "entry_time", "exit_time", "status", "verify_mode");
+                    wrapper.orderByDesc("entry_time");
+                    wrapper.last("LIMIT 10");
+                    List<Map<String, Object>> entryList = entryLogDao.selectMaps(wrapper);
+
+                    JSONArray entryArray = new JSONArray();
+                    for (Map<String, Object> entry : entryList) {
+                        JSONObject entryObj = new JSONObject();
+                        entryObj.put("user_name", entry.get("user_name"));
+                        entryObj.put("entry_time", entry.get("entry_time"));
+                        entryObj.put("exit_time", entry.get("exit_time"));
+                        entryObj.put("status", entry.get("status"));
+                        entryObj.put("verify_mode", entry.get("verify_mode"));
+                        entryArray.add(entryObj);
+                    }
+
+                    systemPrompt += " 最近入场记录如下：" + entryArray.toJSONString() + "。请根据这些信息回答用户关于入场记录的问题。";
                 }
 
                 JSONObject requestBody = new JSONObject();
@@ -142,7 +338,9 @@ public class AiChatController {
                                     JSONObject delta = choice.getJSONObject("delta");
                                     if (delta != null && delta.containsKey("content")) {
                                         String content = delta.getString("content");
-                                        emitter.send(SseEmitter.event().data(content));
+                                        JSONObject wrapper = new JSONObject();
+                                        wrapper.put("content", content);
+                                        emitter.send(SseEmitter.event().data(wrapper.toJSONString()));
                                     }
                                 }
                             } catch (Exception e) {
@@ -161,5 +359,40 @@ public class AiChatController {
         });
 
         return emitter;
+    }
+
+    private String extractCoachName(String message) {
+        if (message == null || message.isEmpty()) {
+            return null;
+        }
+
+        String[] keywords = {"教练", "私教", "老师"};
+        String lowerMessage = message.toLowerCase();
+
+        for (String keyword : keywords) {
+            int index = lowerMessage.indexOf(keyword);
+            if (index != -1) {
+                String beforeKeyword = message.substring(0, index).trim();
+                String afterKeyword = message.substring(index + keyword.length()).trim();
+
+                if (!beforeKeyword.isEmpty()) {
+                    String[] parts = beforeKeyword.split("\\s+");
+                    String lastPart = parts[parts.length - 1];
+                    if (lastPart.length() >= 2 && lastPart.length() <= 4) {
+                        return lastPart;
+                    }
+                }
+
+                if (!afterKeyword.isEmpty()) {
+                    String[] parts = afterKeyword.split("\\s+");
+                    String firstPart = parts[0];
+                    if (firstPart.length() >= 2 && firstPart.length() <= 4) {
+                        return firstPart;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
