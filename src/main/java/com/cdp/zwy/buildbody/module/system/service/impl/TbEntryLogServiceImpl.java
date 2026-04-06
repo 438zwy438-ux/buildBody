@@ -168,7 +168,8 @@ public class TbEntryLogServiceImpl extends ServiceImpl<TbEntryLogDao, TbEntryLog
         log.setVerifyMode(3); // 3-人工核验 (对应任务书场景)
         log.setStatus("IN");
         log.setAdminId(adminId);
-        TbMemberProfile profile = memberProfileDao.selectById(userId);
+        TbMemberProfile profile = memberProfileDao.selectOne(new QueryWrapper<TbMemberProfile>().eq("user_id", userId));
+
         log.setUserName(profile.getRealName());
         SysUser user = sysUserDao.selectById(userId);
         log.setPhone(user.getPhone());

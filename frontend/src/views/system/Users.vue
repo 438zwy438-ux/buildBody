@@ -207,7 +207,7 @@ const handleAdd = () => {
 }
 
 const goToRegister = () => {
-  router.push('/user/register')
+  router.push({ path: '/user/register' })
 }
 
 const handleRoleChange = (value) => {

@@ -49,7 +49,8 @@ public class SysOrderController {
     }
     @Operation(summary = "查询我的私教课订单")
     @GetMapping("/my-courses-orders")
-    @RequireRole({ "vip"})
+    @RequireRole({ "user", "vip"})
+//    考虑到VIP会降级为普通会员所以加上user角色
     public Result<List<CourseOrderVO>> getMyCoursesOrders(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         List<CourseOrderVO> courseOrders = sysOrderService.getMyCourseOrders(userId);

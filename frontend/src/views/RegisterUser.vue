@@ -4,7 +4,7 @@
       <div class="register-header">
         <el-icon class="logo-icon"><Trophy /></el-icon>
         <h2>健身俱乐部</h2>
-        <p>会员注册</p>
+        <p>管理员注册会员</p>
       </div>
       <el-form :model="registerForm" :rules="rules" ref="registerFormRef" label-width="80px">
         <el-form-item label="用户名" prop="username">
@@ -28,9 +28,9 @@
             <el-radio :label="1">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="年龄" prop="age">
-          <el-input-number v-model="registerForm.age" :min="1" :max="100" />
-        </el-form-item>
+<!--        <el-form-item label="年龄" prop="age">-->
+<!--          <el-input-number v-model="registerForm.age" :min="1" :max="100" />-->
+<!--        </el-form-item>-->
         <el-form-item label="人脸照片" prop="faceImgUrl" required>
           <el-upload
               class="face-uploader"
@@ -191,7 +191,8 @@ const handleRegister = async () => {
       try {
         await register(registerForm)
         ElMessage.success('注册成功,请登录')
-        router.push('/user/login')
+        const redirect = router.currentRoute.value.query.redirect || '/user/login'
+        router.push(redirect)
       } catch (error) {
         console.error('注册失败:', error)
       } finally {

@@ -72,7 +72,7 @@ const handleLogin = async () => {
 }
 
 const goToRegister = () => {
-  router.push('/register')
+  router.push({ path: '/user/register', query: { redirect: '/admin/dashboard' } })
 }
 </script>
 

@@ -28,9 +28,7 @@
             <el-radio :label="1">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="年龄" prop="age">
-          <el-input-number v-model="registerForm.age" :min="1" :max="100" />
-        </el-form-item>
+
         <el-form-item label="人脸照片" prop="faceImgUrl" required>
           <el-upload
             class="face-uploader"
@@ -191,7 +189,7 @@ const handleRegister = async () => {
       try {
         await register(registerForm)
         ElMessage.success('注册成功,请登录')
-        router.push('/user/login')
+
       } catch (error) {
         console.error('注册失败:', error)
       } finally {

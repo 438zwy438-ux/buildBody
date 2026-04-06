@@ -20,8 +20,9 @@ const routes = [
   {
     path: '/user/register',
     name: 'UserRegister',
-    component: () => import('@/views/Register.vue'),
-    meta: { title: '会员注册' }
+    component: () => import('@/views/RegisterUser.vue'),
+    meta: { title: '会员注册' , requiresAuth: true, requiredRoles: ['admin'] }
+
   },
   {
     path: '/user',
@@ -141,7 +142,7 @@ const routes = [
   {
     path: '/admin/register',
     name: 'AdminRegister',
-    component: () => import('@/views/Register.vue'),
+    component: () => import('@/views/RegisterUser.vue'),
     meta: { title: '管理员注册' }
   },
   {
