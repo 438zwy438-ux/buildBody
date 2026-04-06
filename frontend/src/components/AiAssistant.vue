@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { Close, ChatDotRound, Promotion } from '@element-plus/icons-vue'
+import { Close, ChatDotRound, Promotion, Picture } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { marked } from 'marked'
 
@@ -148,7 +148,8 @@ const handleSend = async () => {
   const aiMessageIndex = messages.value.length
   messages.value.push({
     role: 'assistant',
-    content: ''
+    content: '',
+    images: []
   })
 
   try {
@@ -189,6 +190,10 @@ const handleSend = async () => {
               const jsonData = JSON.parse(content)
               if (jsonData.content) {
                 messages.value[aiMessageIndex].content += jsonData.content
+                
+                const imageUrls = extractImageUrls(messages.value[aiMessageIndex].content)
+                messages.value[aiMessageIndex].images = imageUrls.map(url => ({ url }))
+                
                 scrollToBottom()
               }
             } catch (e) {
@@ -205,6 +210,16 @@ const handleSend = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const extractImageUrls = (markdown) => {
+  const imageRegex = /!\[.*?\]\((.*?)\)/g
+  const urls = []
+  let match
+  while ((match = imageRegex.exec(markdown)) !== null) {
+    urls.push(match[1])
+  }
+  return urls
 }
 
 onMounted(() => {
@@ -450,40 +465,40 @@ onUnmounted(() => {
   line-height: 1.6;
 }
 
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3 {
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3) {
   margin: 12px 0 8px 0;
   font-weight: 600;
 }
 
-.markdown-content h1 {
+.markdown-content :deep(h1) {
   font-size: 1.4em;
 }
 
-.markdown-content h2 {
+.markdown-content :deep(h2) {
   font-size: 1.2em;
 }
 
-.markdown-content h3 {
+.markdown-content :deep(h3) {
   font-size: 1.1em;
 }
 
-.markdown-content p {
+.markdown-content :deep(p) {
   margin: 8px 0;
 }
 
-.markdown-content ul,
-.markdown-content ol {
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
   margin: 8px 0;
   padding-left: 20px;
 }
 
-.markdown-content li {
+.markdown-content :deep(li) {
   margin: 4px 0;
 }
 
-.markdown-content code {
+.markdown-content :deep(code) {
   background: #f5f5f5;
   padding: 2px 6px;
   border-radius: 4px;
@@ -491,7 +506,7 @@ onUnmounted(() => {
   font-size: 0.9em;
 }
 
-.markdown-content pre {
+.markdown-content :deep(pre) {
   background: #f5f5f5;
   padding: 12px;
   border-radius: 8px;
@@ -499,24 +514,81 @@ onUnmounted(() => {
   margin: 8px 0;
 }
 
-.markdown-content pre code {
+.markdown-content :deep(pre) code {
   background: none;
   padding: 0;
 }
 
-.markdown-content strong {
+.markdown-content :deep(strong) {
   font-weight: 600;
 }
 
-.markdown-content em {
+.markdown-content :deep(em) {
   font-style: italic;
 }
 
-.markdown-content blockquote {
+.markdown-content :deep(blockquote) {
   border-left: 4px solid #667eea;
   padding-left: 12px;
   margin: 8px 0;
   color: #666;
+}
+
+.markdown-content :deep(img) {
+  width: 200px !important;
+  height: auto !important;
+  border-radius: 12px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #e8e8e8;
+  background: #f8f8f8;
+  object-fit: cover;
+  max-width: none !important;
+}
+
+.markdown-content :deep(img):hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #667eea;
+}
+
+.message-images {
+  display: flex;
+   gap: 12px;
+  margin-top: 12px;
+}
+
+.message-image {
+  width: 200px;
+  height: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f8f8f8;
+  display: block;
+}
+
+.message-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #667eea;
+}
+
+.image-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 24px;
 }
 
 .typing {

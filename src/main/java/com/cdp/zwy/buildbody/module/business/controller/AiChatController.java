@@ -10,15 +10,15 @@ import com.cdp.zwy.buildbody.module.business.dao.TbCoachProfileDao;
 import com.cdp.zwy.buildbody.module.business.dao.TbCourseDao;
 import com.cdp.zwy.buildbody.module.business.dao.TbEquipmentDao;
 import com.cdp.zwy.buildbody.module.business.dao.TbMemberCardDao;
-import com.cdp.zwy.buildbody.module.business.entity.TbCoachProfile;
-import com.cdp.zwy.buildbody.module.business.entity.TbCourse;
-import com.cdp.zwy.buildbody.module.business.entity.TbEquipment;
-import com.cdp.zwy.buildbody.module.business.entity.TbMemberCard;
+import com.cdp.zwy.buildbody.module.business.dao.TbCardTemplateDao;
+import com.cdp.zwy.buildbody.module.business.entity.*;
 import com.cdp.zwy.buildbody.module.business.service.impl.AiChatServiceImpl;
 import com.cdp.zwy.buildbody.module.system.dao.SysOrderDao;
 import com.cdp.zwy.buildbody.module.system.dao.TbEntryLogDao;
+import com.cdp.zwy.buildbody.module.system.dao.ImgRelationDao;
 import com.cdp.zwy.buildbody.module.system.entity.SysOrder;
 import com.cdp.zwy.buildbody.module.system.entity.TbEntryLog;
+import com.cdp.zwy.buildbody.module.system.entity.ImgRelation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -69,10 +69,16 @@ public class AiChatController {
     private TbMemberCardDao memberCardDao;
 
     @Resource
+    private TbCardTemplateDao cardTemplateDao;
+
+    @Resource
     private SysOrderDao orderDao;
 
     @Resource
     private TbEntryLogDao entryLogDao;
+
+    @Resource
+    private ImgRelationDao imgRelationDao;
 
     @Value("${ai.api-key}")
     private String apiKey;
@@ -134,7 +140,7 @@ public class AiChatController {
 
                 if (message.contains("教练") || message.contains("私教") || message.contains("老师")) {
                     QueryWrapper<TbCoachProfile> wrapper = new QueryWrapper<>();
-                    wrapper.select("real_name", "specialty", "intro", "entry_date");
+                    wrapper.select("real_name", "specialty", "intro", "entry_date", "certificates");
                     wrapper.eq("status", 1);
                     
                     String coachName = extractCoachName(message);
@@ -151,19 +157,45 @@ public class AiChatController {
                         coachObj.put("specialty", coach.get("specialty"));
                         coachObj.put("intro", coach.get("intro"));
                         coachObj.put("entry_date", coach.get("entry_date"));
+                        coachObj.put("certificates", coach.get("certificates"));
+                        coachObj.put("type", "coach");
                         coachArray.add(coachObj);
                     }
 
                     if (coachName != null && !coachName.isEmpty()) {
-                        systemPrompt += " 教练[" + coachName + "]的资料如下：" + coachArray.toJSONString() + "。请根据这些信息回答用户关于该教练的问题。";
+                        systemPrompt += " 教练[" + coachName + "]的资料如下：" + coachArray.toJSONString() + 
+                            "。请按照以下格式回答：\n" +
+                            "**教练姓名**：xxx\n" +
+                            "**特长**：xxx\n" +
+                            "**简介**：xxx\n" +
+                            "**入职日期**：xxx\n" +
+                            "\n" +
+                            "**证书**：\n" +
+                            "![证书](图片URL1)\n" +
+                            "![证书](图片URL2)\n" +
+                            "\n" +
+                            "在教练的详细信息后面，立即显示该教练的证书图片（使用Markdown图片语法），不要把所有图片放在最后。";
                     } else {
-                        systemPrompt += " 当前健身房在职教练列表如下：" + coachArray.toJSONString() + "。请根据这些信息回答用户关于教练的问题。";
+                        systemPrompt += " 当前健身房在职教练列表如下：" + coachArray.toJSONString() + 
+                            "。请按照以下格式回答：\n" +
+                            "1. **教练姓名**\n" +
+                            "   - 特长：xxx\n" +
+                            "   - 简介：xxx\n" +
+                            "   - 入职日期：xxx\n" +
+                            "   \n" +
+                            "   **证书**：\n" +
+                            "   ![证书](图片URL1)\n" +
+                            "   ![证书](图片URL2)\n" +
+                            "   \n" +
+                            "2. **教练姓名**\n" +
+                            "   ...\n" +
+                            "在每个教练的详细信息后面，立即显示该教练的证书图片（使用Markdown图片语法），不要把所有图片放在最后。";
                     }
                 }
 
                 if (message.contains("课程") || message.contains("私教课") || message.contains("团课")) {
                     QueryWrapper<TbCourse> wrapper = new QueryWrapper<>();
-                    wrapper.select("name", "type", "price", "duration", "description");
+                    wrapper.select("id", "name", "type", "price", "duration", "description", "cover_img");
                     wrapper.eq("status", 1);
                     List<Map<String, Object>> courseList = courseDao.selectMaps(wrapper);
 
@@ -175,10 +207,39 @@ public class AiChatController {
                         courseObj.put("price", course.get("price"));
                         courseObj.put("duration", course.get("duration"));
                         courseObj.put("description", course.get("description"));
+                        courseObj.put("cover_img", course.get("cover_img"));
+                        courseObj.put("type_label", "course");
+
+                        Long courseId = (Long) course.get("id");
+                        QueryWrapper<ImgRelation> imgWrapper = new QueryWrapper<>();
+                        imgWrapper.select("img_url");
+                        imgWrapper.eq("relation_type", 3);
+
+                        imgWrapper.last("LIMIT 5");
+                        List<Map<String, Object>> imgList = imgRelationDao.selectMaps(imgWrapper);
+
+                        JSONArray imgUrls = new JSONArray();
+                        for (Map<String, Object> img : imgList) {
+                            imgUrls.add(img.get("img_url"));
+                        }
+                        courseObj.put("images", imgUrls);
+
                         courseArray.add(courseObj);
                     }
 
-                    systemPrompt += " 当前健身房在售课程列表如下：" + courseArray.toJSONString() + "。请根据这些信息回答用户关于课程的问题。";
+                    systemPrompt += " 当前健身房在售课程列表如下：" + courseArray.toJSONString() + 
+                        "。请根据这些信息回答用户关于课程的问题。在回答时，请按照以下格式：\n" +
+                        "1. **课程名称**\n" +
+                        "   - 价格：xxx\n" +
+                        "   - 时长：xxx\n" +
+                        "   - 描述：xxx\n" +
+                        "   \n" +
+                        "   ![课程图片](图片URL1)\n" +
+                        "   ![课程图片](图片URL2)\n" +
+                        "   \n" +
+                        "2. **课程名称**\n" +
+                        "   ...\n" +
+                        "在每个课程的详细信息后面，立即显示该课程的图片（使用Markdown图片语法），不要把所有图片放在最后。";
                 }
 
                 if (message.contains("订单") || message.contains("购买") || message.contains("支付")) {
@@ -204,26 +265,27 @@ public class AiChatController {
                 }
 
                 if (message.contains("会员卡") || message.contains("卡种") || message.contains("健身卡")) {
-                    QueryWrapper<TbMemberCard> wrapper = new QueryWrapper<>();
-                    wrapper.select("card_no", "template_id", "total_count", "remain_count", "active_time", "expire_time", "status");
+                    QueryWrapper<TbCardTemplate> wrapper = new QueryWrapper<>();
+                    wrapper.select("id", "name", "type", "price", "duration_days", "times", "description", "status");
                     wrapper.eq("status", 1);
                     wrapper.last("LIMIT 10");
-                    List<Map<String, Object>> cardList = memberCardDao.selectMaps(wrapper);
+                    List<Map<String, Object>> cardList = cardTemplateDao.selectMaps(wrapper);
 
                     JSONArray cardArray = new JSONArray();
                     for (Map<String, Object> card : cardList) {
                         JSONObject cardObj = new JSONObject();
-                        cardObj.put("card_no", card.get("card_no"));
-                        cardObj.put("template_id", card.get("template_id"));
-                        cardObj.put("total_count", card.get("total_count"));
-                        cardObj.put("remain_count", card.get("remain_count"));
-                        cardObj.put("active_time", card.get("active_time"));
-                        cardObj.put("expire_time", card.get("expire_time"));
+                        cardObj.put("id", card.get("id"));
+                        cardObj.put("name", card.get("name"));
+                        cardObj.put("type", card.get("type"));
+                        cardObj.put("price", card.get("price"));
+                        cardObj.put("duration_days", card.get("duration_days"));
+                        cardObj.put("times", card.get("times"));
+                        cardObj.put("description", card.get("description"));
                         cardObj.put("status", card.get("status"));
                         cardArray.add(cardObj);
                     }
 
-                    systemPrompt += " 会员卡信息如下：" + cardArray.toJSONString() + "。请根据这些信息回答用户关于会员卡的问题。";
+                    systemPrompt += " 会员卡种信息如下：" + cardArray.toJSONString() + "。请根据这些信息回答用户关于会员卡的问题。";
                 }
 
                 if (message.contains("人多") || message.contains("人流量") || message.contains("拥挤") || 
