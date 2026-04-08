@@ -18,4 +18,5 @@ public interface SysUserService extends IService<SysUser> {
     
     List<String> getUserRoles(Long userId);
     Boolean isVip(Long userId);
+    Boolean logout(Long userId);
 }

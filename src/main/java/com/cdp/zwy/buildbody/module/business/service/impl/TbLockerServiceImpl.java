@@ -76,10 +76,14 @@ public class TbLockerServiceImpl extends ServiceImpl<TbLockerDao, TbLocker> impl
             throw new RuntimeException("未找到使用的储物柜");
         }
 
-        locker.setCurrentUserId(null);
-        locker.setStatus(0);
-        locker.setIsLocker(0);
-        return this.updateById(locker);
+        // 使用 UpdateWrapper 显式更新所有字段，包括 null 值
+        return this.update(
+            new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<TbLocker>()
+                .eq("id", locker.getId())
+                .set("current_user_id", null)
+                .set("status", 0)
+                .set("is_locker", 0)
+        );
     }
 
     @Override
@@ -168,9 +172,13 @@ public class TbLockerServiceImpl extends ServiceImpl<TbLockerDao, TbLocker> impl
             throw new RuntimeException("储物柜不存在");
         }
         
-        locker.setCurrentUserId(null);
-        locker.setStatus(0);
-        locker.setIsLocker(0);
-        return this.updateById(locker);
+        // 使用 UpdateWrapper 显式更新所有字段，包括 null 值
+        return this.update(
+            new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<TbLocker>()
+                .eq("id", locker.getId())
+                .set("current_user_id", null)
+                .set("status", 0)
+                .set("is_locker", 0)
+        );
     }
 }

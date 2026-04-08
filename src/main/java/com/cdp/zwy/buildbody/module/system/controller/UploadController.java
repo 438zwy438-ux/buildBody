@@ -118,4 +118,20 @@ public class UploadController {
             return Result.error("上传失败");
         }
     }
+
+    @Operation(summary = "上传课程封面图（不需要课程ID）")
+    @PostMapping("/course-cover")
+    public Result<String> uploadCourseCover(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("文件不能为空");
+        }
+
+        try {
+            String fileUrl = minioUtil.upload(file, "course");
+            return Result.success(fileUrl);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("上传失败");
+        }
+    }
 }

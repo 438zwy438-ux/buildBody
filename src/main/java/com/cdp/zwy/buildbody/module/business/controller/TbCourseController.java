@@ -174,4 +174,62 @@ public class TbCourseController {
         
         return Result.success(sysOrderService.list(orderQuery));
     }
+
+    @Operation(summary = "查询课程销量")
+    @GetMapping("/sales-count/{courseId}")
+    @RequireRole({"admin", "coach"})
+    public Result<Integer> getCourseSalesCount(@PathVariable Long courseId) {
+        QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
+        orderQuery.eq("course_id", courseId);
+        orderQuery.eq("type", 2);
+        orderQuery.eq("status", 1);
+        
+        List<SysOrder> orders = sysOrderService.list(orderQuery);
+        int totalCount = orders.size();
+        
+        return Result.success(totalCount);
+    }
+    
+    @Operation(summary = "查询教练的课程列表（含销量）")      
+    @GetMapping("/coach-courses")
+    @RequireRole({"admin", "coach"})
+    public Result<List<Map<String, Object>>> getCoachCourses(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        
+        QueryWrapper<TbCourse> courseQuery = new QueryWrapper<>();
+        courseQuery.eq("coach_user_id", userId);
+        courseQuery.eq("type", 1);
+        courseQuery.orderByDesc("create_time");
+        
+        List<TbCourse> courses = tbCourseService.list(courseQuery);
+        
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (TbCourse course : courses) {
+            Map<String, Object> courseData = new HashMap<>();
+            courseData.put("id", course.getId());
+            courseData.put("name", course.getName());
+            courseData.put("type", course.getType());
+            courseData.put("price", course.getPrice());
+            courseData.put("duration", course.getDuration());
+            courseData.put("courseTimes", course.getCourseTimes());
+            courseData.put("coverImg", course.getCoverImg());
+            courseData.put("description", course.getDescription());
+            courseData.put("status", course.getStatus());
+            courseData.put("createTime", course.getCreateTime());
+
+
+            QueryWrapper<SysOrder> orderQuery = new QueryWrapper<>();
+            orderQuery.eq("course_id", course.getId());
+            orderQuery.eq("type", 2);
+            orderQuery.eq("status", 1);
+
+            List<SysOrder> orders = sysOrderService.list(orderQuery);
+            int totalCount = orders.size();
+            courseData.put("salesCount", totalCount);
+            
+            result.add(courseData);
+        }
+        
+        return Result.success(result);
+    }
 }

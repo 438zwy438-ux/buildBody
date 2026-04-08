@@ -343,4 +343,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUser> impleme
         
         return false;
     }
+
+    @Override
+    public Boolean logout(Long userId) {
+        // 退出登录时，可以在这里做一些清理工作
+        // 比如清除服务器端的会话信息、记录日志等
+        // 目前只是返回成功，因为主要的信息存储在前端
+        return true;
+    }
 }

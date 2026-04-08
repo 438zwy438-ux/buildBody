@@ -80,10 +80,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
+import { logout as logoutApi, getCurrentUserInfo } from '@/api/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -98,6 +99,15 @@ const toggleCollapse = () => {
   isCollapse.value = !isCollapse.value
 }
 
+const fetchUserInfo = async () => {
+  try {
+    const res = await getCurrentUserInfo()
+    userStore.setUserInfo(res.data)
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+}
+
 const handleCommand = async (command) => {
   if (command === 'logout') {
     try {
@@ -106,6 +116,13 @@ const handleCommand = async (command) => {
         cancelButtonText: '取消',
         type: 'warning'
       })
+      
+      try {
+        await logoutApi()
+      } catch (error) {
+        console.error('退出登录请求失败:', error)
+      }
+      
       userStore.logout()
       router.push('/admin/login')
     } catch (error) {
@@ -113,6 +130,12 @@ const handleCommand = async (command) => {
     }
   }
 }
+
+onMounted(() => {
+  if (userStore.token) {
+    fetchUserInfo()
+  }
+})
 </script>
 
 <style scoped>

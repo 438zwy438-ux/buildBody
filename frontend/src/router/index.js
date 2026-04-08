@@ -126,6 +126,12 @@ const routes = [
         meta: { title: '课程核销', requiresAuth: true, requiredRoles: ['coach'] }
       },
       {
+        path: 'coach-courses',
+        name: 'CoachCourses',
+        component: () => import('@/views/user/CoachCourses.vue'),
+        meta: { title: '我的课程', requiresAuth: true, requiredRoles: ['coach'] }
+      },
+      {
         path: 'locker-usage',
         name: 'LockerUsage',
         component: () => import('@/views/user/LockerUsage.vue'),

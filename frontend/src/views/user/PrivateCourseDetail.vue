@@ -68,6 +68,7 @@
         
         <div class="action-section">
           <el-button 
+            v-if="canPurchase"
             type="primary" 
             size="large" 
             :disabled="course.status !== 1"
@@ -81,6 +82,12 @@
           <div v-if="course.status !== 1" class="status-tip">
             <el-alert type="warning" :closable="false" show-icon>
               该课程已下架，暂时无法购买
+            </el-alert>
+          </div>
+          
+          <div v-if="!canPurchase && course.status === 1" class="login-tip">
+            <el-alert type="info" :closable="false" show-icon>
+              请先登录会员账号才能购买课程
             </el-alert>
           </div>
         </div>
@@ -98,6 +105,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { getCourseList } from '@/api/course'
 import { getCoachProfileList } from '@/api/coachProfile'
 import { ElMessage } from 'element-plus'
@@ -105,10 +113,18 @@ import { ArrowLeft, Loading, Warning, Picture, ShoppingCart } from '@element-plu
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const course = ref(null)
 const coaches = ref([])
 const loading = ref(true)
+
+const userInfo = computed(() => userStore.userInfo)
+const roles = computed(() => userStore.roles)
+
+const canPurchase = computed(() => {
+  return roles.value.includes('user') || roles.value.includes('vip')
+})
 
 const coachInfo = computed(() => {
   if (!course.value || !coaches.value.length) return null
@@ -373,6 +389,10 @@ onMounted(() => {
 }
 
 .status-tip {
+  margin-top: 20px;
+}
+
+.login-tip {
   margin-top: 20px;
 }
 

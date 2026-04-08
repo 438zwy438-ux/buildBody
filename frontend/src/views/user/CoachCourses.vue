@@ -1,32 +1,15 @@
 <template>
-  <div class="courses-page">
+  <div class="coach-courses-page">
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>课程管理</span>
-          <el-button type="primary" @click="handleAdd">添加课程</el-button>
+          <span>我的课程</span>
+<!--          <el-button type="primary" @click="handleAdd">添加课程</el-button>-->
         </div>
       </template>
       
-      <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="课程名称">
-          <el-input v-model="searchForm.name" placeholder="请输入课程名称" clearable />
-        </el-form-item>
-        <el-form-item label="课程类型">
-          <el-select v-model="searchForm.type" placeholder="请选择课程类型" clearable style="width: 150px">
-            <el-option label="私教" :value="1" />
-            <el-option label="团课" :value="2" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-
       <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
-9        <el-table-column label="封面图" width="100">
+        <el-table-column label="封面图" width="100">
           <template #default="{ row }">
             <el-image
               v-if="row.coverImg"
@@ -39,14 +22,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="name" label="课程名称" />
-        <el-table-column prop="type" label="课程类型" width="100">
+        <el-table-column prop="price" label="价格" width="100" />
+        <el-table-column prop="duration" label="时长(分钟)" width="120" />
+        <el-table-column prop="courseTimes" label="服务次数" width="100" />
+        <el-table-column prop="salesCount" label="销量" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.type === 1 ? 'success' : 'warning'">{{ row.type === 1 ? '私教' : '团课' }}</el-tag>
+            <el-tag type="success">{{ row.salesCount || 0 }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="价格" width="100" />
-        <el-table-column prop="duration" label="时长(分钟)" width="100" />
-        <el-table-column prop="courseTimes" label="服务次数" width="100" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '上架' : '下架' }}</el-tag>
@@ -64,40 +47,12 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.size"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
         <el-form-item label="课程名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入课程名称" />
-        </el-form-item>
-        <el-form-item label="课程类型" prop="type">
-          <el-radio-group v-model="form.type">
-            <el-radio :label="1">私教</el-radio>
-            <el-radio :label="2">团课</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="关联教练" prop="coachUserId">
-          <el-select v-model="form.coachUserId" placeholder="请选择教练（私教课必选）" clearable style="width: 100%">
-            <el-option
-              v-for="coach in coachList"
-              :key="coach.id"
-              :label="coach.realName"
-              :value="coach.userId"
-            />
-          </el-select>
         </el-form-item>
         <el-form-item label="课程单价" prop="price">
           <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
@@ -155,8 +110,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import { getCourseList, createCourse, updateCourse, deleteCourse } from '@/api/course'
-import { getCoachProfileList } from '@/api/coachProfile'
+import { getCoachCourses, createCourse, updateCourse, deleteCourse } from '@/api/course'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 
@@ -169,19 +123,6 @@ const fileList = ref([])
 const previewVisible = ref(false)
 const previewImage = ref('')
 const uploadUrl = ref('/api/upload/course-cover')
-const tempCourseId = ref(null)
-const coachList = ref([])
-
-const searchForm = reactive({
-  name: '',
-  type: null
-})
-
-const pagination = reactive({
-  page: 1,
-  size: 10,
-  total: 0
-})
 
 const form = reactive({
   id: null,
@@ -198,58 +139,23 @@ const form = reactive({
 
 const rules = {
   name: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择课程类型', trigger: 'change' }],
   price: [{ required: true, message: '请输入课程单价', trigger: 'blur' }],
   duration: [{ required: true, message: '请输入单次时长', trigger: 'blur' }],
   courseTimes: [{ required: true, message: '请输入课程服务次数', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
-const fetchCoachList = async () => {
-  try {
-    const res = await getCoachProfileList({ current: 1, size: 1000 })
-    coachList.value = res.data?.records || []
-  } catch (error) {
-    console.error('获取教练列表失败:', error)
-    coachList.value = []
-  }
-}
-
 const fetchData = async () => {
   loading.value = true
   try {
-    const params = {
-      current: pagination.page,
-      size: pagination.size
-    }
-    if (searchForm.name) {
-      params.name = searchForm.name
-    }
-    if (searchForm.type) {
-      params.type = searchForm.type
-    }
-    const res = await getCourseList(params)
-    tableData.value = res.data?.records || []
-    pagination.total = Number(res.data?.total || 0)
+    const res = await getCoachCourses()
+    tableData.value = res.data || []
   } catch (error) {
     console.error('获取课程列表失败:', error)
     tableData.value = []
-    pagination.total = 0
   } finally {
     loading.value = false
   }
-}
-
-const handleSearch = () => {
-  pagination.page = 1
-  fetchData()
-}
-
-const handleReset = () => {
-  searchForm.name = ''
-  searchForm.type = null
-  pagination.page = 1
-  fetchData()
 }
 
 const handleAdd = () => {
@@ -274,7 +180,7 @@ const handleEdit = (row) => {
   form.id = row.id
   form.name = row.name
   form.type = row.type
-  form.coachUserId = row.coachUserId
+  form.coachUserId = null
   form.price = row.price
   form.duration = row.duration
   form.courseTimes = row.courseTimes
@@ -344,16 +250,6 @@ const handleSubmit = async () => {
   })
 }
 
-const handleSizeChange = (val) => {
-  pagination.size = val
-  fetchData()
-}
-
-const handleCurrentChange = (val) => {
-  pagination.page = val
-  fetchData()
-}
-
 const handlePicturePreview = (file) => {
   previewImage.value = file.url
   previewVisible.value = true
@@ -368,7 +264,6 @@ const handleUploadSuccess = (response, file, fileList) => {
       form.coverImg = imageUrl
       file.url = imageUrl
       
-      // 立即更新数据库中的cover_img字段
       if (form.id) {
         updateCourse({
           id: form.id,
@@ -389,7 +284,6 @@ const handleRemove = (file, fileList) => {
   console.log('删除图片:', file, fileList)
   form.coverImg = ''
   
-  // 如果课程已存在，立即更新数据库清除封面图
   if (form.id) {
     updateCourse({
       id: form.id,
@@ -417,12 +311,7 @@ const beforeUpload = (file) => {
   return true
 }
 
-const handleChange = (file, fileList) => {
-  console.log('文件状态变化:', file.status, fileList)
-}
-
 onMounted(() => {
-  fetchCoachList()
   fetchData()
 })
 </script>
@@ -432,15 +321,5 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.search-form {
-  margin-bottom: 20px;
-}
-
-.pagination-wrapper {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
 }
 </style>

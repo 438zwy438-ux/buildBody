@@ -107,4 +107,13 @@ public class SysUserController {
     public Result<Boolean> registerCoach(@RequestBody CoachRegisterDTO dto) {
         return Result.success(sysUserService.registerCoach(dto));
     }
+
+    @Operation(summary = "退出登录")
+    @PostMapping("/logout")
+    @RequireRole({"user", "vip", "coach", "admin"})
+    public Result<Boolean> logout(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        sysUserService.logout(userId);
+        return Result.success(true);
+    }
 }

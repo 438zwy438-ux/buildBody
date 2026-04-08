@@ -84,3 +84,17 @@ export const bookCourse = (data) => {
     params: data
   })
 }
+
+export const getCourseSalesCount = (courseId) => {
+  return request({
+    url: `/tbCourse/sales-count/${courseId}`,
+    method: 'get'
+  })
+}
+
+export const getCoachCourses = () => {
+  return request({
+    url: '/tbCourse/coach-courses',
+    method: 'get'
+  })
+}

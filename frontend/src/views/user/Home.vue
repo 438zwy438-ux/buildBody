@@ -13,6 +13,68 @@
       </el-carousel>
     </div>
 
+    <div class="gym-info-section">
+      <div class="section-header">
+        <h2>健身房介绍</h2>
+        <p>专业健身环境，为您提供优质服务</p>
+      </div>
+      
+      <div class="gym-info-content">
+        <div class="gym-info-left">
+          <div class="gym-intro">
+            <h3>关于我们</h3>
+            <p>{{ gymInfo.introduction }}</p>
+          </div>
+          
+          <div class="gym-details">
+            <div class="detail-item">
+              <el-icon :size="24" color="#667eea"><Location /></el-icon>
+              <div class="detail-content">
+                <span class="detail-label">地址</span>
+                <span class="detail-value">{{ gymInfo.address }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <el-icon :size="24" color="#667eea"><Phone /></el-icon>
+              <div class="detail-content">
+                <span class="detail-label">联系电话</span>
+                <span class="detail-value">{{ gymInfo.phone }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <el-icon :size="24" color="#667eea"><Grid /></el-icon>
+              <div class="detail-content">
+                <span class="detail-label">占地面积</span>
+                <span class="detail-value">{{ gymInfo.area }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <el-icon :size="24" color="#667eea"><Clock /></el-icon>
+              <div class="detail-content">
+                <span class="detail-label">经营时间</span>
+                <span class="detail-value">{{ gymInfo.businessHours }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="gym-info-right">
+          <div class="gym-features">
+            <h3>我们的特色</h3>
+            <ul>
+              <li v-for="(feature, index) in gymInfo.features" :key="index">
+                <el-icon color="#667eea"><Check /></el-icon>
+                <span>{{ feature }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="equipment-section">
       <div class="section-header">
         <h2>健身器材</h2>
@@ -163,12 +225,29 @@ import { useRouter } from 'vue-router'
 import { getBannerList } from '@/api/banner'
 import { getEquipmentList } from '@/api/equipment'
 import { getCoachList } from '@/api/coach'
-import { Trophy, Star, Clock, Medal, Picture, User, ArrowRight, CreditCard } from '@element-plus/icons-vue'
+import { Trophy, Star, Clock, Medal, Picture, User, ArrowRight, CreditCard, Location, Phone, Grid, Check } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const banners = ref([])
 const equipmentList = ref([])
 const coachList = ref([])
+const gymInfo = ref({
+  introduction: '我们是一家专业的高端健身俱乐部，致力于为每一位会员提供最优质的健身体验。拥有国际一流的健身器材、专业的教练团队和舒适的运动环境，帮助您实现健康目标。',
+  address: '北京市朝阳区建国路88号SOHO现代城A座3层',
+  phone: '010-88888888',
+  area: '2000平方米',
+  businessHours: '周一至周日 06:00-23:00',
+  features: [
+    '国际一流品牌健身器材',
+    '国家级认证专业教练团队',
+    '24小时智能健身区域',
+    '专业私教一对一指导',
+    '多样化团课课程',
+    '舒适更衣室及淋浴设施',
+    '营养餐吧服务',
+    '会员专属休息区'
+  ]
+})
 
 const fetchBanners = async () => {
     try {
@@ -290,6 +369,233 @@ onMounted(() => {
   font-size: 20px;
   margin: 0;
   opacity: 0.95;
+}
+
+.gym-info-section {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.gym-info-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.gym-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.gym-intro h3 {
+  font-size: 24px;
+  color: #333;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.gym-intro p {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.gym-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+  background: #f0f2f5;
+  transform: translateX(4px);
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.gym-info-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.gym-features h3 {
+  font-size: 24px;
+  color: #333;
+  margin: 0 0 24px 0;
+  font-weight: 600;
+}
+
+.gym-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gym-features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.gym-features li:hover {
+  background: #e8f0fe;
+  transform: translateX(4px);
+}
+
+.private-courses-section {
+  max-width: 1400px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.course-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.course-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #f5f7fa;
+  color: #999;
+}
+
+.course-info {
+  padding: 20px;
+}
+
+.course-name {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.course-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.course-price {
+  font-size: 20px;
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.course-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.course-coach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.coach-name {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+.loading-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #666;
+}
+
+.loading-container p,
+.empty-container p {
+  margin-top: 16px;
+  font-size: 16px;
 }
 
 .equipment-section {
@@ -604,8 +910,17 @@ onMounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
   
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .features-section {
     grid-template-columns: 1fr;
+  }
+  
+  .gym-info-content {
+    grid-template-columns: 1fr;
+    padding: 24px;
   }
   
   .banner-overlay h1 {

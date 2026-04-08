@@ -61,7 +61,7 @@
             </div>
             
             <div class="course-actions">
-              <el-button type="primary" size="small" @click.stop="purchaseCourse(course)">
+              <el-button v-if="canPurchase" type="primary" size="small" @click.stop="purchaseCourse(course)">
                 立即购买
               </el-button>
               <el-button size="small" @click.stop="viewCourseDetail(course.id)">
@@ -81,17 +81,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 import { getCourseList } from '@/api/course'
 import { getCoachProfileList } from '@/api/coachProfile'
 import { ElMessage } from 'element-plus'
 import { Loading, Picture, Clock, Collection, Box } from '@element-plus/icons-vue'
 
 const router = useRouter()
+const userStore = useUserStore()
+
 const loading = ref(false)
 const courses = ref([])
 const coaches = ref([])
+
+const roles = computed(() => userStore.roles)
+
+const canPurchase = computed(() => {
+  return roles.value.includes('user') || roles.value.includes('vip')
+})
 
 const fetchCourses = async () => {
   loading.value = true

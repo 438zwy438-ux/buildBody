@@ -69,3 +69,10 @@ export const getCurrentUserInfo = () => {
     method: 'get'
   })
 }
+
+export const logout = () => {
+  return request({
+    url: '/sysUser/logout',
+    method: 'post'
+  })
+}
