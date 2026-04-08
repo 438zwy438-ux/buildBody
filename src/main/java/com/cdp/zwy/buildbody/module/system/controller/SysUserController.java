@@ -9,6 +9,7 @@ import com.cdp.zwy.buildbody.module.system.controller.DTO.CoachRegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.LoginDTO;
 import com.cdp.zwy.buildbody.module.system.controller.DTO.RegisterDTO;
 import com.cdp.zwy.buildbody.module.system.controller.VO.LoginVO;
+import com.cdp.zwy.buildbody.module.system.controller.VO.UserVO;
 import com.cdp.zwy.buildbody.module.system.entity.SysUser;
 import com.cdp.zwy.buildbody.module.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "账号相关接口")
@@ -27,18 +29,68 @@ public class SysUserController {
     @Resource
     private SysUserService sysUserService;
 
+    @Resource
+    private com.cdp.zwy.buildbody.module.system.service.SysUserRoleService sysUserRoleService;
+
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
-
-    public Result<Page<SysUser>> selectAll(Page<SysUser> page, SysUser sysUser) {
-        return Result.success(this.sysUserService.page(page, new QueryWrapper<>(sysUser)));
+    @RequireRole("admin")
+    public Result<Page<UserVO>> selectAll(Page<SysUser> page, SysUser sysUser) {
+        Page<SysUser> userPage = this.sysUserService.page(page, new QueryWrapper<>(sysUser));
+        
+        // 转换为 UserVO 并填充角色信息
+        List<UserVO> userVOList = userPage.getRecords().stream().map(user -> {
+            UserVO userVO = new UserVO();
+            userVO.setUserId(user.getUserId());
+            userVO.setUsername(user.getUsername());
+            userVO.setNickname(user.getNickname());
+            userVO.setPhone(user.getPhone());
+            userVO.setAvatar(user.getAvatar());
+            userVO.setStatus(user.getStatus());
+            userVO.setCreateTime(user.getCreateTime());
+            userVO.setUpdateTime(user.getUpdateTime());
+            
+            // 获取用户角色
+            List<String> roles = sysUserService.getUserRoles(user.getUserId());
+            userVO.setRoles(roles);
+            userVO.setRoleKey(roles.isEmpty() ? null : roles.get(0)); // 取第一个角色作为主角色
+            
+            return userVO;
+        }).collect(Collectors.toList());
+        
+        // 构建返回的 Page<UserVO>
+        Page<UserVO> resultPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        resultPage.setRecords(userVOList);
+        
+        return Result.success(resultPage);
     }
 
     @Operation(summary = "通过主键查询单条数据")
     @GetMapping("/{id}")
     @RequireRole({"admin", "coach"})
-    public Result<SysUser> selectOne(@PathVariable Serializable id) {
-        return Result.success(this.sysUserService.getById(id));
+    public Result<UserVO> selectOne(@PathVariable Serializable id) {
+        SysUser user = this.sysUserService.getById(id);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        
+        // 转换为 UserVO 并填充角色信息
+        UserVO userVO = new UserVO();
+        userVO.setUserId(user.getUserId());
+        userVO.setUsername(user.getUsername());
+        userVO.setNickname(user.getNickname());
+        userVO.setPhone(user.getPhone());
+        userVO.setAvatar(user.getAvatar());
+        userVO.setStatus(user.getStatus());
+        userVO.setCreateTime(user.getCreateTime());
+        userVO.setUpdateTime(user.getUpdateTime());
+        
+        // 获取用户角色
+        List<String> roles = sysUserService.getUserRoles(user.getUserId());
+        userVO.setRoles(roles);
+        userVO.setRoleKey(roles.isEmpty() ? null : roles.get(0));
+        
+        return Result.success(userVO);
     }
 
     @Operation(summary = "获取当前用户信息")

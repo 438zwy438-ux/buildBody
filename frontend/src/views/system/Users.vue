@@ -26,15 +26,16 @@
 
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="userId" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="nickname" label="昵称" />
         <el-table-column prop="phone" label="手机号" />
-        <el-table-column prop="role" label="角色">
+        <el-table-column prop="roleKey" label="角色">
           <template #default="{ row }">
-            <el-tag v-if="row.role === 1" type="danger">管理员</el-tag>
-            <el-tag v-else-if="row.role === 2" type="success">会员</el-tag>
-            <el-tag v-else-if="row.role === 3" type="warning">教练</el-tag>
+            <el-tag v-if="row.roleKey === 'admin'" type="danger">管理员</el-tag>
+            <el-tag v-else-if="row.roleKey === 'user'" type="success">会员</el-tag>
+            <el-tag v-else-if="row.roleKey === 'vip'" type="success">VIP</el-tag>
+            <el-tag v-else-if="row.roleKey === 'coach'" type="warning">教练</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间">
@@ -218,11 +219,11 @@ const handleRoleChange = (value) => {
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑用户'
-  form.id = row.id
+  form.id = row.userId
   form.username = row.username
   form.nickname = row.nickname
   form.phone = row.phone
-  form.role = row.role
+  form.role = row.roleKey === 'admin' ? 1 : (row.roleKey === 'user' ? 2 : (row.roleKey === 'vip' ? 2 : 3))
   dialogVisible.value = true
 }
 
@@ -233,7 +234,7 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    await deleteUser([row.id])
+    await deleteUser([row.userId])
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {
