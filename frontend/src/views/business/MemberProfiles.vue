@@ -36,12 +36,13 @@
         v-loading="loading" 
         border
         @selection-change="handleSelectionChange"
+        style="width: 100%"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="档案ID" width="80" align="center" />
-        <el-table-column prop="userId" label="用户ID" width="100" align="center" />
-        <el-table-column prop="realName" label="真实姓名" width="120" />
-        <el-table-column prop="gender" label="性别" width="80" align="center">
+        <el-table-column prop="id" label="档案ID" min-width="80" align="center" />
+        <el-table-column prop="userId" label="用户ID" min-width="100" align="center" />
+        <el-table-column prop="realName" label="真实姓名" min-width="120" />
+        <el-table-column prop="gender" label="性别" min-width="80" align="center">
           <template #default="{ row }">
             <el-tag 
               :type="row.gender === 0 ? 'primary' : row.gender === 1 ? 'danger' : 'info'"
@@ -51,8 +52,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="age" label="年龄" width="80" align="center" />
-        <el-table-column prop="faceImgUrl" label="人脸照片" width="100" align="center">
+        <el-table-column prop="faceImgUrl" label="人脸照片" min-width="100" align="center">
           <template #default="{ row }">
             <el-image
               v-if="row.faceImgUrl"
@@ -72,25 +72,14 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="balance" label="账户余额" width="120" align="right">
-          <template #default="{ row }">
-            <span>{{ formatCurrency(row.balance) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="points" label="积分" width="100" align="center" />
-        <el-table-column prop="isVip" label="VIP状态" width="120" align="center">
+        <el-table-column prop="isVip" label="VIP状态" min-width="120" align="center">
           <template #default="{ row }">
             <el-tag :type="row.isVip === 1 ? 'warning' : 'info'" size="small">
               {{ row.isVip === 1 ? 'VIP' : '普通会员' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="vipExpireTime" label="VIP过期时间" width="180" align="center">
-          <template #default="{ row }">
-            <span>{{ formatDateTime(row.vipExpireTime) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="birthDate" label="出生日期" width="120" align="center">
+        <el-table-column prop="birthDate" label="出生日期" min-width="120" align="center">
           <template #default="{ row }">
             <span>{{ formatDate(row.birthDate) }}</span>
           </template>
@@ -138,15 +127,6 @@
             <el-radio :label="2">未知</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="年龄" prop="age">
-          <el-input-number 
-            v-model="form.age" 
-            :min="1" 
-            :max="120" 
-            style="width: 100%" 
-            placeholder="请输入年龄"
-          />
-        </el-form-item>
         <el-form-item label="人脸照片" prop="faceImgUrl">
           <el-upload
             class="avatar-uploader"
@@ -167,37 +147,11 @@
           </el-upload>
           <div class="upload-tip">支持 JPG/PNG 格式，不超过 5MB</div>
         </el-form-item>
-        <el-form-item label="账户余额" prop="balance">
-          <el-input-number 
-            v-model="form.balance" 
-            :min="0" 
-            :precision="2" 
-            style="width: 100%" 
-            placeholder="请输入账户余额"
-          />
-        </el-form-item>
-        <el-form-item label="积分" prop="points">
-          <el-input-number 
-            v-model="form.points" 
-            :min="0" 
-            style="width: 100%" 
-            placeholder="请输入积分"
-          />
-        </el-form-item>
         <el-form-item label="VIP状态" prop="isVip">
           <el-radio-group v-model="form.isVip">
             <el-radio :label="0">普通会员</el-radio>
             <el-radio :label="1">VIP会员</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="VIP过期时间" prop="vipExpireTime">
-          <el-date-picker
-            v-model="form.vipExpireTime"
-            type="datetime"
-            placeholder="选择VIP过期时间"
-            style="width: 100%"
-            value-format="YYYY-MM-DD HH:mm:ss"
-          />
         </el-form-item>
         <el-form-item label="出生日期" prop="birthDate">
           <el-date-picker
@@ -221,6 +175,12 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture, User, Camera } from '@element-plus/icons-vue'
+import { 
+  getMemberProfileList, 
+  createMemberProfile, 
+  updateMemberProfile, 
+  deleteMemberProfile 
+} from '@/api/memberProfile'
 
 // 响应式数据定义
 const loading = ref(false)
@@ -250,12 +210,8 @@ const form = reactive({
   userId: null,
   realName: '',
   gender: 2,
-  age: null,
   faceImgUrl: '',
-  balance: 0.00,
-  points: 0,
   isVip: 0,
-  vipExpireTime: null,
   birthDate: null
 })
 
@@ -271,25 +227,10 @@ const rules = {
   ],
   gender: [
     { required: true, message: '请选择性别', trigger: 'change' }
-  ],
-  age: [
-    { required: true, message: '请输入年龄', trigger: 'blur' },
-    { type: 'number', min: 1, max: 120, message: '年龄必须在 1-120 之间', trigger: 'blur' }
-  ],
-  balance: [
-    { type: 'number', min: 0, message: '余额不能为负数', trigger: 'blur' }
-  ],
-  points: [
-    { type: 'number', min: 0, message: '积分不能为负数', trigger: 'blur' }
   ]
 }
 
 // 格式化函数
-const formatCurrency = (value) => {
-  if (value === null || value === undefined) return '¥0.00'
-  return `¥${parseFloat(value).toFixed(2)}`
-}
-
 const formatDateTime = (value) => {
   if (!value) return '-'
   return value.replace('T', ' ').substring(0, 16)
@@ -376,12 +317,8 @@ const resetForm = () => {
     userId: null,
     realName: '',
     gender: 2,
-    age: null,
     faceImgUrl: '',
-    balance: 0.00,
-    points: 0,
     isVip: 0,
-    vipExpireTime: null,
     birthDate: null
   })
 }
@@ -488,66 +425,25 @@ const handleSubmit = async () => {
   }
 }
 
-// API 接口方法（预留）
+// API 接口方法
 const fetchData = async () => {
   loading.value = true
   try {
-    // 模拟数据 - 实际项目中替换为真实的 API 调用
-    const mockData = [
-      {
-        id: 1,
-        userId: 1001,
-        realName: '张三',
-        gender: 0,
-        age: 28,
-        faceImgUrl: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-        balance: 500.50,
-        points: 1200,
-        isVip: 1,
-        vipExpireTime: '2024-12-31 23:59:59',
-        birthDate: '1995-05-15'
-      },
-      {
-        id: 2,
-        userId: 1002,
-        realName: '李四',
-        gender: 1,
-        age: 25,
-        faceImgUrl: '',
-        balance: 200.00,
-        points: 800,
-        isVip: 0,
-        vipExpireTime: null,
-        birthDate: '1998-08-20'
-      }
-    ]
+    const params = {
+      current: pagination.page,
+      size: pagination.size
+    }
     
-    // 过滤数据（模拟搜索）
-    let filteredData = mockData
     if (searchForm.realName) {
-      filteredData = filteredData.filter(item => 
-        item.realName.includes(searchForm.realName)
-      )
+      params.realName = searchForm.realName
     }
     if (searchForm.isVip !== null) {
-      filteredData = filteredData.filter(item => item.isVip === searchForm.isVip)
+      params.isVip = searchForm.isVip
     }
     
-    // 模拟分页
-    const start = (pagination.page - 1) * pagination.size
-    const end = start + pagination.size
-    tableData.value = filteredData.slice(start, end)
-    pagination.total = filteredData.length
-    
-    // 实际项目中的 API 调用示例：
-    // const params = {
-    //   current: pagination.page,
-    //   size: pagination.size,
-    //   ...searchForm
-    // }
-    // const res = await getMemberProfileList(params)
-    // tableData.value = res.data?.records || []
-    // pagination.total = Number(res.data?.total || 0)
+    const res = await getMemberProfileList(params)
+    tableData.value = res.data?.records || []
+    pagination.total = Number(res.data?.total || 0)
     
   } catch (error) {
     console.error('获取会员档案列表失败:', error)
@@ -560,31 +456,19 @@ const fetchData = async () => {
 }
 
 const handleAddRecord = async (data) => {
-  // 实际项目中的 API 调用示例：
-  // return await createMemberProfile(data)
-  console.log('新增会员:', data)
-  return Promise.resolve()
+  return await createMemberProfile(data)
 }
 
 const handleUpdateRecord = async (data) => {
-  // 实际项目中的 API 调用示例：
-  // return await updateMemberProfile(data)
-  console.log('更新会员:', data)
-  return Promise.resolve()
+  return await updateMemberProfile(data)
 }
 
 const handleDeleteRecord = async (id) => {
-  // 实际项目中的 API 调用示例：
-  // return await deleteMemberProfile([id])
-  console.log('删除会员ID:', id)
-  return Promise.resolve()
+  return await deleteMemberProfile([id])
 }
 
 const handleBatchDeleteRecords = async (ids) => {
-  // 实际项目中的 API 调用示例：
-  // return await deleteMemberProfile(ids)
-  console.log('批量删除会员IDs:', ids)
-  return Promise.resolve()
+  return await deleteMemberProfile(ids)
 }
 
 // 生命周期

@@ -75,7 +75,7 @@ public class TbCourseBookingController {
     @PostMapping("/check")
     @RequireRole({"admin", "coach"})
     public Result<Boolean> checkCourse(@RequestParam Long bookingId, HttpServletRequest request) {
-        String role = (String) request.getAttribute("role");
+        List<String> roles = (List<String>) request.getAttribute("roles");
         Long userId = (Long) request.getAttribute("userId");
         
         TbCourseBooking booking = tbCourseBookingService.getById(bookingId);
@@ -83,7 +83,7 @@ public class TbCourseBookingController {
             return Result.error("预约记录不存在");
         }
         
-        if ("coach".equals(role) && !booking.getCoachUserId().equals(userId)) {
+        if (roles.contains("coach") && !booking.getCoachUserId().equals(userId)) {
             return Result.error("只能核销自己的课程");
         }
         
@@ -107,10 +107,10 @@ public class TbCourseBookingController {
     @RequireRole({"admin", "coach"})
     public Result<List<TbCourseBooking>> getCoachBookings(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        String role = (String) request.getAttribute("role");
+        List<String> roles = (List<String>) request.getAttribute("roles");
         
         QueryWrapper<TbCourseBooking> queryWrapper = new QueryWrapper<>();
-        if ("coach".equals(role)) {
+        if (roles.contains("coach")) {
             queryWrapper.eq("coach_user_id", userId);
         }
         queryWrapper.orderByDesc("create_time");

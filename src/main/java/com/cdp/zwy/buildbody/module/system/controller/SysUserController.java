@@ -113,10 +113,10 @@ public class SysUserController {
     @RequireRole({"admin", "user", "vip", "coach"})
     public Result<Boolean> update(@RequestBody SysUser sysUser, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        String role = (String) request.getAttribute("role");
+        List<String> roles = (List<String>) request.getAttribute("roles");
         
         // 管理员可以更新任意用户，其他角色只能更新自己
-        if (!"admin".equals(role) && !sysUser.getUserId().equals(userId)) {
+        if (!roles.contains("admin") && !sysUser.getUserId().equals(userId)) {
             return Result.error("只能更新自己的信息");
         }
         return Result.success(this.sysUserService.updateById(sysUser));

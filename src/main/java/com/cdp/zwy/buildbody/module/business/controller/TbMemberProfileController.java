@@ -70,9 +70,9 @@ public class TbMemberProfileController {
     @RequireRole({"admin", "user", "vip"})
     public Result<Boolean> update(@RequestBody TbMemberProfile tbMemberProfile, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        String role = (String) request.getAttribute("role");
+        List<String> roles = (List<String>) request.getAttribute("roles");
         
-        if (!"admin".equals(role) && !tbMemberProfile.getUserId().equals(userId)) {
+        if (!roles.contains("admin") && !tbMemberProfile.getUserId().equals(userId)) {
             return Result.error("只能修改自己的信息");
         }
         
