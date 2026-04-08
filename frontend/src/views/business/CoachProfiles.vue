@@ -6,7 +6,7 @@
           <span>教练档案管理</span>
           <div>
             <el-button type="success" @click="handleRegisterCoach">注册教练账号</el-button>
-            <el-button type="primary" @click="handleAdd">添加教练</el-button>
+<!--            <el-button type="primary" @click="handleAdd">添加教练</el-button>-->
           </div>
         </div>
       </template>

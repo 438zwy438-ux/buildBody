@@ -12,10 +12,11 @@
         <el-form-item>
           <el-button type="primary" @click="handleLogin" :loading="loading" style="width: 100%">登录</el-button>
         </el-form-item>
+
         <el-form-item>
           <div class="login-footer">
-            <span>还没有账号?</span>
-            <el-link type="primary" @click="goToRegister">立即注册</el-link>
+            <span>会员登录?</span>
+            <el-link type="primary" @click="goToUserLogin">点击这里</el-link>
           </div>
         </el-form-item>
       </el-form>
@@ -73,6 +74,10 @@ const handleLogin = async () => {
 
 const goToRegister = () => {
   router.push('/register')
+}
+
+const goToUserLogin = () => {
+  router.push('/user/login')
 }
 </script>
 
