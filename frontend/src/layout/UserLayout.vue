@@ -54,7 +54,7 @@
         <router-view />
       </el-main>
       <el-footer class="footer">
-        <p>© 2024 健身俱乐部 - 专业健身服务</p>
+        <p>© 2026某智能健身系统 - 专业健身服务</p>
       </el-footer>
     </el-container>
   </div>
