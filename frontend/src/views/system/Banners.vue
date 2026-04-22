@@ -183,15 +183,15 @@ const handleUploadSuccess = (response) => {
 
 const beforeUpload = (file) => {
   const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
-  const isLt2M = file.size / 1024 / 1024 < 2
+  const isLt20M = file.size / 1024 / 1024 < 20
 
   if (!isJPG) {
     ElMessage.error('上传图片只能是 JPG/PNG 格式!')
   }
-  if (!isLt2M) {
+  if (!isLt20M) {
     ElMessage.error('上传图片大小不能超过 2MB!')
   }
-  return isJPG && isLt2M
+  return isJPG && isLt20M
 }
 
 const handleSubmit = async () => {

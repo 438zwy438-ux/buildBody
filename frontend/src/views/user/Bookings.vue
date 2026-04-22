@@ -132,7 +132,7 @@ const fetchData = async () => {
         
         if (courseRes.data?.coachUserId) {
           const coachRes = await getCoachProfileByUserId(courseRes.data.coachUserId)
-          booking.coachName = coachRes.data?.realName || '未知教练'
+          booking.coachName = coachRes.data?.coach?.realName || '未知教练'
         }
       } catch (error) {
         console.error('查询课程或教练信息失败:', error)
@@ -157,7 +157,7 @@ const formatDateTime = (dateTime) => {
 
 const handleCancel = async (booking) => {
   try {
-    await ElMessageBox.confirm('确定要取消这个预约吗？取消后将恢复一次私教课次数。', '提示', {
+    await ElMessageBox.confirm('确定要取消这个预约吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'

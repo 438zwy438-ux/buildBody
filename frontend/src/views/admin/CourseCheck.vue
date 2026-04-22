@@ -90,7 +90,7 @@ const fetchData = async () => {
         // 查询教练姓名（仅管理员需要）
         if (isAdmin.value && courseRes.data?.coachUserId) {
           const coachRes = await getCoachProfileByUserId(courseRes.data.coachUserId)
-          booking.coachName = coachRes.data?.realName || '未知教练'
+          booking.coachName = coachRes.data?.coach?.realName || '未知教练'
         }
       } catch (error) {
         console.error('查询课程或用户信息失败:', error)

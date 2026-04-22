@@ -64,11 +64,11 @@
     <!-- 悬浮按钮区域 -->
     <Transition name="bounce">
       <div v-if="!isOpen" class="floating-container">
-        <!-- 气泡提示（显示5秒后自动隐藏） -->
+        <!-- 气泡提示（每10秒显示一次） -->
         <Transition name="slide-fade">
           <div v-if="showBubble" class="speech-bubble">
             <div class="bubble-content">
-              <span>Hi，我是您的AI教练，有什么可以帮您？</span>
+              <span>你好朋友，我是你的专属健身ai客服需要帮忙吗</span>
               <div class="bubble-tail"></div>
             </div>
           </div>
@@ -85,9 +85,7 @@
              class="floating-ball"
              @click="toggleChat"
            >
-             <el-icon :size="28" class="ai-icon">
-               <ChatDotRound />
-             </el-icon>
+             <img src="/images/ai图标.jpg" alt="AI助手" class="ai-icon-img" />
              <div class="pulse-ring"></div>
            </div>
         </el-tooltip>
@@ -109,6 +107,7 @@ const loading = ref(false)
 const chatContentRef = ref(null)
 const showBubble = ref(true)
 let bubbleTimer = null
+let bubbleHideTimer = null
 
 const renderMarkdown = (content) => {
   return marked(content)
@@ -117,8 +116,24 @@ const renderMarkdown = (content) => {
 const toggleChat = () => {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
+    showBubble.value = false
+    if (bubbleHideTimer) {
+      clearTimeout(bubbleHideTimer)
+    }
     scrollToBottom()
+  } else {
+    showBubble.value = true
+    startBubbleHideTimer()
   }
+}
+
+const startBubbleHideTimer = () => {
+  if (bubbleHideTimer) {
+    clearTimeout(bubbleHideTimer)
+  }
+  bubbleHideTimer = setTimeout(() => {
+    showBubble.value = false
+  }, 5000)
 }
 
 const scrollToBottom = () => {
@@ -230,15 +245,33 @@ onMounted(() => {
     }
   ]
   
-  // 5秒后自动隐藏气泡提示
-  bubbleTimer = setTimeout(() => {
+  // 启动定时器，每10秒显示一次气泡提示
+  startBubbleTimer()
+  
+  // 5秒后自动隐藏第一次显示的气泡提示
+  bubbleHideTimer = setTimeout(() => {
     showBubble.value = false
   }, 5000)
 })
 
+const startBubbleTimer = () => {
+  if (bubbleTimer) {
+    clearInterval(bubbleTimer)
+  }
+  bubbleTimer = setInterval(() => {
+    if (!isOpen.value) {
+      showBubble.value = true
+      startBubbleHideTimer()
+    }
+  }, 10000)
+}
+
 onUnmounted(() => {
   if (bubbleTimer) {
-    clearTimeout(bubbleTimer)
+    clearInterval(bubbleTimer)
+  }
+  if (bubbleHideTimer) {
+    clearTimeout(bubbleHideTimer)
   }
 })
 </script>
@@ -303,12 +336,21 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   color: white;
   animation: breathing 2s ease-in-out infinite;
+  overflow: hidden;
 }
 
 .floating-ball:hover {
   transform: scale(1.15);
   box-shadow: 0 12px 40px rgba(102, 126, 234, 0.7);
   animation: none;
+}
+
+.ai-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 /* 呼吸灯动效 */
@@ -321,10 +363,6 @@ onUnmounted(() => {
   border: 2px solid rgba(102, 126, 234, 0.6);
   border-radius: 50%;
   animation: pulse 2s ease-out infinite;
-}
-
-.ai-icon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .chat-window {
