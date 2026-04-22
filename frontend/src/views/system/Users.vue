@@ -69,7 +69,7 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="!form.id">
+        <el-form-item label="密码" prop="password" v-if="!form.userId">
           <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password />
         </el-form-item>
         <el-form-item label="昵称" prop="nickname">
@@ -85,7 +85,7 @@
             <el-option label="教练" :value="3" />
           </el-select>
         </el-form-item>
-        <template v-if="form.role === 3 && !form.id">
+        <template v-if="form.role === 3 && !form.userId">
           <el-form-item label="真实姓名" prop="realName">
             <el-input v-model="form.realName" placeholder="请输入真实姓名" />
           </el-form-item>
@@ -131,7 +131,7 @@ const pagination = reactive({
 })
 
 const form = reactive({
-  id: null,
+  userId: null,
   username: '',
   password: '',
   nickname: '',
@@ -143,17 +143,17 @@ const form = reactive({
 })
 
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  username: [{ required: false, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: false, message: '请输入密码', trigger: 'blur' }],
+  nickname: [{ required: false, message: '请输入昵称', trigger: 'blur' }],
   phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { required: false, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
-  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  specialty: [{ required: true, message: '请输入专长', trigger: 'blur' }],
-  intro: [{ required: true, message: '请输入简介', trigger: 'blur' }]
+  role: [{ required: false, message: '请选择角色', trigger: 'change' }],
+  realName: [{ required: false, message: '请输入真实姓名', trigger: 'blur' }],
+  specialty: [{ required: false, message: '请输入专长', trigger: 'blur' }],
+  intro: [{ required: false, message: '请输入简介', trigger: 'blur' }]
 }
 
 const fetchData = async () => {
@@ -195,7 +195,7 @@ const handleReset = () => {
 
 const handleAdd = () => {
   dialogTitle.value = '添加用户'
-  form.id = null
+  form.userId= null
   form.username = ''
   form.password = ''
   form.nickname = ''
@@ -212,14 +212,14 @@ const goToRegister = () => {
 }
 
 const handleRoleChange = (value) => {
-  if (value === 3 && !form.id) {
+  if (value === 3 && !form.userId) {
     form.nickname = form.realName ? form.realName + '教练' : ''
   }
 }
 
 const handleEdit = (row) => {
   dialogTitle.value = '编辑用户'
-  form.id = row.userId
+  form.userId= row.userId
   form.username = row.username
   form.nickname = row.nickname
   form.phone = row.phone
@@ -248,7 +248,7 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        if (form.role === 3 && !form.id) {
+        if (form.role === 3 && !form.userId) {
           await addCoach({
             username: form.username,
             password: form.password,
@@ -260,7 +260,7 @@ const handleSubmit = async () => {
         } else {
           await updateUser(form)
         }
-        ElMessage.success(form.id ? '更新成功' : '添加成功')
+        ElMessage.success(form.userId? '更新成功' : '添加成功')
         dialogVisible.value = false
         fetchData()
       } catch (error) {

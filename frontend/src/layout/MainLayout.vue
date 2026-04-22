@@ -2,7 +2,7 @@
   <el-container class="main-layout">
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">
-        <span v-if="!isCollapse">健身房管理</span>
+        <span v-if="!isCollapse">某智能健身系统后台</span>
         <span v-else>健身</span>
       </div>
       <el-menu

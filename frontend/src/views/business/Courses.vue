@@ -69,7 +69,7 @@
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.size"
-          :page-sizes="[10, 20, 50, 100]"
+          :page-sizes="[10, 20, 200, 100]"
           :total="pagination.total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
@@ -123,7 +123,7 @@
             <el-icon><Plus /></el-icon>
             <template #tip>
               <div class="el-upload__tip">
-                只能上传jpg/png文件，且不超过5MB
+                只能上传jpg/png文件，且不超过20MB
               </div>
             </template>
           </el-upload>
@@ -281,7 +281,7 @@ const handleEdit = (row) => {
   form.coverImg = row.coverImg
   form.description = row.description
   form.status = row.status
-  
+
   fileList.value = []
   if (row.coverImg) {
     fileList.value = [{
@@ -310,7 +310,7 @@ const handleDelete = async (row) => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -326,7 +326,7 @@ const handleSubmit = async () => {
           description: form.description,
           status: Number(form.status)
         }
-        
+
         if (form.id) {
           await updateCourse(submitData)
           ElMessage.success('更新成功')
@@ -334,7 +334,7 @@ const handleSubmit = async () => {
           await createCourse(submitData)
           ElMessage.success('创建成功')
         }
-        
+
         dialogVisible.value = false
         fetchData()
       } catch (error) {
@@ -367,7 +367,7 @@ const handleUploadSuccess = (response, file, fileList) => {
     if (imageUrl) {
       form.coverImg = imageUrl
       file.url = imageUrl
-      
+
       // 立即更新数据库中的cover_img字段
       if (form.id) {
         updateCourse({
@@ -388,7 +388,7 @@ const handleUploadSuccess = (response, file, fileList) => {
 const handleRemove = (file, fileList) => {
   console.log('删除图片:', file, fileList)
   form.coverImg = ''
-  
+
   // 如果课程已存在，立即更新数据库清除封面图
   if (form.id) {
     updateCourse({
@@ -404,14 +404,14 @@ const handleRemove = (file, fileList) => {
 
 const beforeUpload = (file) => {
   const isImage = file.type.startsWith('image/')
-  const isLt5M = file.size / 1024 / 1024 < 5
-  
+  const isLt20M = file.size / 1024 / 1024 < 20
+
   if (!isImage) {
     ElMessage.error('只能上传图片文件!')
     return false
   }
-  if (!isLt5M) {
-    ElMessage.error('图片大小不能超过5MB!')
+  if (!isLt20M) {
+    ElMessage.error('图片大小不能超过20MB!')
     return false
   }
   return true

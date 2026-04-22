@@ -35,6 +35,19 @@ export const deleteBanner = (idList) => {
   return request({
     url: '/sysBanner/delete',
     method: 'delete',
-    params: { idList }
+    params: { idList },
+    paramsSerializer: {
+      serialize: (params) => {
+        return Object.keys(params)
+          .map(key => {
+            const value = params[key]
+            if (Array.isArray(value)) {
+              return `${key}=${value.join(',')}`
+            }
+            return `${key}=${value}`
+          })
+          .join('&')
+      }
+    }
   })
 }

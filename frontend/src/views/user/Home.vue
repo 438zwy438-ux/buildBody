@@ -1,7 +1,7 @@
 <template>
   <div class="home-page">
     <div class="banner-section">
-      <el-carousel :interval="4000" height="400px" arrow="always" indicator-position="outside">
+      <el-carousel :interval="4000" height="700px" arrow="always" indicator-position="outside">
         <el-carousel-item v-for="banner in banners" :key="banner.id">
           <div class="banner-item" :style="{ backgroundImage: `url(${banner.imageUrl})` }">
             <div class="banner-overlay">
@@ -109,7 +109,10 @@
           </div>
           
           <div class="equipment-info">
-            <h3>{{ equipment.name }}</h3>
+            <div class="equipment-header">
+              <h3>{{ equipment.name }}</h3>
+              <el-tag type="info" size="small" class="count-tag">数量: {{ equipment.count }}</el-tag>
+            </div>
             <p class="equipment-code">编号: {{ equipment.code }}</p>
             <p class="equipment-location">位置: {{ equipment.location }}</p>
             <el-tag :type="equipment.status === 1 ? 'success' : 'danger'" size="small">
@@ -271,14 +274,30 @@ const fetchEquipment = async () => {
   try {
     const res = await getEquipmentList({
       current:1,
-      size: 20,
+      size: 100,
       status: 1
     })
     if (res.data.records) {
-      equipmentList.value = res.data.records.map(equipment => ({
+      const allEquipment = res.data.records.map(equipment => ({
         ...equipment,
         images: equipment.images || []
       }))
+      
+      // 按器材名称分组，每种只展示一个，并统计数量
+      const equipmentMap = new Map()
+      allEquipment.forEach(equipment => {
+        const name = equipment.name
+        if (!equipmentMap.has(name)) {
+          equipmentMap.set(name, {
+            ...equipment,
+            count: 1
+          })
+        } else {
+          equipmentMap.get(name).count++
+        }
+      })
+      
+      equipmentList.value = Array.from(equipmentMap.values())
     }
   } catch (error) {
     console.error('获取器材列表失败:', error)
@@ -683,10 +702,25 @@ onMounted(() => {
   padding: 20px;
 }
 
-.equipment-info h3 {
+.equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.equipment-header h3 {
   font-size: 18px;
   color: #333;
-  margin: 0 0 12px 0;
+  margin: 0;
+  font-weight: 600;
+  flex: 1;
+}
+
+.count-tag {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
   font-weight: 600;
 }
 
