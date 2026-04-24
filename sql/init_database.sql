@@ -251,7 +251,7 @@ ON DUPLICATE KEY UPDATE user_id=user_id;
 
 -- 初始化测试数据
 INSERT INTO sys_banner (title, description, image_url, sort_order, status) VALUES
-('欢迎来到健身俱乐部', '专业健身，健康生活', 'https://via.placeholder.com/1200x400?text=Welcome', 1, 1),
+('欢迎来到智能健身系统', '专业健身，健康生活', 'https://via.placeholder.com/1200x400?text=Welcome', 1, 1),
 ('专业教练团队', '资深教练，为您提供专业指导', 'https://via.placeholder.com/1200x400?text=Coach', 2, 1),
 ('先进健身设备', '国际一流品牌，保障训练效果', 'https://via.placeholder.com/1200x400?text=Equipment', 3, 1);
 

@@ -3,7 +3,7 @@
     <div class="landing-content">
       <div class="logo-section">
         <el-icon class="logo-icon"><Trophy /></el-icon>
-        <h1>健身俱乐部管理系统</h1>
+        <h1>智能健身系统管理系统</h1>
         <p>专业健身服务，助您达成健身目标</p>
       </div>
       

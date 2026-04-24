@@ -75,7 +75,8 @@
       </div>
     </div>
 
-    <div class="equipment-section">
+    <!-- 健身器材部分已移至独立页面 -->
+    <!-- <div class="equipment-section">
       <div class="section-header">
         <h2>健身器材</h2>
         <p>专业设备，助力您的健身之旅</p>
@@ -83,7 +84,7 @@
       
       <div class="equipment-grid">
         <div 
-          v-for="equipment in equipmentList" 
+          v-for="equipment in equipmentList.slice(0, 4)" 
           :key="equipment.id" 
           class="equipment-card"
           @click="goToDetail(equipment.id)"
@@ -121,9 +122,17 @@
           </div>
         </div>
       </div>
-    </div>
+      
+      <div class="view-all-button">
+        <el-button type="primary" size="large" @click="goToEquipmentList">
+          查看所有器材
+          <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+    </div> -->
 
-    <div class="coach-section">
+    <!-- 专业教练部分已移至独立页面 -->
+    <!-- <div class="coach-section">
       <div class="section-header">
         <h2>专业教练</h2>
         <p>资深教练团队，为您提供专业指导</p>
@@ -179,9 +188,14 @@
           <el-icon class="el-icon--right"><ArrowRight /></el-icon>
         </el-button>
       </div>
-    </div>
+    </div> -->
 
     <div class="features-section">
+      <div class="feature-item" @click="goToEquipmentList" style="cursor: pointer">
+        <el-icon :size="40" color="#667eea"><Grid /></el-icon>
+        <h3>健身器材</h3>
+        <p>专业设备，助力您的健身之旅</p>
+      </div>
       <div class="feature-item" @click="goToCoachList" style="cursor: pointer">
         <el-icon :size="40" color="#667eea"><Trophy /></el-icon>
         <h3>专业教练</h3>
@@ -196,11 +210,6 @@
         <el-icon :size="40" color="#667eea"><Star /></el-icon>
         <h3>优质服务</h3>
         <p>贴心服务，让您享受健身乐趣</p>
-      </div>
-      <div class="feature-item">
-        <el-icon :size="40" color="#667eea"><Clock /></el-icon>
-        <h3>灵活时间</h3>
-        <p>24小时营业，随时随地健身</p>
       </div>
     </div>
 
@@ -235,7 +244,7 @@ const banners = ref([])
 const equipmentList = ref([])
 const coachList = ref([])
 const gymInfo = ref({
-  introduction: '我们是一家专业的高端健身俱乐部，致力于为每一位会员提供最优质的健身体验。拥有国际一流的健身器材、专业的教练团队和舒适的运动环境，帮助您实现健康目标。',
+  introduction: '我们是一家专业的高端智能健身系统，致力于为每一位会员提供最优质的健身体验。拥有国际一流的健身器材、专业的教练团队和舒适的运动环境，帮助您实现健康目标。',
   address: '北京市朝阳区建国路88号SOHO现代城A座3层',
   phone: '010-88888888',
   area: '2000平方米',
@@ -321,6 +330,10 @@ const fetchCoach = async () => {
 
 const goToDetail = (equipmentId) => {
   router.push(`/user/equipment/${equipmentId}`)
+}
+
+const goToEquipmentList = () => {
+  router.push('/user/equipment')
 }
 
 const goToCoachDetail = (coachId) => {

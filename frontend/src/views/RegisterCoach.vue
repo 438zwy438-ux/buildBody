@@ -3,7 +3,7 @@
     <div class="register-box">
       <div class="register-header">
         <el-icon class="logo-icon"><Trophy /></el-icon>
-        <h2>健身俱乐部</h2>
+        <h2>智能健身系统</h2>
         <p>教练注册</p>
       </div>
       <el-form :model="registerForm" :rules="rules" ref="registerFormRef" label-width="100px">

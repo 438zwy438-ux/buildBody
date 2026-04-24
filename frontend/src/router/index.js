@@ -54,6 +54,12 @@ const routes = [
         meta: { title: '会员卡中心', requiresAuth: false }
       },
       {
+        path: 'equipment',
+        name: 'EquipmentList',
+        component: () => import('@/views/user/EquipmentList.vue'),
+        meta: { title: '健身器材', requiresAuth: false }
+      },
+      {
         path: 'equipment/:id',
         name: 'EquipmentDetail',
         component: () => import('@/views/user/EquipmentDetail.vue'),

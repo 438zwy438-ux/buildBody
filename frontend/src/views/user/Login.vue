@@ -3,7 +3,7 @@
     <div class="login-box">
       <div class="login-header">
         <el-icon class="logo-icon"><Trophy /></el-icon>
-        <h2>健身俱乐部</h2>
+        <h2>智能健身系统</h2>
         <p>会员登录</p>
       </div>
       <el-form :model="loginForm" :rules="rules" ref="loginFormRef" label-width="0">

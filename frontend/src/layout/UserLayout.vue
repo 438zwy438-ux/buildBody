@@ -5,7 +5,7 @@
         <div class="header-left">
           <div class="logo">
             <el-icon><Trophy /></el-icon>
-            <span>健身俱乐部</span>
+            <span>智能健身系统</span>
           </div>
         </div>
         <div class="header-right">
@@ -14,10 +14,12 @@
             mode="horizontal"
             router
             background-color="transparent"
-            text-color="#fff"
+            text-color="#8A2BE2"
             active-text-color="#409eff"
           >
             <el-menu-item index="/user/home">首页</el-menu-item>
+            <el-menu-item index="/user/equipment">健身器材</el-menu-item>
+            <el-menu-item index="/user/coach">专业教练</el-menu-item>
             <el-menu-item index="/user/card-shop">会员卡中心</el-menu-item>
             <el-menu-item index="/user/private-courses">私教课程</el-menu-item>
             <el-menu-item index="/user/courses" v-if="hasAnyRole(['user', 'vip'])">课程预约</el-menu-item>
