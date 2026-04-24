@@ -10,6 +10,5 @@ import com.cdp.zwy.buildbody.module.business.entity.TbFixLog;
  * @since 2026-02-26 23:15:11
  */
 public interface TbFixLogService extends IService<TbFixLog> {
-
+    boolean saveFixLogAndUpdateEquipmentStatus(TbFixLog tbFixLog);
 }
-

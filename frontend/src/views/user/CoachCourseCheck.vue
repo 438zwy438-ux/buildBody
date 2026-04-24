@@ -8,6 +8,7 @@
       </template>
       
       <el-table :data="bookings" v-loading="loading" border>
+        <el-table-column prop="orderId" label="订单ID" width="120" />
         <el-table-column prop="courseName" label="课程名称" />
         <el-table-column prop="userName" label="会员" />
         <el-table-column prop="scheduleTime" label="预约时间">
@@ -103,6 +104,27 @@ const formatDateTime = (dateTime) => {
 
 const handleCheck = async (booking) => {
   try {
+    const now = dayjs()
+    const scheduleTime = dayjs(booking.scheduleTime)
+    const checkTime = scheduleTime.add(2, 'hour')
+    
+    if (now.isBefore(checkTime)) {
+      const remainingMinutes = checkTime.diff(now, 'minute')
+      const hours = Math.floor(remainingMinutes / 60)
+      const minutes = remainingMinutes % 60
+      
+      let timeText = ''
+      if (hours > 0) {
+        timeText += `${hours}小时`
+      }
+      if (minutes > 0) {
+        timeText += `${minutes}分钟`
+      }
+      
+      ElMessage.warning(`课程尚未结束，请在预约时间两小时后，即${timeText}后再进行核销`)
+      return
+    }
+    
     await ElMessageBox.confirm('确定要核销这个课程吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',

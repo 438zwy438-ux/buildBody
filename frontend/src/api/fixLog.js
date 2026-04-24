@@ -17,7 +17,7 @@ export const getFixLogById = (id) => {
 
 export const createFixLog = (data) => {
   return request({
-    url: '/tbFixLog/insert',
+    url: '/tbFixLog/insertAndUpdateStatus',
     method: 'post',
     data
   })

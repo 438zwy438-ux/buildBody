@@ -12,13 +12,6 @@
         <el-form-item label="器材名称">
           <el-input v-model="searchForm.equipmentName" placeholder="请输入器材名称" clearable />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="待维修" :value="1" />
-            <el-option label="维修中" :value="2" />
-            <el-option label="已完成" :value="3" />
-          </el-select>
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -29,27 +22,21 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="equipmentId" label="器材ID" />
         <el-table-column prop="equipmentName" label="器材名称" />
-        <el-table-column prop="faultDesc" label="故障描述" />
-        <el-table-column prop="reportTime" label="报修时间">
+        <el-table-column prop="damagePosition" label="损坏位置" />
+        <el-table-column prop="damageDescription" label="损坏说明" />
+        <el-table-column prop="damageTime" label="损坏时间">
           <template #default="{ row }">
-            {{ row.reportTime ? dayjs(row.reportTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
+            {{ row.damageTime ? dayjs(row.damageTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
           </template>
         </el-table-column>
-        <el-table-column prop="fixTime" label="维修时间">
+        <el-table-column prop="repairerName" label="维修人员" />
+        <el-table-column prop="repairTime" label="维修时间">
           <template #default="{ row }">
-            {{ row.fixTime ? dayjs(row.fixTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag v-if="row.status === 1" type="danger">待维修</el-tag>
-            <el-tag v-else-if="row.status === 2" type="warning">维修中</el-tag>
-            <el-tag v-else type="success">已完成</el-tag>
+            {{ row.repairTime ? dayjs(row.repairTime).format('YYYY-MM-DD HH:mm:ss') : '' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -68,47 +55,60 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="器材ID" prop="equipmentId">
-          <el-input v-model="form.equipmentId" placeholder="请输入器材ID" />
+    <el-dialog v-model="dialogVisible" title="添加维修记录" width="600px">
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
+        <el-form-item label="选择器械" prop="equipmentId">
+          <el-select 
+            v-model="form.equipmentId" 
+            placeholder="请选择器械" 
+            style="width: 100%"
+            filterable
+            @change="handleEquipmentChange"
+            :loading="equipmentLoading"
+          >
+            <el-option
+              v-for="item in equipmentList"
+              :key="item.id"
+              :label="`${item.name} (${item.code})`"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="器材名称" prop="equipmentName">
-          <el-input v-model="form.equipmentName" placeholder="请输入器材名称" />
+          <el-input v-model="form.equipmentName" placeholder="自动带出" disabled />
         </el-form-item>
-        <el-form-item label="故障描述" prop="faultDesc">
-          <el-input v-model="form.faultDesc" type="textarea" :rows="3" placeholder="请输入故障描述" />
+        <el-form-item label="损坏位置" prop="damagePosition">
+          <el-input v-model="form.damagePosition" placeholder="请输入损坏位置" />
         </el-form-item>
-        <el-form-item label="报修时间" prop="reportTime">
+        <el-form-item label="损坏说明" prop="damageDescription">
+          <el-input v-model="form.damageDescription" type="textarea" :rows="3" placeholder="请输入损坏说明" />
+        </el-form-item>
+        <el-form-item label="损坏时间" prop="damageTime">
           <el-date-picker
-            v-model="form.reportTime"
+            v-model="form.damageTime"
             type="datetime"
-            placeholder="选择日期时间"
+            placeholder="选择损坏时间"
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item label="维修时间" prop="fixTime">
+        <el-form-item label="维修人员姓名" prop="repairerName">
+          <el-input v-model="form.repairerName" placeholder="请输入维修人员姓名" />
+        </el-form-item>
+        <el-form-item label="维修人员电话" prop="repairerPhone">
+          <el-input v-model="form.repairerPhone" placeholder="请输入维修人员电话" />
+        </el-form-item>
+        <el-form-item label="维修时间" prop="repairTime">
           <el-date-picker
-            v-model="form.fixTime"
+            v-model="form.repairTime"
             type="datetime"
-            placeholder="选择日期时间"
+            placeholder="选择维修时间"
             style="width: 100%"
           />
-        </el-form-item>
-        <el-form-item label="维修备注" prop="fixNotes">
-          <el-input v-model="form.fixNotes" type="textarea" :rows="3" placeholder="请输入维修备注" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">待维修</el-radio>
-            <el-radio :label="2">维修中</el-radio>
-            <el-radio :label="3">已完成</el-radio>
-          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitting">确定</el-button>
       </template>
     </el-dialog>
   </div>
@@ -116,19 +116,21 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { getFixLogList, createFixLog, updateFixLog, deleteFixLog } from '@/api/fixLog'
+import { getFixLogList, createFixLog, deleteFixLog } from '@/api/fixLog'
+import { getEquipmentList } from '@/api/equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
-const dialogTitle = ref('添加记录')
 const formRef = ref(null)
 const tableData = ref([])
+const equipmentLoading = ref(false)
+const equipmentList = ref([])
+const submitting = ref(false)
 
 const searchForm = reactive({
-  equipmentName: '',
-  status: null
+  equipmentName: ''
 })
 
 const pagination = reactive({
@@ -138,22 +140,44 @@ const pagination = reactive({
 })
 
 const form = reactive({
-  id: null,
-  equipmentId: null,
+  equipmentId: '',
   equipmentName: '',
-  faultDesc: '',
-  reportTime: null,
-  fixTime: null,
-  fixNotes: '',
-  status: 1
+  damagePosition: '',
+  damageDescription: '',
+  damageTime: null,
+  repairerName: '',
+  repairerPhone: '',
+  repairTime: null
 })
 
 const rules = {
-  equipmentId: [{ required: true, message: '请输入器材ID', trigger: 'blur' }],
-  equipmentName: [{ required: true, message: '请输入器材名称', trigger: 'blur' }],
-  faultDesc: [{ required: true, message: '请输入故障描述', trigger: 'blur' }],
-  reportTime: [{ required: true, message: '请选择报修时间', trigger: 'change' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  equipmentId: [{ required: true, message: '请选择器械', trigger: 'change' }],
+  equipmentName: [{ required: true, message: '器材名称不能为空', trigger: 'blur' }],
+  damagePosition: [{ required: true, message: '请输入损坏位置', trigger: 'blur' }],
+  damageDescription: [{ required: true, message: '请输入损坏说明', trigger: 'blur' }],
+  damageTime: [{ required: true, message: '请选择损坏时间', trigger: 'change' }],
+  repairerName: [{ required: true, message: '请输入维修人员姓名', trigger: 'blur' }],
+  repairerPhone: [{ required: true, message: '请输入维修人员电话', trigger: 'blur' }]
+}
+
+const fetchEquipmentList = async () => {
+  equipmentLoading.value = true
+  try {
+    const res = await getEquipmentList({ current: 1, size: 1000 })
+    equipmentList.value = res.data?.records || []
+  } catch (error) {
+    console.error('获取器械列表失败:', error)
+    equipmentList.value = []
+  } finally {
+    equipmentLoading.value = false
+  }
+}
+
+const handleEquipmentChange = (equipmentId) => {
+  const equipment = equipmentList.value.find(item => item.id === equipmentId)
+  if (equipment) {
+    form.equipmentName = equipment.name
+  }
 }
 
 const fetchData = async () => {
@@ -165,9 +189,6 @@ const fetchData = async () => {
     }
     if (searchForm.equipmentName) {
       params.equipmentName = searchForm.equipmentName
-    }
-    if (searchForm.status !== null && searchForm.status !== '') {
-      params.status = searchForm.status
     }
     const res = await getFixLogList(params)
     tableData.value = res.data?.records || []
@@ -188,34 +209,20 @@ const handleSearch = () => {
 
 const handleReset = () => {
   searchForm.equipmentName = ''
-  searchForm.status = null
   pagination.page = 1
   fetchData()
 }
 
-const handleAdd = () => {
-  dialogTitle.value = '添加记录'
-  form.id = null
-  form.equipmentId = null
+const handleAdd = async () => {
+  form.equipmentId = ''
   form.equipmentName = ''
-  form.faultDesc = ''
-  form.reportTime = null
-  form.fixTime = null
-  form.fixNotes = ''
-  form.status = 1
-  dialogVisible.value = true
-}
-
-const handleEdit = (row) => {
-  dialogTitle.value = '编辑记录'
-  form.id = row.id
-  form.equipmentId = row.equipmentId
-  form.equipmentName = row.equipmentName
-  form.faultDesc = row.faultDesc
-  form.reportTime = row.reportTime
-  form.fixTime = row.fixTime
-  form.fixNotes = row.fixNotes
-  form.status = row.status
+  form.damagePosition = ''
+  form.damageDescription = ''
+  form.damageTime = null
+  form.repairerName = ''
+  form.repairerPhone = ''
+  form.repairTime = null
+  await fetchEquipmentList()
   dialogVisible.value = true
 }
 
@@ -239,17 +246,17 @@ const handleSubmit = async () => {
   
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      submitting.value = true
       try {
-        if (form.id) {
-          await updateFixLog(form)
-        } else {
-          await createFixLog(form)
-        }
-        ElMessage.success(form.id ? '更新成功' : '添加成功')
+        await createFixLog(form)
+        ElMessage.success('添加成功')
         dialogVisible.value = false
         fetchData()
       } catch (error) {
         console.error('提交失败:', error)
+        ElMessage.error(error.response?.data?.msg || '操作失败')
+      } finally {
+        submitting.value = false
       }
     }
   })

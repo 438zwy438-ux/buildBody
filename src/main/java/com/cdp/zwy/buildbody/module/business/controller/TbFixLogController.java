@@ -39,7 +39,12 @@ public class TbFixLogController {
     @Operation(summary = "分页查询所有数据")
     @GetMapping("/selectAll")
     public Result<Page<TbFixLog>> selectAll(Page<TbFixLog> page, TbFixLog tbFixLog) {
-        return Result.success(this.tbFixLogService.page(page, new QueryWrapper<>(tbFixLog)));
+        QueryWrapper<TbFixLog> queryWrapper = new QueryWrapper<>();
+        if (tbFixLog.getEquipmentName() != null && !tbFixLog.getEquipmentName().isEmpty()) {
+            queryWrapper.like("equipment_name", tbFixLog.getEquipmentName());
+        }
+        queryWrapper.orderByDesc("create_time");
+        return Result.success(this.tbFixLogService.page(page, queryWrapper));
     }
 
     /**
@@ -64,6 +69,12 @@ public class TbFixLogController {
     @PostMapping("/insert")
     public Result<Boolean> insert(@RequestBody TbFixLog tbFixLog) {
         return Result.success(this.tbFixLogService.save(tbFixLog));
+    }
+
+    @Operation(summary = "新增维修记录并更新器械状态")
+    @PostMapping("/insertAndUpdateStatus")
+    public Result<Boolean> insertAndUpdateStatus(@RequestBody TbFixLog tbFixLog) {
+        return Result.success(this.tbFixLogService.saveFixLogAndUpdateEquipmentStatus(tbFixLog));
     }
 
     /**

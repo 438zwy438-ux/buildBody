@@ -1,5 +1,6 @@
 package com.cdp.zwy.buildbody.module.business.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import java.util.Date;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
@@ -12,25 +13,17 @@ import java.io.Serializable;
  */
 @SuppressWarnings("serial")
 public class TbFixLog extends Model<TbFixLog> {
-//维修记录ID（主键）
     private Integer id;
-//维修器械ID
     private String equipmentId;
-//损坏位置
+    @TableField(exist = false)
+    private String equipmentName;
     private String damagePosition;
-//损坏说明
     private String damageDescription;
-//损坏时间
     private Date damageTime;
-//维修人员姓名
     private String repairerName;
-//维修人员电话
     private String repairerPhone;
-//维修时间（完成维修的时间）
     private Date repairTime;
-//记录创建时间
     private Date createTime;
-
 
     public Integer getId() {
         return id;
@@ -46,6 +39,14 @@ public class TbFixLog extends Model<TbFixLog> {
 
     public void setEquipmentId(String equipmentId) {
         this.equipmentId = equipmentId;
+    }
+
+    public String getEquipmentName() {
+        return equipmentName;
+    }
+
+    public void setEquipmentName(String equipmentName) {
+        this.equipmentName = equipmentName;
     }
 
     public String getDamagePosition() {
@@ -114,4 +115,3 @@ public class TbFixLog extends Model<TbFixLog> {
         return this.id;
     }
 }
-

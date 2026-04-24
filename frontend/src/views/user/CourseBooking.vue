@@ -133,7 +133,7 @@ const handleConfirmBook = async () => {
     const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 
     await bookCourse({
-      courseId: currentOrder.value.courseId,
+      orderId: currentOrder.value.id,
       scheduleTime: formattedTime
     })
     ElMessage.success('预约成功')

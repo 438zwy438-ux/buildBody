@@ -17,7 +17,7 @@ import java.util.Map;
 public interface TbCourseBookingService extends IService<TbCourseBooking> {
 
     @Transactional(rollbackFor = Exception.class)
-    Long bookCourse(Long userId, Long courseId, Date scheduleTime);
+    Long bookCourse(Long userId, Long orderId, Date scheduleTime);
 
     @Transactional(rollbackFor = Exception.class)
     Boolean checkCourse(Long bookingId);

@@ -43,7 +43,21 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long bookCourse(Long userId, Long courseId, Date scheduleTime) {
+    public Long bookCourse(Long userId, Long orderId, Date scheduleTime) {
+        SysOrder order = sysOrderService.getById(orderId);
+        if (order == null || order.getType() != 2 || order.getStatus() != 1) {
+            throw new RuntimeException("订单不存在或状态异常");
+        }
+        
+        if (order.getRemainCount() <= 0) {
+            throw new RuntimeException("该课程没有可用的私教课次数，请先购买");
+        }
+        
+        Long courseId = order.getCourseId();
+        if (courseId == null) {
+            throw new RuntimeException("订单未关联课程");
+        }
+        
         TbCourse course = tbCourseService.getById(courseId);
         if (course == null || course.getType() != 1) {
             throw new RuntimeException("课程不存在或不是私教课");
@@ -54,16 +68,6 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
             throw new RuntimeException("课程未关联教练");
         }
         
-        List<SysOrder> orders = sysOrderService.list(new QueryWrapper<SysOrder>()
-                .eq("user_id", userId)
-                .eq("type", 2)
-                .eq("status", 1)
-                .gt("remain_count", 0));
-        
-        if (orders.isEmpty()) {
-            throw new RuntimeException("您没有可用的私教课次数，请先购买");
-        }
-        
         TbCoachProfile coach = coachProfileService.getOne(new QueryWrapper<TbCoachProfile>()
                 .eq("user_id", coachUserId)
                 .eq("status", 1));
@@ -72,10 +76,8 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
             throw new RuntimeException("教练不存在或已离职");
         }
         
-        SysOrder availableOrder = orders.get(0);
-        
         TbCourseBooking booking = new TbCourseBooking();
-        booking.setOrderId(availableOrder.getId());
+        booking.setOrderId(orderId);
         booking.setUserId(userId);
         booking.setCoachUserId(coachUserId);
         booking.setCourseId(courseId);
@@ -85,8 +87,8 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
         
         this.save(booking);
         
-        availableOrder.setRemainCount(availableOrder.getRemainCount() - 1);
-        sysOrderService.updateById(availableOrder);
+        order.setRemainCount(order.getRemainCount() - 1);
+        sysOrderService.updateById(order);
         
         return booking.getId();
     }
@@ -104,19 +106,41 @@ public class TbCourseBookingServiceImpl extends ServiceImpl<TbCourseBookingDao, 
             throw new RuntimeException("该预约已核销或已取消");
         }
         
-        // 2. 更新预约状态为已完成
+        // 2. 检查是否已过预约时间+2小时
+        Date scheduleTime = booking.getScheduleTime();
+        long scheduleTimeMillis = scheduleTime.getTime();
+        long currentTimeMillis = System.currentTimeMillis();
+        long checkTimeMillis = scheduleTimeMillis + 2 * 60 * 60 * 1000; // 预约时间+2小时
+        
+        if (currentTimeMillis < checkTimeMillis) {
+            long remainingMinutes = (checkTimeMillis - currentTimeMillis) / (60 * 1000);
+            long hours = remainingMinutes / 60;
+            long minutes = remainingMinutes % 60;
+            
+            String timeText = "";
+            if (hours > 0) {
+                timeText += hours + "小时";
+            }
+            if (minutes > 0) {
+                timeText += minutes + "分钟";
+            }
+            
+            throw new RuntimeException("课程尚未结束，请在预约时间后" + timeText + "再进行核销");
+        }
+        
+        // 3. 更新预约状态为已完成
         booking.setStatus(1); // 1-已完成
         booking.setCheckTime(new Date());
         this.updateById(booking);
         
-        // 3. 检查用户是否还有剩余的私教课次数
+        // 4. 检查用户是否还有剩余的私教课次数
         List<SysOrder> orders = sysOrderService.list(new QueryWrapper<SysOrder>()
                 .eq("user_id", booking.getUserId())
                 .eq("type", 2) // 2-私教课
                 .eq("status", 1) // 1-已支付
                 .gt("remain_count", 0)); // 剩余次数大于0
         
-        // 4. 如果没有剩余次数，将用户降级为普通会员
+        // 5. 如果没有剩余次数，将用户降级为普通会员
         if (orders.isEmpty()) {
             TbMemberProfile memberProfile = memberProfileService.getOne(
                     new QueryWrapper<TbMemberProfile>().eq("user_id", booking.getUserId()));

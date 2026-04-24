@@ -1,9 +1,0 @@
--- 查看当前 tb_entry_log 表结构
-USE build_body;
-DESC tb_entry_log;
-
--- 查看表的所有字段
-SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_COMMENT 
-FROM INFORMATION_SCHEMA.COLUMNS 
-WHERE TABLE_SCHEMA = 'build_body' AND TABLE_NAME = 'tb_entry_log'
-ORDER BY ORDINAL_POSITION;

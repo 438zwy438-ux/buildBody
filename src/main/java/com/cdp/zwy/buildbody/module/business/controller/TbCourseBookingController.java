@@ -63,11 +63,11 @@ public class TbCourseBookingController {
     @Operation(summary = "预约课程")
     @PostMapping("/book")
     @RequireRole("vip")
-    public Result<Long> bookCourse(@RequestParam Long courseId,
+    public Result<Long> bookCourse(@RequestParam Long orderId,
                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date scheduleTime,
                                   HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        Long bookingId = tbCourseBookingService.bookCourse(userId, courseId, scheduleTime);
+        Long bookingId = tbCourseBookingService.bookCourse(userId, orderId, scheduleTime);
         return Result.success(bookingId);
     }
     

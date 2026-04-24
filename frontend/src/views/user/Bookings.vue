@@ -10,6 +10,7 @@
       <el-tabs v-model="activeTab">
         <el-tab-pane label="全部预约" name="all">
           <el-table :data="allBookings" v-loading="loading" border>
+            <el-table-column prop="orderId" label="订单ID" width="120" />
             <el-table-column prop="courseName" label="课程名称" />
             <el-table-column prop="coachName" label="教练" />
             <el-table-column prop="scheduleTime" label="预约时间">
@@ -39,6 +40,7 @@
         
         <el-tab-pane label="待核销" name="pending">
           <el-table :data="pendingBookings" v-loading="loading" border>
+            <el-table-column prop="orderId" label="订单ID" width="120" />
             <el-table-column prop="courseName" label="课程名称" />
             <el-table-column prop="coachName" label="教练" />
             <el-table-column prop="scheduleTime" label="预约时间">
@@ -61,6 +63,7 @@
         
         <el-tab-pane label="已完成" name="completed">
           <el-table :data="completedBookings" v-loading="loading" border>
+            <el-table-column prop="orderId" label="订单ID" width="120" />
             <el-table-column prop="courseName" label="课程名称" />
             <el-table-column prop="coachName" label="教练" />
             <el-table-column prop="scheduleTime" label="预约时间">
@@ -83,6 +86,7 @@
         
         <el-tab-pane label="已取消" name="cancelled">
           <el-table :data="cancelledBookings" v-loading="loading" border>
+            <el-table-column prop="orderId" label="订单ID" width="120" />
             <el-table-column prop="courseName" label="课程名称" />
             <el-table-column prop="coachName" label="教练" />
             <el-table-column prop="scheduleTime" label="预约时间">

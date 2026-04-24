@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cdp.zwy.buildbody.module.business.dao.TbFixLogDao">
+
+    <resultMap id="BaseResultMap" type="com.cdp.zwy.buildbody.module.business.entity.TbFixLog">
+        <id column="id" property="id" />
+        <result column="equipment_id" property="equipmentId" />
+        <result column="damage_position" property="damagePosition" />
+        <result column="damage_description" property="damageDescription" />
+        <result column="damage_time" property="damageTime" />
+        <result column="repairer_name" property="repairerName" />
+        <result column="repairer_phone" property="repairerPhone" />
+        <result column="repair_time" property="repairTime" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <resultMap id="DetailResultMap" type="com.cdp.zwy.buildbody.module.business.entity.TbFixLog" extends="BaseResultMap">
+        <result column="equipment_name" property="equipmentName" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, equipment_id, damage_position, damage_description, damage_time, repairer_name, repairer_phone, repair_time, create_time
+    </sql>
+
+    <select id="selectAllWithEquipmentName" resultMap="DetailResultMap">
+        SELECT 
+            f.id,
+            f.equipment_id,
+            f.damage_position,
+            f.damage_description,
+            f.damage_time,
+            f.repairer_name,
+            f.repairer_phone,
+            f.repair_time,
+            f.create_time,
+            e.name as equipment_name
+        FROM tb_fix_log f
+        LEFT JOIN tb_equipment e ON f.equipment_id = e.id
+        <where>
+            <if test="equipmentName != null and equipmentName != ''">
+                AND e.name LIKE CONCAT('%', #{equipmentName}, '%')
+            </if>
+        </where>
+        ORDER BY f.create_time DESC
+    </select>
+
+</mapper>
